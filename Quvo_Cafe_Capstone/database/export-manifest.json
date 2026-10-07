@@ -1,0 +1,20 @@
+{
+    "exported_utc": "2026-10-07T16:48:14+00:00",
+    "schema_tables": [
+        "roles",
+        "cafe_tables",
+        "staff_users",
+        "menu_items",
+        "customer_sessions"
+    ],
+    "data_rows": {
+        "roles": 2,
+        "cafe_tables": 1,
+        "menu_items": 2
+    },
+    "excluded_data": {
+        "staff_users": "Accounts and password hashes are private.",
+        "customer_sessions": "Guest names and session tokens are private.",
+        "sysdiagrams": "SSMS diagram metadata is not required by the application and is excluded."
+    }
+}
