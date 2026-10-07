@@ -1,0 +1,33 @@
+<section class="screen" id="screenOnlineAuth">
+  <div class="mini-header">
+    <div>
+      <p class="eyebrow">Quvo Café · Online ordering</p>
+      <h2>Customer account</h2>
+    </div>
+  </div>
+  <div aria-label="Online customer access" class="auth-tabs" role="tablist">
+    <button class="auth-tab active" data-auth-tab="login" id="loginTabBtn" type="button">
+      Login
+    </button>
+    <button class="auth-tab" data-auth-tab="register" id="registerTabBtn" type="button">
+      Register
+    </button>
+  </div>
+  <form class="form-card auth-panel active" id="loginForm">
+    <p class="small-copy auth-help">Sign in using your Quvo Café customer account.</p>
+    <label for="loginEmail">Email</label>
+    <input autocomplete="username" id="loginEmail" type="text" />
+    <label for="loginPassword">Password</label>
+    <input autocomplete="current-password" id="loginPassword" type="password" />
+    <p class="form-error" id="loginError"></p>
+    <button class="primary-btn" type="submit">Login and continue</button>
+  </form>
+  <template data-fragment="register/register.html"></template>
+  <div class="info-card">
+    <p class="eyebrow">Delivery requests</p>
+    <p>
+      For delivery requests, Quvo Café staff will review the address and contact details and
+      coordinate the courier arrangement.
+    </p>
+  </div>
+</section>

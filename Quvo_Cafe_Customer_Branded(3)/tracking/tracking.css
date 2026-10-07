@@ -1,0 +1,70 @@
+.timeline {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--line);
+}
+
+.timeline-dot {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #eadfd3;
+  color: var(--coffee-dark);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.timeline-item.done .timeline-dot {
+  background: var(--success);
+  color: white;
+}
+
+.timeline-item.current {
+  border-color: var(--coffee-light);
+  box-shadow: 0 10px 26px rgba(111, 78, 55, 0.14);
+}
+
+.timeline-item h3 {
+  margin-bottom: 4px;
+}
+
+.timeline-item p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.tracking-details {
+  margin-top: 14px;
+}
+
+.ticket-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.ticket-row:last-child {
+  border-bottom: 0;
+}
+
+.ticket-row strong {
+  color: var(--coffee-dark);
+}

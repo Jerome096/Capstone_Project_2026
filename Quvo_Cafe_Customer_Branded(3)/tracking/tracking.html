@@ -1,0 +1,28 @@
+<section class="screen" id="screenTracking">
+  <div class="mini-header">
+    <button aria-label="Go back to menu" class="icon-btn" data-nav="screenMenu">‹</button>
+    <div>
+      <p class="eyebrow">Order tracking</p>
+      <h2>Order status</h2>
+    </div>
+  </div>
+  <section class="order-ticket">
+    <div>
+      <p class="eyebrow">Current order</p>
+      <h3 id="trackingOrderCode">No order yet</h3>
+    </div>
+    <div class="tracking-badges">
+      <span class="count-pill status-pill" id="trackingStatus">Waiting</span
+      ><span class="count-pill" id="trackingPayment">Payment</span>
+    </div>
+  </section>
+  <section class="timeline" id="statusTimeline"></section>
+  <div class="tracking-details" id="trackingDetails"></div>
+  <div aria-live="polite" class="live-update-card">
+    <div class="live-update-head">
+      <span class="live-dot"></span><strong>Live order updates</strong>
+    </div>
+    <p>Order progress updates automatically as staff actions are reflected in the system.</p>
+    <small id="trackingUpdatedAt">Waiting for an order</small>
+  </div>
+</section>

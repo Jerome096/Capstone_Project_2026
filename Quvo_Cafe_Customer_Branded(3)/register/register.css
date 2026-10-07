@@ -1,0 +1,8 @@
+.auth-panel:where(#registerForm) {
+  display: none;
+}
+
+.auth-panel:where(#registerForm).active {
+  display: grid;
+  gap: 10px;
+}

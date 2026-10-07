@@ -1,0 +1,99 @@
+<section class="screen" id="screenAccount">
+  <div class="mini-header account-page-header">
+    <button aria-label="Go back to menu" class="icon-btn" data-nav="screenMenu">‹</button>
+    <div>
+      <p class="eyebrow">Online customer</p>
+      <h2>My account</h2>
+    </div>
+  </div>
+
+  <section class="account-identity-card">
+    <div class="account-avatar" id="accountAvatar">QC</div>
+    <div class="account-identity-copy">
+      <p class="eyebrow">Signed in as</p>
+      <h3 id="accountDisplayName">Customer</h3>
+      <p id="accountDisplayEmail">Not signed in</p>
+    </div>
+  </section>
+
+  <section class="account-section-card">
+    <div class="account-section-heading">
+      <div>
+        <p class="eyebrow">Profile</p>
+        <h3>Personal information</h3>
+      </div>
+      <span class="account-chip">Editable</span>
+    </div>
+    <form class="account-form" id="profileForm">
+      <label for="profileName">Full name</label>
+      <input autocomplete="name" id="profileName" type="text" />
+
+      <label for="profileEmail">Email</label>
+      <input autocomplete="email" id="profileEmail" type="email" />
+
+      <label for="profileContact">Contact number</label>
+      <input autocomplete="tel" id="profileContact" type="tel" />
+
+      <label for="profileAddress">Saved delivery address or notes</label>
+      <textarea
+        id="profileAddress"
+        rows="3"
+        placeholder="Add your preferred delivery address or landmark"
+      ></textarea>
+
+      <p class="form-error" id="profileError"></p>
+      <p class="form-success" id="profileSuccess"></p>
+      <button class="primary-btn" type="submit">Save profile changes</button>
+    </form>
+  </section>
+
+  <section class="account-section-card">
+    <div class="account-section-heading">
+      <div>
+        <p class="eyebrow">Security</p>
+        <h3>Change password</h3>
+      </div>
+    </div>
+    <form class="account-form" id="passwordForm">
+      <label for="currentPassword">Current password</label>
+      <input autocomplete="current-password" id="currentPassword" type="password" />
+
+      <label for="newPassword">New password</label>
+      <input
+        autocomplete="new-password"
+        id="newPassword"
+        type="password"
+        placeholder="At least 6 characters"
+      />
+
+      <label for="confirmNewPassword">Confirm new password</label>
+      <input autocomplete="new-password" id="confirmNewPassword" type="password" />
+
+      <p class="form-error" id="passwordError"></p>
+      <p class="form-success" id="passwordSuccess"></p>
+      <button class="secondary-btn account-action-btn" type="submit">Update password</button>
+    </form>
+  </section>
+
+  <section class="account-section-card account-links-card">
+    <button class="account-link-row" id="accountOrdersBtn" type="button">
+      <span>
+        <strong>My orders</strong>
+        <small>Review your submitted online orders</small>
+      </span>
+      <span aria-hidden="true">›</span>
+    </button>
+  </section>
+
+  <section class="account-section-card logout-card">
+    <div>
+      <p class="eyebrow">Session</p>
+      <h3>Finished ordering?</h3>
+      <p class="small-copy">
+        Signing out removes the active login from this browser. Your registered account and order
+        history remain saved.
+      </p>
+    </div>
+    <button class="logout-btn" id="logoutBtn" type="button">Log out</button>
+  </section>
+</section>

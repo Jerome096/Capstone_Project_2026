@@ -1,0 +1,39 @@
+<form class="form-card auth-panel" id="registerForm">
+  <label for="registerName">Full name</label>
+  <input autocomplete="name" id="registerName" placeholder="Enter your full name" type="text" />
+  <label for="registerContact">Contact number</label>
+  <input
+    autocomplete="tel"
+    id="registerContact"
+    placeholder="Enter your contact number"
+    type="tel"
+  />
+  <label for="registerEmail">Email</label>
+  <input
+    autocomplete="email"
+    id="registerEmail"
+    placeholder="Enter your email address"
+    type="email"
+  />
+  <label for="registerAddress">Address or delivery notes</label>
+  <textarea
+    id="registerAddress"
+    placeholder="Optional. Used only for staff-coordinated delivery request records."
+    rows="3"
+  ></textarea>
+  <label for="registerPassword"
+    >Password<input
+      autocomplete="new-password"
+      id="registerPassword"
+      placeholder="At least 6 characters"
+      type="password" /></label
+  ><label for="registerPasswordConfirm"
+    >Confirm password<input
+      autocomplete="new-password"
+      id="registerPasswordConfirm"
+      placeholder="Re-enter your password"
+      type="password"
+  /></label>
+  <p class="form-error" id="registerError"></p>
+  <button class="primary-btn" type="submit">Create account</button>
+</form>

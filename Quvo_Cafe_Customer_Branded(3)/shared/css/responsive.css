@@ -1,0 +1,223 @@
+/* Shared responsive layout, loaded after module and brand styles. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --screen-padding: clamp(16px, 3vw, 32px);
+  --navigation-height: calc(76px + var(--safe-bottom));
+  --viewport-height: 100vh;
+}
+@supports (height: 100dvh) {
+  :root {
+    --viewport-height: 100dvh;
+  }
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+body {
+  min-height: 0;
+  overflow: hidden;
+}
+.customer-shell {
+  height: var(--app-height, var(--viewport-height));
+  min-height: 0;
+  padding: 0;
+}
+.app-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.screen {
+  inset: 0 0 var(--navigation-height);
+  padding: calc(var(--screen-padding) + var(--safe-top))
+    calc(var(--screen-padding) + var(--safe-right)) var(--screen-padding)
+    calc(var(--screen-padding) + var(--safe-left));
+  overscroll-behavior-y: contain;
+  scroll-padding-block: 24px;
+  visibility: hidden;
+}
+.screen-active {
+  visibility: visible;
+}
+#screenDineInStart,
+#screenOnlineAuth,
+#screenWaiting {
+  bottom: 0;
+  padding-bottom: calc(var(--screen-padding) + var(--safe-bottom));
+}
+.screen > *,
+.modal-panel > *,
+.menu-card > *,
+.cart-item > *,
+.mini-header > *,
+.app-header > *,
+.order-ticket > *,
+.history-head > *,
+.account-section-heading > * {
+  min-width: 0;
+}
+h1,
+h2,
+h3,
+p,
+strong,
+small,
+.ticket-row {
+  overflow-wrap: anywhere;
+}
+input:not([type="radio"]):not([type="checkbox"]),
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 16px;
+}
+button,
+.payment-option {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.icon-btn,
+.close-btn,
+.qty-control button,
+.cart-stepper button {
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+}
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--quvo-gold-deep);
+  outline-offset: 3px;
+}
+.bottom-nav {
+  height: var(--navigation-height);
+  padding: 10px calc(12px + var(--safe-right)) calc(12px + var(--safe-bottom))
+    calc(12px + var(--safe-left));
+  gap: 4px;
+}
+.bottom-nav.online-mode .nav-btn {
+  font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+  padding-inline: 2px;
+}
+.floating-cart {
+  left: calc(var(--screen-padding) + var(--safe-left));
+  right: calc(var(--screen-padding) + var(--safe-right));
+  bottom: calc(var(--navigation-height) + 12px);
+}
+#screenMenu {
+  /* Leave room to scroll the last item above the floating cart action. */
+  padding-bottom: 96px;
+}
+.toast {
+  left: calc(16px + var(--safe-left));
+  right: calc(16px + var(--safe-right));
+  bottom: calc(var(--navigation-height) + 16px);
+}
+.app-header {
+  top: calc(-1 * var(--screen-padding));
+  margin: calc(-1 * var(--screen-padding)) calc(-1 * var(--screen-padding)) 16px;
+  padding: var(--screen-padding);
+}
+.menu-card {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.cart-actions,
+.card-bottom,
+.order-ticket,
+.history-head,
+.session-request-meta,
+.account-section-heading {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.ticket-row {
+  gap: 16px;
+}
+.ticket-row strong {
+  min-width: 0;
+  text-align: right;
+}
+.modal-panel {
+  width: min(100%, 640px);
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  max-height: calc(100% - var(--safe-top) - 12px);
+  padding: 24px calc(20px + var(--safe-right)) calc(24px + var(--safe-bottom))
+    calc(20px + var(--safe-left));
+  overscroll-behavior-y: contain;
+  scroll-padding-block: 24px;
+}
+.close-btn {
+  right: calc(14px + var(--safe-right));
+}
+.modal-top {
+  padding-right: 48px;
+}
+.customize-form fieldset {
+  min-width: 0;
+}
+@media (min-width: 700px) {
+  #screenDineInStart > *,
+  #screenOnlineAuth > *,
+  #screenWaiting > * {
+    max-width: 640px;
+    margin-inline: auto;
+  }
+  .menu-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .menu-list > .empty-card {
+    grid-column: 1 / -1;
+  }
+  #screenAccount > *,
+  #screenCart > *,
+  #screenTracking > *,
+  #screenHistory > * {
+    max-width: 760px;
+    margin-inline: auto;
+  }
+  .bottom-nav {
+    padding-inline: max(calc(16px + var(--safe-left)), calc((100% - 760px) / 2))
+      max(calc(16px + var(--safe-right)), calc((100% - 760px) / 2));
+  }
+  .floating-cart,
+  .toast {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+}
+@media (min-width: 1200px) and (min-height: 600px) {
+  .customer-shell {
+    padding: 24px;
+  }
+  .app-frame {
+    max-width: 1120px;
+    border: 1px solid var(--quvo-border);
+    border-radius: 28px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --screen-padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

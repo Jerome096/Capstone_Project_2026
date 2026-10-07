@@ -1,0 +1,29 @@
+<!-- The waiting screen stays open until the server records a staff decision. -->
+<section class="screen" id="screenWaiting">
+  <div class="mini-header">
+    <div>
+      <p class="eyebrow">Session request</p>
+      <h2>Waiting for approval</h2>
+    </div>
+  </div>
+  <div class="waiting-card">
+    <div class="pulse-ring">
+      <span></span>
+    </div>
+    <h3>Cashier confirmation needed</h3>
+    <p>
+      Please wait while the cashier verifies that you are currently seated at
+      <strong id="waitingTableLabel">your table</strong>.
+    </p>
+  </div>
+  <div aria-live="polite" class="info-card session-request-card">
+    <p class="eyebrow">Session request sent</p>
+    <div class="session-request-meta">
+      <span>Request ID</span><strong id="sessionRequestCode">Pending</strong>
+    </div>
+    <p id="sessionRequestStatus">
+      Waiting for staff confirmation. This page updates automatically.
+    </p>
+    <button class="secondary-btn" id="cancelSessionRequestBtn" type="button">Cancel request</button>
+  </div>
+</section>

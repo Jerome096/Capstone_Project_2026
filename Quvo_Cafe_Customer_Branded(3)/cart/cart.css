@@ -1,0 +1,61 @@
+.remove-btn,
+.cart-stepper button {
+  border: 0;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.remove-btn {
+  padding: 7px 10px;
+  background: #f9e4df;
+  color: var(--danger);
+}
+
+.floating-cart {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 92px;
+  z-index: 25;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--coffee-dark);
+  color: #fff8f0;
+  font-weight: 950;
+  box-shadow: 0 14px 28px rgba(63, 42, 29, 0.26);
+}
+
+.floating-cart.visible {
+  display: flex;
+}
+
+.floating-cart span {
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.cart-item {
+  grid-template-columns: 1fr;
+}
+
+.cart-meta {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.cart-actions {
+  margin-top: 12px;
+}

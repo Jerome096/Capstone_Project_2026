@@ -1,0 +1,73 @@
+.payment-card,
+.fulfillment-card,
+.summary-card {
+  margin-top: 14px;
+}
+
+.payment-options,
+.fulfillment-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.fulfillment-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.payment-option input {
+  accent-color: var(--coffee-dark);
+}
+
+.summary-card {
+  display: grid;
+  gap: 10px;
+}
+
+.summary-card div {
+  color: var(--muted);
+}
+
+.summary-card strong {
+  color: var(--coffee-dark);
+}
+
+.summary-total {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 1.05rem;
+}
+
+.delivery-fields {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel-soft);
+}
+
+.delivery-fields label {
+  font-weight: 900;
+  color: var(--coffee-dark);
+}
+
+@media (max-width: 390px) {
+  .payment-options,
+  .fulfillment-options {
+    grid-template-columns: 1fr;
+  }
+}

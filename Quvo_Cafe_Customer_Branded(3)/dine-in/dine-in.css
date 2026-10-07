@@ -1,0 +1,33 @@
+.waiting-card {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.pulse-ring {
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  margin: 10px auto 18px;
+  border-radius: 999px;
+  background: rgba(111, 78, 55, 0.1);
+}
+
+.pulse-ring span {
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  background: var(--coffee);
+  box-shadow: 0 0 0 14px rgba(111, 78, 55, 0.14);
+  animation: pulse 1.4s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(111, 78, 55, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 0 0 22px rgba(111, 78, 55, 0);
+  }
+}

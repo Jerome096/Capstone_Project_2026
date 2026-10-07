@@ -1,0 +1,59 @@
+<section class="fulfillment-card hidden" id="fulfillmentCard">
+  <p class="eyebrow">Online fulfillment</p>
+  <div class="fulfillment-options">
+    <label class="payment-option">
+      <input checked="" name="fulfillmentOption" type="radio" value="Pickup" />
+      <span>Pickup</span>
+    </label>
+    <label class="payment-option">
+      <input name="fulfillmentOption" type="radio" value="Staff-coordinated delivery request" />
+      <span>Delivery request</span>
+    </label>
+  </div>
+  <div class="delivery-fields hidden" id="deliveryDetails">
+    <label for="deliveryAddress">Delivery address or landmark</label>
+    <textarea
+      id="deliveryAddress"
+      placeholder="Enter your delivery address or landmark"
+      rows="3"
+    ></textarea>
+    <label for="deliveryContact">Receiver contact number</label>
+    <input id="deliveryContact" placeholder="Enter the receiver’s contact number" type="tel" />
+    <p class="small-copy">
+      Quvo Café staff will contact you if courier details or the delivery fee need confirmation.
+    </p>
+  </div>
+</section>
+<section class="payment-card">
+  <p class="eyebrow">Preferred payment method</p>
+  <div class="payment-options">
+    <label class="payment-option">
+      <input checked="" name="paymentMethod" type="radio" value="Cash" />
+      <span>Cash</span>
+    </label>
+    <label class="payment-option">
+      <input name="paymentMethod" type="radio" value="GCash" />
+      <span>GCash</span>
+    </label>
+    <label class="payment-option">
+      <input name="paymentMethod" type="radio" value="PayMaya" />
+      <span>PayMaya</span>
+    </label>
+  </div>
+  <p class="small-copy" id="paymentNote">
+    Your selected payment method will be confirmed by Quvo Café staff before your order moves to
+    preparation.
+  </p>
+</section>
+<section class="summary-card">
+  <div>
+    <span>Subtotal</span>
+    <strong id="subtotalText">₱0.00</strong>
+  </div>
+
+  <div class="summary-total">
+    <span>Total</span>
+    <strong id="totalText">₱0.00</strong>
+  </div>
+  <button class="primary-btn" id="submitOrderBtn">Submit order</button>
+</section>

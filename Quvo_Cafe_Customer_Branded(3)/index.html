@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+      name="viewport"
+    />
+    <title>Quvo Café | Customer Ordering</title>
+
+    <link href="assets/images/quvo-favicon.png" rel="icon" type="image/png" />
+    <meta content="#12110f" name="theme-color" />
+    <link rel="stylesheet" href="shared/css/base.css" />
+    <link rel="stylesheet" href="login/login.css" />
+    <link rel="stylesheet" href="register/register.css" />
+    <link rel="stylesheet" href="dine-in/dine-in.css" />
+    <link rel="stylesheet" href="menu/menu.css" />
+    <link rel="stylesheet" href="cart/cart.css" />
+    <link rel="stylesheet" href="checkout/checkout.css" />
+    <link rel="stylesheet" href="tracking/tracking.css" />
+    <link rel="stylesheet" href="orders/orders.css" />
+    <link rel="stylesheet" href="account/account.css" />
+    <link rel="stylesheet" href="shared/css/brand.css" />
+    <link rel="stylesheet" href="shared/css/responsive.css" />
+  </head>
+  <body>
+    <main class="customer-shell">
+      <section class="app-frame">
+        <template data-fragment="dine-in/dine-in.html"></template>
+        <template data-fragment="login/login.html"></template>
+        <template data-fragment="dine-in/waiting.html"></template>
+        <template data-fragment="menu/menu.html"></template>
+        <template data-fragment="cart/cart.html"></template>
+        <template data-fragment="tracking/tracking.html"></template>
+        <template data-fragment="orders/orders.html"></template>
+
+        <template data-fragment="account/account.html"></template>
+
+        <template data-fragment="shared/navigation.html"></template>
+        <template data-fragment="cart/cart-button.html"></template>
+        <template data-fragment="menu/item-modal.html"></template>
+        <div class="toast" id="toast"></div>
+      </section>
+    </main>
+
+    <noscript>Please enable JavaScript to use customer ordering.</noscript>
+    <script src="shared/viewport.js" defer></script>
+    <script src="shared/loader.js" defer></script>
+  </body>
+</html>

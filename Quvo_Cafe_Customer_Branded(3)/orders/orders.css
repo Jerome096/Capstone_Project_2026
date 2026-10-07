@@ -1,0 +1,17 @@
+.history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.history-card {
+  display: grid;
+  gap: 8px;
+}
+
+.history-head {
+  margin-bottom: 4px;
+}
+
+.history-card h3 {
+  margin-bottom: 0;
+}

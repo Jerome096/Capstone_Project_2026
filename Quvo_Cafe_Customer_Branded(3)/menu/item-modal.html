@@ -1,0 +1,48 @@
+<div aria-hidden="true" class="modal" id="itemModal">
+  <div class="modal-backdrop" data-close-modal=""></div>
+  <section aria-labelledby="modalItemName" aria-modal="true" class="modal-panel" role="dialog">
+    <button aria-label="Close item details" class="close-btn" data-close-modal="" type="button">
+      ×
+    </button>
+    <div class="modal-top">
+      <div class="item-icon large" id="modalItemIcon"></div>
+      <div>
+        <p class="eyebrow" id="modalItemCategory">Category</p>
+        <h3 id="modalItemName">Item name</h3>
+        <p class="small-copy" id="modalItemDesc"></p>
+      </div>
+    </div>
+    <form class="customize-form" id="customizeForm">
+      <fieldset id="drinkOptions">
+        <legend>Drink options</legend>
+        <label for="sugarLevel">Sugar level</label>
+        <select id="sugarLevel">
+          <option>100%</option>
+          <option>75%</option>
+          <option>50%</option>
+          <option>25%</option>
+          <option>0%</option>
+        </select>
+        <label for="iceLevel">Ice level</label>
+        <select id="iceLevel">
+          <option>Regular ice</option>
+          <option>Less ice</option>
+          <option>No ice</option>
+          <option>Hot</option>
+        </select>
+      </fieldset>
+
+      <label for="itemNotes">Special instructions</label>
+      <textarea id="itemNotes" placeholder="Enter special instructions" rows="3"></textarea>
+      <div class="quantity-row">
+        <span>Quantity</span>
+        <div class="qty-control">
+          <button id="decreaseQty" type="button">−</button>
+          <strong id="modalQty">1</strong>
+          <button id="increaseQty" type="button">+</button>
+        </div>
+      </div>
+      <button class="primary-btn" id="addToCartBtn" type="submit">Add to cart</button>
+    </form>
+  </section>
+</div>

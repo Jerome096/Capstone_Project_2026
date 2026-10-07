@@ -1,0 +1,32 @@
+<!-- Guest names identify individual visits; staff must approve every new session. -->
+<section class="screen" id="screenDineInStart">
+  <div class="mini-header">
+    <div>
+      <p class="eyebrow">Quvo Café · Table QR ordering</p>
+      <h2>Dine-in session</h2>
+    </div>
+  </div>
+  <div class="hero-card">
+    <p class="muted">You are ordering from</p>
+    <h2 id="welcomeTableLabel">Scan your table QR</h2>
+    <p class="small-copy">
+      Enter your name or nickname. This helps the cashier identify your table session.
+    </p>
+  </div>
+  <form class="form-card" id="nameForm">
+    <label for="customerName">Name or nickname</label>
+    <input
+      autocomplete="name"
+      maxlength="100"
+      required
+      id="customerName"
+      placeholder="Enter your name or nickname"
+      type="text"
+    />
+    <p class="form-error" id="nameError"></p>
+    <button class="primary-btn" type="submit">Request cashier approval</button>
+  </form>
+  <p class="bottom-note">
+    No account registration is required. Your visit is linked to this table after cashier approval.
+  </p>
+</section>
