@@ -1,0 +1,39 @@
+<div
+  class="modal-backdrop hidden"
+  id="receiptSuccessModal"
+>
+  <div
+    aria-labelledby="receiptSuccessTitle"
+    aria-modal="true"
+    class="receipt-modal-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close receipt modal"
+      class="modal-close"
+      id="receiptSuccessClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div class="eyebrow">Receipt generated</div>
+    <h2 id="receiptSuccessTitle">Payment confirmed</h2>
+    <div
+      class="receipt-paper mini-receipt-paper"
+      id="receiptSuccessContent"
+    ></div>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="receiptSuccessNewOrder"
+      >
+        New order
+      </button>
+      <button
+        class="btn dark"
+        id="receiptSuccessView"
+      >
+        View receipt
+      </button>
+    </div>
+  </div>
+</div>

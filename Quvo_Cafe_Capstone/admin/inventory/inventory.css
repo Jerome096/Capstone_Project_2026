@@ -1,0 +1,310 @@
+/* Styles for inventory; shared controls remain in shared/css. */
+
+.inventory-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.inventory-lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.inventory-main-card,
+.inventory-side-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 15px;
+}
+
+.inventory-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.inventory-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inventory-search {
+  width: 270px;
+  background: var(--white);
+}
+
+.inventory-filter-row {
+  margin-bottom: 12px;
+}
+
+.inventory-table {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--white);
+}
+
+.inventory-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.75fr 1.25fr 0.9fr;
+  gap: 10px;
+  align-items: center;
+  min-height: 58px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inventory-row:last-child {
+  border-bottom: 0;
+}
+
+.inventory-header {
+  min-height: 36px;
+  background: var(--surface);
+  color: #9a918a;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.inventory-item-name {
+  font-weight: 800;
+}
+
+.inventory-subtext {
+  color: #8b8179;
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.inventory-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 0 9px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.inventory-status.normal {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.inventory-status.low {
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+
+.inventory-status.out {
+  background: var(--coral-bg);
+  color: var(--coral-text);
+}
+
+.inventory-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.inventory-row-actions .btn {
+  min-height: 28px;
+  padding: 0 9px;
+}
+
+.inventory-impact-list,
+.inventory-movement-list,
+.inventory-recipe-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.inventory-impact-card,
+.inventory-movement-card,
+.inventory-recipe-card {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--white);
+  padding: 12px;
+}
+
+.inventory-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.inventory-chip-row {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.inventory-chip {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: var(--surface);
+  color: #7b746e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.inventory-warning {
+  color: var(--amber-text);
+}
+
+.inventory-danger {
+  color: var(--coral-text);
+}
+
+.inventory-copy {
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.inventory-form-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.inventory-form-grid label {
+  display: grid;
+  gap: 6px;
+  color: #9a918a;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  font-size: 9px;
+}
+
+.inventory-form-grid input,
+.inventory-form-grid select {
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 0 10px;
+  outline: 0;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.inventory-form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.inventory-modal-card {
+  width: 560px;
+}
+
+@media (max-width: 1280px) {
+  .inventory-layout,
+  .inventory-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-toolbar,
+  .inventory-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 860px) {
+  .inventory-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 12px;
+  }
+
+  .inventory-header {
+    display: none;
+  }
+
+  .inventory-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inventory-form-grid textarea {
+  width: 100%;
+  border: 1px solid #eadfce;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font: inherit;
+  resize: vertical;
+  background: #fffdf9;
+  color: #2b2118;
+}
+
+.inventory-recipe-actions {
+  margin-top: 12px;
+}
+.inventory-main-card,
+.inventory-side-card {
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-lg);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+
+.inventory-form-grid input,
+.inventory-form-grid select,
+.inventory-form-grid textarea {
+  min-height: 42px;
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-md);
+  background: var(--q-surface);
+  font-size: var(--q-text-sm);
+}
+.inventory-status,
+.inventory-chip {
+  border-radius: var(--q-radius-pill);
+  font-size: var(--q-text-xs);
+  font-weight: 700;
+}
+.inventory-toolbar {
+  gap: 12px;
+}
+.inventory-header {
+  color: var(--q-ink-500);
+  background: var(--q-surface-muted);
+  font-size: var(--q-text-xs);
+  letter-spacing: 0.05em;
+}
+
+.inventory-row {
+  font-size: var(--q-text-sm);
+}
+
+.inventory-impact-card,
+.inventory-movement-card,
+.inventory-recipe-card {
+  border-color: var(--q-border);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+.inventory-copy {
+  line-height: 1.45;
+}

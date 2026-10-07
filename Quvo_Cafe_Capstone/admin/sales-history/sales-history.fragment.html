@@ -1,0 +1,85 @@
+<section
+  class="screen"
+  id="salesHistory"
+>
+  <div class="admin-page-note">
+    <i data-lucide="lock-keyhole"></i>
+    <span
+      >Sales history and closing records are restricted to authorized admin access.</span
+    >
+  </div>
+  <div class="stats-grid report-stats">
+    <article class="stat-card">
+      <div class="stat-label">Today sales</div>
+      <div
+        class="stat-value"
+        id="salesTodayStat"
+      >
+        ₱0
+      </div>
+      <div class="stat-icon green-soft"><i data-lucide="wallet"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">This month</div>
+      <div
+        class="stat-value"
+        id="salesMonthStat"
+      >
+        ₱0
+      </div>
+      <div class="stat-icon blue-soft"><i data-lucide="calendar-days"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">This year</div>
+      <div
+        class="stat-value"
+        id="salesYearStat"
+      >
+        ₱0
+      </div>
+      <div class="stat-icon brown-soft"><i data-lucide="bar-chart-3"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">EOD records</div>
+      <div
+        class="stat-value"
+        id="eodRecordCount"
+      >
+        0
+      </div>
+      <div class="stat-icon pink-soft"><i data-lucide="receipt-text"></i></div>
+    </article>
+  </div>
+  <section class="records-card">
+    <div class="admin-toolbar">
+      <div>
+        <div class="eyebrow">Sales records</div>
+        <h2>EOD sales history</h2>
+      </div>
+      <div class="receipt-filters">
+        <button
+          class="receipt-filter active"
+          data-sales-view="daily"
+        >
+          Daily
+        </button>
+        <button
+          class="receipt-filter"
+          data-sales-view="monthly"
+        >
+          Monthly
+        </button>
+        <button
+          class="receipt-filter"
+          data-sales-view="yearly"
+        >
+          Yearly
+        </button>
+      </div>
+    </div>
+    <div
+      class="sales-history-list"
+      id="salesHistoryList"
+    ></div>
+  </section>
+</section>

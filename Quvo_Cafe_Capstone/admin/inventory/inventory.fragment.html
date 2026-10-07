@@ -1,0 +1,181 @@
+<section
+  class="screen"
+  id="inventory"
+>
+  <div class="admin-page-note">
+    <i data-lucide="lock-keyhole"></i>
+    <span
+      >Inventory monitoring and Bill of Materials configuration are restricted to
+      authorized admin access.</span
+    >
+  </div>
+  <div class="stats-grid report-stats">
+    <article class="stat-card">
+      <div class="stat-label">Tracked items</div>
+      <div
+        class="stat-value"
+        id="inventoryTrackedStat"
+      >
+        0
+      </div>
+      <div class="stat-icon brown-soft"><i data-lucide="package"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Low stock</div>
+      <div
+        class="stat-value"
+        id="inventoryLowStat"
+      >
+        0
+      </div>
+      <div class="stat-icon amber-soft"><i data-lucide="triangle-alert"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Out of stock</div>
+      <div
+        class="stat-value"
+        id="inventoryOutStat"
+      >
+        0
+      </div>
+      <div class="stat-icon pink-soft"><i data-lucide="circle-x"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Menu affected</div>
+      <div
+        class="stat-value"
+        id="inventoryAffectedStat"
+      >
+        0
+      </div>
+      <div class="stat-icon green-soft"><i data-lucide="utensils"></i></div>
+    </article>
+  </div>
+  <div class="inventory-layout">
+    <section class="inventory-main-card">
+      <div class="inventory-toolbar">
+        <div>
+          <div class="eyebrow">Inventory monitoring</div>
+          <h2>Stock items</h2>
+        </div>
+        <div class="inventory-actions">
+          <div class="search-box inventory-search">
+            <i data-lucide="search"></i>
+            <input
+              id="inventorySearch"
+              placeholder="Search stock item, category, or menu link..."
+              type="search"
+            />
+          </div>
+          <button
+            class="btn dark"
+            id="addInventoryItemBtn"
+          >
+            <i
+              data-lucide="plus"
+              style="width: 13px; height: 13px; vertical-align: -2px"
+            ></i>
+            Add item
+          </button>
+        </div>
+      </div>
+      <div class="receipt-filters inventory-filter-row">
+        <button
+          class="receipt-filter active"
+          data-inventory-filter="all"
+        >
+          All
+        </button>
+        <button
+          class="receipt-filter"
+          data-inventory-filter="normal"
+        >
+          Normal
+        </button>
+        <button
+          class="receipt-filter"
+          data-inventory-filter="low"
+        >
+          Low
+        </button>
+        <button
+          class="receipt-filter"
+          data-inventory-filter="out"
+        >
+          Out
+        </button>
+      </div>
+      <div class="inventory-table">
+        <div class="inventory-row inventory-header">
+          <span>Stock item</span>
+          <span>Category</span>
+          <span>Current</span>
+          <span>Reorder level</span>
+          <span>Status</span>
+          <span>Linked menu</span>
+          <span>Actions</span>
+        </div>
+        <div id="inventoryRows"></div>
+      </div>
+    </section>
+    <aside class="inventory-side-card">
+      <div class="eyebrow">Menu impact</div>
+      <h2>Affected menu items</h2>
+      <div
+        class="inventory-impact-list"
+        id="inventoryImpactList"
+      ></div>
+    </aside>
+  </div>
+  <div class="inventory-lower-grid">
+    <section class="inventory-main-card">
+      <div class="admin-toolbar">
+        <div>
+          <div class="eyebrow">Stock records</div>
+          <h2>Movement log</h2>
+        </div>
+        <button
+          class="btn light"
+          id="addStockMovementBtn"
+        >
+          <i
+            data-lucide="clipboard-plus"
+            style="width: 13px; height: 13px; vertical-align: -2px"
+          ></i>
+          Add stock movement
+        </button>
+      </div>
+      <div
+        class="inventory-movement-list"
+        id="inventoryMovementLog"
+      ></div>
+    </section>
+    <section class="inventory-main-card">
+      <div class="admin-toolbar">
+        <div>
+          <div class="eyebrow">Recipe-based ingredient setup</div>
+          <h2>Bill of Materials links</h2>
+        </div>
+        <button
+          class="btn light"
+          id="addInventoryRecipeBtn"
+        >
+          <i
+            data-lucide="list-plus"
+            style="width: 13px; height: 13px; vertical-align: -2px"
+          ></i>
+          Add/Edit Bill of Materials
+        </button>
+      </div>
+      <p class="inventory-copy">
+        This section links menu items to ingredients deducted after payment confirmation.
+        It is limited to menu-related stock monitoring and does not include costing,
+        procurement, supplier records, or warehouse management.
+      </p>
+      <div
+        class="inventory-recipe-list"
+        id="inventoryRecipeList"
+      ></div>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,73 @@
+<section
+  class="screen active-screen"
+  id="dashboard"
+>
+  <div class="stats-grid">
+    <article class="stat-card">
+      <div class="stat-label">Active order points</div>
+      <div
+        class="stat-value"
+        id="activeTableStat"
+      >
+        0
+      </div>
+      <div class="stat-icon green-soft"><i data-lucide="grid-2x2"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Pending sessions</div>
+      <div
+        class="stat-value"
+        id="pendingSessionsStat"
+      >
+        0
+      </div>
+      <div class="stat-icon amber-soft"><i data-lucide="user-round-check"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Active orders</div>
+      <div
+        class="stat-value"
+        id="activeOrdersStat"
+      >
+        0
+      </div>
+      <div class="stat-icon blue-soft"><i data-lucide="clipboard-check"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Completed today</div>
+      <div
+        class="stat-value"
+        id="completedTodayStat"
+      >
+        0
+      </div>
+      <div class="stat-icon brown-soft"><i data-lucide="circle-check"></i></div>
+    </article>
+  </div>
+  <div class="dashboard-layout">
+    <section>
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Floor plan</div>
+          <h2>Table map</h2>
+        </div>
+        <div class="legend">
+          <span><b class="dot active-dot"></b>Active order</span>
+          <span><b class="dot inactive-dot"></b>No active order</span>
+        </div>
+      </div>
+      <div
+        class="table-map"
+        id="tableMap"
+      ></div>
+    </section>
+    <section class="activity-panel">
+      <div class="eyebrow">Live feed</div>
+      <h2>Recent activity</h2>
+      <div
+        class="activity-list"
+        id="activityList"
+      ></div>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,65 @@
+<section
+  class="screen"
+  id="barista"
+>
+  <div class="barista-summary-grid">
+    <article class="stat-card">
+      <div class="stat-label">Beverage tickets</div>
+      <div
+        class="stat-value"
+        id="baristaTicketCount"
+      >
+        0
+      </div>
+      <div class="stat-icon brown-soft"><i data-lucide="coffee"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Queued</div>
+      <div
+        class="stat-value"
+        id="baristaQueuedCount"
+      >
+        0
+      </div>
+      <div class="stat-icon amber-soft"><i data-lucide="list-ordered"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Preparing</div>
+      <div
+        class="stat-value"
+        id="baristaPreparingCount"
+      >
+        0
+      </div>
+      <div class="stat-icon blue-soft"><i data-lucide="timer"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Ready</div>
+      <div
+        class="stat-value"
+        id="baristaReadyCount"
+      >
+        0
+      </div>
+      <div class="stat-icon green-soft"><i data-lucide="circle-check"></i></div>
+    </article>
+  </div>
+  <section class="barista-board-card">
+    <div class="admin-toolbar">
+      <div>
+        <div class="eyebrow">Barista preparation</div>
+        <h2>Beverage order data</h2>
+      </div>
+      <span class="inventory-chip">Staff-side view</span>
+    </div>
+    <p class="inventory-copy">
+      This screen filters drink items from dine-in QR, online, and manual counter orders.
+      It generates beverage-specific ticket data for the barista without giving access to
+      payment confirmation, admin records, or inventory management.
+    </p>
+    <div
+      class="barista-ticket-list"
+      id="baristaTicketList"
+    ></div>
+  </section>
+</section>

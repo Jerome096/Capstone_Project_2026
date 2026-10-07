@@ -1,0 +1,47 @@
+<div
+  class="modal-backdrop hidden"
+  id="adminModal"
+>
+  <div
+    aria-labelledby="adminTitle"
+    aria-modal="true"
+    class="admin-card"
+    role="dialog"
+  >
+    <div class="admin-lock"><i data-lucide="lock"></i></div>
+    <h2 id="adminTitle">Admin access required</h2>
+    <p id="adminPrompt">Re-enter your own password to open the Admin workspace.</p>
+    <label
+      id="adminPasswordLabel"
+      for="adminPassword"
+      >Admin password</label
+    >
+    <input
+      autocomplete="current-password"
+      id="adminPassword"
+      placeholder="Your password"
+      type="password"
+    />
+    <div
+      class="admin-error"
+      id="adminError"
+      role="alert"
+    ></div>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="adminCancel"
+        type="button"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark"
+        id="adminUnlock"
+        type="button"
+      >
+        Continue
+      </button>
+    </div>
+  </div>
+</div>

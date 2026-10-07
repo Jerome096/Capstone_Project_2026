@@ -1,0 +1,50 @@
+<div
+  class="modal-backdrop hidden"
+  id="eodModal"
+>
+  <div
+    aria-labelledby="eodTitle"
+    aria-modal="true"
+    class="eod-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close end of day modal"
+      class="modal-close"
+      id="eodClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div class="eyebrow">End of day</div>
+    <h2 id="eodTitle">Close current sales day</h2>
+    <p class="modal-sub">
+      Review the closing figures before ending the day. Confirming EOD saves the record
+      and returns to the login screen.
+    </p>
+    <div
+      class="eod-grid"
+      id="eodSummary"
+    ></div>
+    <label class="eod-note">
+      Closing note
+      <textarea
+        id="eodNote"
+        placeholder="Optional note for this closing record"
+      ></textarea>
+    </label>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="eodCancel"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark"
+        id="eodConfirm"
+      >
+        Confirm EOD
+      </button>
+    </div>
+  </div>
+</div>

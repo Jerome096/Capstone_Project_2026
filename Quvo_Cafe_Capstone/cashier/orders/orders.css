@@ -1,0 +1,234 @@
+/* Styles for orders; shared controls remain in shared/css. */
+
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.kanban-column {
+  min-width: 0;
+}
+
+.column-head {
+  height: 39px;
+  border-radius: 13px;
+  background: var(--surface);
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  margin-bottom: 13px;
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.order-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.order-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.order-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 13px;
+}
+
+.order-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.order-number {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.card-menu-btn {
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: #706c67;
+  display: grid;
+  place-items: center;
+}
+
+.card-menu-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.order-time {
+  color: #9ca0a5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.order-time svg {
+  width: 12px;
+  height: 12px;
+}
+
+.order-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brown);
+  margin-bottom: 9px;
+}
+
+.order-context {
+  display: grid;
+  gap: 4px;
+  margin: -3px 0 8px;
+  color: #7d746c;
+  font-size: 10px;
+}
+
+.order-context b {
+  color: var(--brown);
+}
+
+.order-payment {
+  margin: 9px 0 10px;
+  border-radius: 12px;
+  padding: 9px 10px;
+  display: grid;
+  gap: 3px;
+  border: 1px solid transparent;
+}
+
+.order-payment span {
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.order-payment small {
+  color: inherit;
+  opacity: 0.78;
+  font-size: 10px;
+}
+
+.order-payment.pending {
+  background: var(--amber-bg);
+  border-color: #e7bf82;
+  color: var(--amber-text);
+}
+
+.order-payment.confirmed {
+  background: var(--green-bg);
+  border-color: #bed7ad;
+  color: var(--green-text);
+}
+
+.card-actions {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.card-actions .btn {
+  width: 100%;
+}
+
+.prep-notice {
+  margin-top: 12px;
+  min-height: 36px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  color: #8b8179;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 12px;
+  font-weight: 700;
+}
+
+.edit-card {
+  background: var(--white);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+  position: relative;
+  border-radius: 16px;
+}
+
+.edit-card {
+  width: 520px;
+  max-width: calc(100vw - 32px);
+  padding: 18px;
+}
+
+.edit-summary {
+  margin: 13px 0;
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 12px;
+  display: grid;
+  gap: 7px;
+}
+
+.edit-list {
+  display: grid;
+  gap: 10px;
+  max-height: 330px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.edit-line {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: var(--white);
+}
+
+.edit-line-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+@media (max-width: 1180px) {
+  .kanban {
+    grid-template-columns: 1fr;
+  }
+}
+
+.edit-card {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--q-radius-xl);
+  box-shadow: var(--q-shadow-lg);
+}
+
+.order-card {
+  border-color: var(--q-border);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+
+.order-number {
+  color: var(--q-ink-950);
+}
+.order-context {
+  line-height: 1.45;
+}

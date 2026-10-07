@@ -1,0 +1,103 @@
+/* Styles for alerts; shared controls remain in shared/css. */
+
+.alert-banner {
+  min-height: 43px;
+  width: max-content;
+  min-width: 275px;
+  border-radius: 14px;
+  background: var(--coral-bg);
+  border: 1px solid #f0bbae;
+  color: var(--coral-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+
+.alert-banner svg {
+  width: 20px;
+  height: 20px;
+  color: var(--red);
+}
+
+.alerts-list {
+  max-width: 640px;
+  display: grid;
+  gap: 12px;
+}
+
+.alert-card {
+  min-height: 91px;
+  border-radius: 14px;
+  border: 1px solid #efbfb5;
+  background: var(--coral-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px;
+}
+
+.alert-left {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.bell-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--white);
+  background: var(--red);
+}
+
+.bell-circle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.alert-table {
+  display: inline-flex;
+  background: #fff8f4;
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: var(--coral-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  font-size: 9px;
+  margin-bottom: 6px;
+}
+
+.alert-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.alert-time {
+  margin-top: 4px;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.alert-time svg {
+  width: 11px;
+  height: 11px;
+}
+
+.empty-alerts {
+  max-width: 360px;
+  margin-top: 35px;
+  text-align: center;
+}
+
+.alert-card {
+  border-color: var(--q-border);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}

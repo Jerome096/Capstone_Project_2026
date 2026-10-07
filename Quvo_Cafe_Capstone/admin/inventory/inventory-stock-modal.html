@@ -1,0 +1,103 @@
+<div
+  class="modal-backdrop hidden"
+  id="inventoryStockModal"
+>
+  <div
+    aria-labelledby="inventoryStockTitle"
+    aria-modal="true"
+    class="edit-card inventory-modal-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close inventory modal"
+      class="modal-close"
+      id="inventoryStockClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div
+      class="eyebrow"
+      id="inventoryStockEyebrow"
+    >
+      Inventory
+    </div>
+    <h2 id="inventoryStockTitle">Update stock item</h2>
+    <p class="modal-sub">Record an inventory adjustment for admin monitoring.</p>
+    <div class="inventory-form-grid">
+      <label>
+        Stock item
+        <input
+          id="inventoryItemName"
+          type="text"
+        />
+      </label>
+      <label>
+        Category
+        <select id="inventoryCategory">
+          <option value="Coffee">Coffee</option>
+          <option value="Milk and dairy">Milk and dairy</option>
+          <option value="Syrup and sweetener">Syrup and sweetener</option>
+          <option value="Food ingredients">Food ingredients</option>
+          <option value="Pastry">Pastry</option>
+          <option value="Packaging">Packaging</option>
+        </select>
+      </label>
+      <label>
+        Current stock
+        <input
+          id="inventoryCurrent"
+          min="0"
+          step="0.01"
+          type="number"
+        />
+      </label>
+      <label>
+        Unit
+        <input
+          id="inventoryUnit"
+          placeholder="kg, L, pcs, bottles"
+          type="text"
+        />
+      </label>
+      <label>
+        Reorder level
+        <input
+          id="inventoryReorder"
+          min="0"
+          step="0.01"
+          type="number"
+        />
+      </label>
+      <label>
+        Linked menu
+        <input
+          id="inventoryLinkedMenu"
+          placeholder="Linked menu items"
+          type="text"
+        />
+      </label>
+      <label class="full">
+        Note / receipt reference
+        <input
+          id="inventoryNote"
+          placeholder="Example: Restocked based on supplier receipt"
+          type="text"
+        />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="inventoryStockCancel"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark"
+        id="inventoryStockSave"
+      >
+        Save stock
+      </button>
+    </div>
+  </div>
+</div>

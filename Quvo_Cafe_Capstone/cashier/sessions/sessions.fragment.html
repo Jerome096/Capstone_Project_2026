@@ -1,0 +1,42 @@
+<!-- SQL session history stays available after a request is reviewed or closed. -->
+<section class="screen" id="sessions">
+  <div class="summary-pills">
+    <span class="pill pending-pill"><span id="pendingCount">0</span> Pending</span>
+    <span class="pill active-pill"><span id="activeCount">0</span> Active</span>
+    <span class="pill neutral-pill"><span id="totalCount">0</span> Total</span>
+  </div>
+  <div class="dining-toolbar">
+    <label
+      >Show
+      <select id="sessionFilter">
+        <option value="open">Pending and active</option>
+        <option value="all">All history</option>
+        <option value="pending">Pending</option>
+        <option value="active">Active</option>
+        <option value="closed">Closed</option>
+        <option value="rejected">Rejected</option>
+        <option value="cancelled">Cancelled</option>
+      </select></label
+    >
+    <button class="btn" id="refreshSessions" type="button">Refresh</button>
+  </div>
+  <p id="sessionNotice" role="status"></p>
+  <div class="dining-scroll">
+    <section class="list-card">
+      <div class="table-row table-header">
+        <span>Customer</span><span>Table</span><span>Requested</span><span>Status</span
+        ><span>Actions</span>
+      </div>
+      <div id="sessionRows"></div>
+    </section>
+  </div>
+  <div class="dining-toolbar">
+    <button class="btn" id="sessionsPrevious">Previous</button><span id="sessionsPage"></span
+    ><button class="btn" id="sessionsNext">Next</button>
+  </div>
+  <p class="helper-text">
+    Approve only after checking the customer is seated. Close the session when the group leaves so
+    the next group can use the same QR. Requests remain until reviewed, cancelled, or the table is
+    deactivated.
+  </p>
+</section>

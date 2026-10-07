@@ -1,0 +1,66 @@
+<section
+  class="screen"
+  id="receipts"
+>
+  <div class="receipts-layout">
+    <section class="receipts-list-card">
+      <div class="receipts-toolbar">
+        <div>
+          <div class="eyebrow">Previous orders</div>
+          <h2>Receipt records</h2>
+        </div>
+        <div class="search-box receipt-search">
+          <i data-lucide="search"></i>
+          <input
+            id="receiptSearch"
+            placeholder="Search receipts..."
+            type="search"
+          />
+        </div>
+      </div>
+      <div class="receipt-filters">
+        <button
+          class="receipt-filter active"
+          data-receipt-filter="all"
+        >
+          All
+        </button>
+        <button
+          class="receipt-filter"
+          data-receipt-filter="paid"
+        >
+          Paid
+        </button>
+        <button
+          class="receipt-filter"
+          data-receipt-filter="served"
+        >
+          Served
+        </button>
+        <button
+          class="receipt-filter"
+          data-receipt-filter="voided"
+        >
+          Voided
+        </button>
+      </div>
+      <div
+        class="receipt-list"
+        id="receiptList"
+      ></div>
+    </section>
+    <aside
+      class="receipt-preview"
+      id="receiptPreview"
+    >
+      <div class="receipt-empty-preview">
+        <i data-lucide="receipt-text"></i>
+        <h2>Select a receipt</h2>
+        <p>
+          Choose a previous order to view payment details, customer change, and ordered
+          items.
+        </p>
+      </div>
+    </aside>
+  </div>
+</section>

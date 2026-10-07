@@ -1,0 +1,202 @@
+/* Styles for barista; shared controls remain in shared/css. */
+
+.barista-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.barista-board-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.barista-ticket-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.barista-ticket-card,
+.barista-empty {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  padding: 16px;
+}
+
+.barista-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  padding: 42px 20px;
+}
+
+.barista-empty svg {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 10px;
+  color: var(--brown);
+}
+
+.barista-ticket-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.barista-order-number {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.barista-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.barista-status {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  white-space: nowrap;
+}
+
+.barista-status.pending {
+  background: #f5ebe2;
+  color: var(--muted);
+}
+
+.barista-status.queued {
+  background: var(--amber-soft);
+  color: var(--amber-text);
+}
+
+.barista-status.preparing {
+  background: var(--blue-soft);
+  color: var(--blue-text);
+}
+
+.barista-status.ready {
+  background: var(--green-soft);
+  color: var(--green-text);
+}
+
+.barista-customer-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  color: var(--muted);
+}
+
+.barista-customer-line b {
+  color: var(--text);
+}
+
+.barista-items {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.barista-item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #eadfce;
+  border-radius: 16px;
+  padding: 11px;
+  background: #fffdf9;
+}
+
+.barista-item-row p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.barista-ticket-note {
+  border-radius: 16px;
+  background: #f8f1e8;
+  padding: 10px 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 12px;
+}
+
+.barista-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.barista-actions .btn {
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.barista-ticket-modal-card {
+  width: 560px;
+}
+
+.barista-print-ticket .receipt-review-note {
+  font-size: 12px;
+}
+
+@media (max-width: 1280px) {
+  .barista-summary-grid,
+  .barista-ticket-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .barista-summary-grid,
+  .barista-ticket-list {
+    grid-template-columns: 1fr;
+  }
+
+  .barista-ticket-head,
+  .barista-customer-line,
+  .barista-item-row {
+    flex-direction: column;
+  }
+}
+.barista-board-card {
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-lg);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+.barista-status {
+  border-radius: var(--q-radius-pill);
+  font-size: var(--q-text-xs);
+  font-weight: 700;
+}
+
+.barista-ticket-card {
+  border-color: var(--q-border);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+
+.barista-order-number {
+  color: var(--q-ink-950);
+}

@@ -1,0 +1,97 @@
+<div
+  class="modal-backdrop hidden"
+  id="checkoutModal"
+>
+  <div
+    aria-labelledby="checkoutTitle"
+    aria-modal="true"
+    class="checkout-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close checkout modal"
+      class="modal-close"
+      id="checkoutClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div class="eyebrow">Checkout</div>
+    <h2 id="checkoutTitle">Confirm order</h2>
+    <div
+      class="checkout-summary"
+      id="checkoutSummary"
+    ></div>
+    <div class="payment-section">
+      <label>Select payment method</label>
+      <div class="payment-methods">
+        <button
+          class="method"
+          data-method="Cash"
+        >
+          <i data-lucide="banknote"></i>
+          <span>Cash</span>
+        </button>
+        <button
+          class="method"
+          data-method="GCash"
+        >
+          <i data-lucide="wallet"></i>
+          <span>GCash</span>
+        </button>
+        <button
+          class="method"
+          data-method="PayMaya"
+        >
+          <i data-lucide="credit-card"></i>
+          <span>PayMaya</span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="amount-field"
+      id="checkoutCashBlock"
+    >
+      <label>Amount received</label>
+      <input
+        id="amountReceived"
+        min="0"
+        placeholder="0"
+        step="1"
+        type="number"
+      />
+    </div>
+    <div
+      class="change-line"
+      id="checkoutChangeLine"
+    >
+      <span>Change</span>
+      <b id="changeAmount">₱0</b>
+    </div>
+    <div
+      class="amount-field hidden"
+      id="checkoutReferenceBlock"
+    >
+      <label id="paymentReferenceLabel">Payment reference no. optional</label>
+      <input
+        id="paymentReference"
+        placeholder="Enter reference number if available"
+        type="text"
+      />
+    </div>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="checkoutCancel"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark disabled"
+        disabled=""
+        id="confirmPaidBtn"
+      >
+        Confirm order
+      </button>
+    </div>
+  </div>
+</div>

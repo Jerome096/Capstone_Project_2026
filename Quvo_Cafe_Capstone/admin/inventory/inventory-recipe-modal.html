@@ -1,0 +1,58 @@
+<div
+  class="modal-backdrop hidden"
+  id="inventoryRecipeModal"
+>
+  <div
+    aria-labelledby="inventoryRecipeTitle"
+    aria-modal="true"
+    class="edit-card inventory-modal-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close Bill of Materials modal"
+      class="modal-close"
+      id="inventoryRecipeClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div class="eyebrow">Bill of Materials</div>
+    <h2 id="inventoryRecipeTitle">Recipe-based ingredient link</h2>
+    <p class="modal-sub">
+      Set the stock items and quantities deducted when payment is confirmed.
+    </p>
+    <div class="inventory-form-grid">
+      <label class="full">
+        Menu item
+        <select id="inventoryRecipeMenu"></select>
+      </label>
+      <label class="full">
+        Ingredient deduction lines
+        <textarea
+          id="inventoryRecipeLines"
+          placeholder="Example:
+Fresh milk | 0.18
+Ingredient name | quantity"
+          rows="8"
+        ></textarea>
+      </label>
+    </div>
+    <p class="inventory-copy">
+      Format: ingredient name | quantity. Use the same ingredient names listed in Stock
+      Items. The unit is taken from the stock record.
+    </p>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="inventoryRecipeCancel"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark"
+        id="inventoryRecipeSave"
+      >
+        Save Bill of Materials
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+/* Styles for sales; shared controls remain in shared/css. */
+
+.sales-history-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sales-history-row {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--white);
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 1.3fr repeat(6, 0.8fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.sales-history-row.header {
+  min-height: 34px;
+  background: var(--surface);
+  color: #9a918a;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .sales-history-row {
+    grid-template-columns: 1fr;
+  }
+}
+.sales-history-row.header {
+  color: var(--q-ink-500);
+  background: var(--q-surface-muted);
+  font-size: var(--q-text-xs);
+  letter-spacing: 0.05em;
+}

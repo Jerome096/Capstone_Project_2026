@@ -1,0 +1,249 @@
+<section
+  class="screen"
+  id="accounts"
+>
+  <div class="admin-page-note">
+    <i data-lucide="shield-check"></i
+    ><span
+      >Manage staff sign-ins and access. Deactivation keeps account history and blocks
+      sign-in.</span
+    >
+  </div>
+  <div
+    id="accountsNotice"
+    class="accounts-notice hidden"
+    role="status"
+    aria-live="polite"
+  ></div>
+  <div class="account-layout">
+    <section class="account-card">
+      <div class="eyebrow">Your account</div>
+      <h2>Admin credentials</h2>
+      <p>
+        Update your username or password. Enter your current password to confirm your
+        identity.
+      </p>
+      <form
+        class="account-form"
+        id="accountForm"
+      >
+        <label
+          >Username<input
+            id="accountUsername"
+            autocomplete="username"
+            required
+            minlength="3"
+            maxlength="50"
+            pattern="[A-Za-z0-9_.\-]+"
+        /></label>
+        <label
+          >Current password<input
+            id="accountCurrentPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+        /></label>
+        <div class="accounts-form-row">
+          <label
+            ><span>New password <small>(optional)</small></span
+            ><input
+              id="accountPassword"
+              type="password"
+              autocomplete="new-password"
+              minlength="12"
+              maxlength="72"
+          /></label>
+          <label
+            >Confirm new password<input
+              id="accountPasswordConfirm"
+              type="password"
+              autocomplete="new-password"
+              maxlength="72"
+          /></label>
+        </div>
+        <small
+          >Leave both new-password fields blank to keep your password. New passwords need
+          at least 12 characters.</small
+        >
+        <div
+          class="admin-error hidden"
+          id="accountError"
+          role="alert"
+        ></div>
+        <button
+          class="btn dark"
+          type="submit"
+        >
+          Review account changes
+        </button>
+      </form>
+    </section>
+    <aside class="account-card">
+      <div class="eyebrow">Current access</div>
+      <h2>Login account</h2>
+      <div class="record-summary-grid">
+        <div class="record-summary-card">
+          <span>Username</span><b id="currentUsernameLabel">Loading…</b>
+        </div>
+        <div class="record-summary-card">
+          <span>Role</span><b id="currentRoleLabel">Admin</b>
+        </div>
+        <div class="record-summary-card">
+          <span>Admin mode</span><b id="accountAdminModeLabel">Admin access active</b>
+        </div>
+      </div>
+      <p class="accounts-help">
+        All staff accounts share operations access. Admin settings remain restricted to
+        Admin accounts.
+      </p>
+    </aside>
+  </div>
+  <section class="account-card accounts-staff-card">
+    <div class="accounts-toolbar">
+      <div>
+        <div class="eyebrow">Team access</div>
+        <h2>
+          Staff accounts
+          <span
+            id="staffAccountCount"
+            class="accounts-count"
+            >0</span
+          >
+        </h2>
+        <p>Create accounts, edit details, reset passwords or deactivate access.</p>
+      </div>
+      <div class="accounts-actions">
+        <button
+          id="refreshStaffAccounts"
+          class="btn light"
+          type="button"
+        >
+          Refresh</button
+        ><button
+          id="createStaffAccount"
+          class="btn dark"
+          type="button"
+        >
+          + Create staff account
+        </button>
+      </div>
+    </div>
+    <div class="accounts-table-wrap">
+      <table class="accounts-table">
+        <caption class="accounts-sr-only">
+          Staff accounts and access status
+        </caption>
+        <thead>
+          <tr>
+            <th>Staff member</th>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="staffAccountRows">
+          <tr>
+            <td colspan="4">Open Accounts to load your staff list.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog
+    id="staffAccountDialog"
+    class="accounts-dialog"
+    aria-labelledby="staffAccountTitle"
+  >
+    <form
+      id="staffAccountForm"
+      class="account-form"
+    >
+      <div>
+        <div class="eyebrow">Team access</div>
+        <h2 id="staffAccountTitle">Create staff account</h2>
+      </div>
+      <input
+        id="staffAccountId"
+        type="hidden"
+      />
+      <label
+        >Full name<input
+          id="staffAccountName"
+          required
+          maxlength="100"
+          autocomplete="off"
+      /></label>
+      <label
+        >Username<input
+          id="staffAccountUsername"
+          required
+          minlength="3"
+          maxlength="50"
+          pattern="[A-Za-z0-9_.\-]+"
+          autocomplete="off"
+      /></label>
+
+      <p id="staffPasswordHelp">Set a password with at least 12 characters.</p>
+      <div class="accounts-form-row">
+        <label
+          >Password<input
+            id="staffAccountPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="12"
+            maxlength="72" /></label
+        ><label
+          >Confirm password<input
+            id="staffAccountPasswordConfirm"
+            type="password"
+            autocomplete="new-password"
+            maxlength="72"
+        /></label>
+      </div>
+      <div
+        class="admin-error hidden"
+        id="staffAccountError"
+        role="alert"
+      ></div>
+      <div class="accounts-dialog-actions">
+        <button
+          type="button"
+          class="btn light"
+          id="cancelStaffAccount"
+        >
+          Cancel</button
+        ><button
+          type="submit"
+          class="btn dark"
+        >
+          Review changes
+        </button>
+      </div>
+    </form>
+  </dialog>
+  <dialog
+    id="accountConfirmDialog"
+    class="accounts-dialog accounts-confirm"
+    aria-labelledby="accountConfirmTitle"
+  >
+    <div class="eyebrow">Confirm changes</div>
+    <h2 id="accountConfirmTitle">Save these changes?</h2>
+    <p id="accountConfirmText"></p>
+    <div class="accounts-dialog-actions">
+      <button
+        type="button"
+        class="btn light"
+        id="accountConfirmCancel"
+      >
+        Go back</button
+      ><button
+        type="button"
+        class="btn dark"
+        id="accountConfirmSave"
+      >
+        Confirm
+      </button>
+    </div>
+  </dialog>
+</section>

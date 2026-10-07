@@ -1,0 +1,134 @@
+<section
+  class="screen"
+  id="menu"
+>
+  <div class="pos-layout">
+    <section class="pos-menu-area">
+      <div class="menu-toolbar">
+        <div class="search-box">
+          <i data-lucide="search"></i>
+          <input
+            id="menuSearch"
+            placeholder="Search items..."
+            type="search"
+          />
+        </div>
+        <div class="filters">
+          <button
+            class="filter active"
+            data-filter="all"
+          >
+            All
+          </button>
+          <button
+            class="filter"
+            data-filter="coffee"
+          >
+            Coffee
+          </button>
+          <button
+            class="filter"
+            data-filter="non-coffee"
+          >
+            Non-coffee
+          </button>
+          <button
+            class="filter"
+            data-filter="food"
+          >
+            Food
+          </button>
+          <button
+            class="filter"
+            data-filter="pastry"
+          >
+            Pastry
+          </button>
+        </div>
+        <button
+          class="locked-action"
+          id="customizeMenuBtn"
+        >
+          <i data-lucide="lock"></i>
+          Customize menu
+        </button>
+      </div>
+      <div class="menu-note">
+        POS mode for manual counter orders. Tap an available item to customize and add it
+        to the order.
+      </div>
+      <div
+        class="menu-grid"
+        id="menuGrid"
+      ></div>
+    </section>
+    <aside class="pos-cart">
+      <div class="cart-head">
+        <div>
+          <div class="eyebrow">Manual order</div>
+          <h2>Counter POS</h2>
+        </div>
+        <button
+          class="clear-cart"
+          id="clearCartBtn"
+        >
+          Clear
+        </button>
+      </div>
+      <div class="cart-customer">
+        <label>Customer name</label>
+        <input
+          id="counterCustomerName"
+          placeholder="Walk-in customer"
+          type="text"
+        />
+      </div>
+      <div
+        class="cart-items"
+        id="cartItems"
+      ></div>
+      <div
+        class="cart-empty"
+        id="cartEmpty"
+      >
+        <i data-lucide="shopping-bag"></i>
+        <p>No items added yet.</p>
+      </div>
+      <div class="cart-total">
+        <span>Total</span>
+        <b id="cartTotal">₱0</b>
+      </div>
+      <button
+        class="proceed-btn disabled"
+        disabled=""
+        id="proceedOrderBtn"
+      >
+        Proceed to order
+      </button>
+      <div
+        class="paid-state hidden"
+        id="paidState"
+      >
+        <i data-lucide="check-circle-2"></i>
+        <span>Paid manual order sent to preparation</span>
+      </div>
+      <div
+        class="receipt-actions hidden"
+        id="posReceiptActions"
+      >
+        <button
+          class="btn light"
+          id="goToOrdersBtn"
+        >
+          View in orders
+        </button>
+        <button
+          class="btn dark"
+          id="newPosOrderBtn"
+        >
+          New order
+        </button>
+      </div>
+    </aside>
+  </div>
+</section>

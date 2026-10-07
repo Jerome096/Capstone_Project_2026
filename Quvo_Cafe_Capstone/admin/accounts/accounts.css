@@ -1,0 +1,167 @@
+/* Scoped account management layout; uses the existing Quvo palette. */
+#accounts .account-layout {
+  align-items: start;
+}
+#accounts .account-form {
+  gap: 14px;
+}
+#accounts .account-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+#accounts .account-form input,
+#accounts .account-form select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #e5d6c4;
+  border-radius: 10px;
+  background: #fffdfa;
+  color: #28231d;
+  font: inherit;
+}
+#accounts .account-form input:focus,
+#accounts .account-form select:focus {
+  outline: 2px solid #b28a45;
+  outline-offset: 2px;
+}
+#accounts .account-form small,
+#accounts .accounts-help {
+  color: #756b61;
+  font-size: 12px;
+  line-height: 1.6;
+}
+#accounts .accounts-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+#accounts .accounts-staff-card {
+  margin-top: 20px;
+}
+#accounts .accounts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+#accounts .accounts-actions,
+#accounts .accounts-dialog-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#accounts .accounts-dialog-actions {
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+#accounts .accounts-count {
+  font-size: 12px;
+  border-radius: 20px;
+  background: #eee5d7;
+  padding: 3px 9px;
+  vertical-align: middle;
+}
+#accounts .accounts-table-wrap {
+  overflow-x: auto;
+}
+#accounts .accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+#accounts .accounts-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #83725d;
+  background: #f8f4ed;
+}
+#accounts .accounts-table th,
+#accounts .accounts-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #eee5da;
+}
+#accounts .accounts-table td:first-child {
+  font-weight: 600;
+}
+#accounts .accounts-status {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 5px 9px;
+  font-size: 11px;
+  background: #e7efe7;
+  color: #35583e;
+}
+#accounts .accounts-status.inactive {
+  background: #eee8e2;
+  color: #74665b;
+}
+#accounts .accounts-notice {
+  padding: 13px 16px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: #e7efe7;
+  color: #35583e;
+}
+#accounts .accounts-notice.is-error {
+  background: #fff0ec;
+  color: #9b3628;
+}
+#accounts .accounts-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 26px;
+  border: 1px solid #deceba;
+  border-radius: 18px;
+  background: #fffdfa;
+  color: #28231d;
+  box-shadow: 0 24px 70px #0003;
+  margin: auto;
+}
+#accounts .accounts-dialog::backdrop {
+  background: #19161180;
+}
+#accounts .accounts-confirm {
+  max-width: 460px;
+}
+#accounts .accounts-confirm p {
+  white-space: pre-line;
+  line-height: 1.7;
+  margin-top: 14px;
+}
+#accounts button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+#accounts .accounts-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (max-width: 800px) {
+  #accounts .account-layout {
+    grid-template-columns: 1fr;
+  }
+  #accounts .accounts-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 520px) {
+  #accounts .accounts-form-row {
+    grid-template-columns: 1fr;
+  }
+  #accounts .accounts-dialog {
+    padding: 18px;
+  }
+}

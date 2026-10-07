@@ -1,0 +1,350 @@
+/* =========================================================
+   QUVO CAFE DESIGN SYSTEM v1
+   Purpose: shared visual tokens and reusable UI primitives
+   Load AFTER the legacy styles.css during the redesign phase.
+   ========================================================= */
+
+:root {
+  /* Quvo Café brand palette derived from the supplied black-and-gold logo */
+  --q-brand-50: #fcf8ec;
+  --q-brand-100: #f6ecd2;
+  --q-brand-200: #ecd9a7;
+  --q-brand-300: #dfc477;
+  --q-brand-400: #d0ab57;
+  --q-brand-500: #c09c50;
+  --q-brand-600: #a77e31;
+  --q-brand-700: #805d22;
+  --q-brand-800: #5b421c;
+  --q-brand-900: #382818;
+
+  /* Neutral / ink */
+  --q-ink-950: #171513;
+  --q-ink-900: #211e1b;
+  --q-ink-700: #4f4842;
+  --q-ink-600: #675f58;
+  --q-ink-500: #81786f;
+  --q-ink-400: #9d938a;
+  --q-ink-300: #bcb4ac;
+  --q-ink-200: #dad4cd;
+  --q-ink-100: #ece8e3;
+  --q-ink-50: #f7f4f0;
+
+  /* Warm café surfaces */
+  --q-canvas: #f6f1e8;
+  --q-surface: #fffdf9;
+  --q-surface-soft: #faf6ef;
+  --q-surface-muted: #f1e9dd;
+  --q-sidebar: #12110f;
+  --q-sidebar-hover: #211d18;
+  --q-sidebar-active: #2d251d;
+
+  /* Semantic status colors stay functional, not brand-colored */
+  --q-success: #427452;
+  --q-success-bg: #e9f3eb;
+  --q-warning: #a76b16;
+  --q-warning-bg: #fff2dd;
+  --q-info: #376d9d;
+  --q-info-bg: #eaf2f9;
+  --q-danger: #b64a3b;
+  --q-danger-bg: #fbecea;
+
+  /* Typography */
+  --q-font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --q-font-brand: Georgia, "Times New Roman", serif;
+  --q-text-xs: 0.75rem;
+  --q-text-sm: 0.875rem;
+  --q-text-md: 0.9375rem;
+  --q-text-lg: 1.0625rem;
+  --q-text-xl: 1.25rem;
+  --q-text-2xl: 1.75rem;
+  --q-text-3xl: 2.125rem;
+  --q-leading-tight: 1.2;
+  --q-leading-normal: 1.5;
+  --q-leading-relaxed: 1.65;
+
+  /* Spacing */
+  --q-space-1: 0.25rem;
+  --q-space-2: 0.5rem;
+  --q-space-3: 0.75rem;
+  --q-space-4: 1rem;
+  --q-space-5: 1.25rem;
+  --q-space-6: 1.5rem;
+  --q-space-8: 2rem;
+  --q-space-10: 2.5rem;
+  --q-space-12: 3rem;
+
+  /* Radius */
+  --q-radius-sm: 0.5rem;
+  --q-radius-md: 0.75rem;
+  --q-radius-lg: 1rem;
+  --q-radius-xl: 1.25rem;
+  --q-radius-pill: 999px;
+
+  /* Borders and elevation */
+  --q-border: #e4d9ca;
+  --q-border-strong: #d3c4b1;
+  --q-shadow-xs: 0 1px 2px rgba(29, 23, 17, 0.04);
+  --q-shadow-sm: 0 7px 20px rgba(29, 23, 17, 0.07);
+  --q-shadow-md: 0 16px 40px rgba(29, 23, 17, 0.11);
+  --q-shadow-lg: 0 28px 76px rgba(15, 13, 11, 0.22);
+
+  /* Motion */
+  --q-ease: 160ms ease;
+
+  /* Shell dimensions */
+  --q-sidebar-width: 248px;
+  --q-page-gutter: 32px;
+  --q-topbar-height: 92px;
+
+  /* Legacy aliases while current prototype CSS is still present */
+  --white: var(--q-surface);
+  --brown: var(--q-brand-500);
+  --brown-dark: var(--q-brand-700);
+  --sidebar: var(--q-sidebar);
+  --sidebar-soft: var(--q-sidebar-hover);
+  --surface: var(--q-surface-soft);
+  --card: var(--q-surface);
+  --border: var(--q-border);
+  --text: var(--q-ink-950);
+  --muted: var(--q-ink-500);
+  --sage: var(--q-success);
+  --green-bg: var(--q-success-bg);
+  --green-soft: var(--q-success-bg);
+  --green-text: #28543a;
+  --amber-bg: var(--q-warning-bg);
+  --amber-soft: var(--q-warning-bg);
+  --amber-text: #70430a;
+  --blue-bg: var(--q-info-bg);
+  --blue-soft: var(--q-info-bg);
+  --blue-text: #235d8a;
+  --coral-bg: var(--q-danger-bg);
+  --coral-text: #7d2e27;
+  --red: var(--q-danger);
+  --neutral-cell: var(--q-surface-muted);
+  --shadow: var(--q-shadow-sm);
+  --shadow-soft: var(--q-shadow-sm);
+}
+
+html {
+  color-scheme: light;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--q-font-sans);
+  font-size: var(--q-text-sm);
+  line-height: var(--q-leading-normal);
+  color: var(--q-ink-950);
+  background: var(--q-canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    border-color var(--q-ease),
+    box-shadow var(--q-ease),
+    background-color var(--q-ease),
+    color var(--q-ease),
+    transform var(--q-ease);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(192, 156, 80, 0.28);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--q-brand-200);
+  color: var(--q-ink-950);
+}
+
+/* Shared typography */
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: var(--q-text-2xl);
+  line-height: var(--q-leading-tight);
+  letter-spacing: -0.03em;
+  font-weight: 750;
+}
+
+h2 {
+  font-size: var(--q-text-lg);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+p {
+  color: var(--q-ink-500);
+  line-height: var(--q-leading-relaxed);
+}
+
+.eyebrow,
+.stat-label,
+.nav-section-label {
+  color: var(--q-brand-600);
+  font-size: var(--q-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Shared card primitive */
+.surface-card,
+.stat-card,
+.list-card,
+.account-card {
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-lg);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+
+/* Buttons */
+.btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--q-radius-md);
+  font-size: var(--q-text-sm);
+  font-weight: 700;
+}
+
+.btn.dark,
+.proceed-btn {
+  background: linear-gradient(180deg, #1d1a17 0%, var(--q-sidebar) 100%);
+  color: #fff;
+}
+
+.btn.dark:hover,
+.proceed-btn:hover:not(.disabled) {
+  background: linear-gradient(180deg, #2b241d 0%, #191511 100%);
+}
+
+.btn.light {
+  background: var(--q-surface-muted);
+  color: var(--q-ink-700);
+  border-color: var(--q-border);
+}
+
+.btn.green {
+  background: var(--q-success);
+}
+
+.btn.red-outline {
+  border-color: #d9a39c;
+  color: var(--q-danger);
+  background: var(--q-surface);
+}
+
+/* Form controls */
+input,
+select,
+textarea {
+  color: var(--q-ink-950);
+}
+
+.login-form input,
+.account-form input,
+.amount-field input,
+.note-input,
+.admin-card input {
+  min-height: 42px;
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-md);
+  background: var(--q-surface);
+  font-size: var(--q-text-sm);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--q-ink-300);
+}
+
+/* Common status badges */
+.status-tag,
+.pill,
+.category-tag,
+.table-chip,
+.sheet-badge {
+  border-radius: var(--q-radius-pill);
+  font-size: var(--q-text-xs);
+  font-weight: 700;
+}
+
+/* Modal shell */
+.modal-backdrop {
+  background: rgba(24, 20, 17, 0.58);
+  backdrop-filter: blur(5px);
+  padding: var(--q-space-4);
+}
+
+.admin-card {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--q-radius-xl);
+  box-shadow: var(--q-shadow-lg);
+}
+
+/* Utility primitives for new screens */
+.page-stack {
+  display: grid;
+  gap: var(--q-space-6);
+}
+
+.page-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+  gap: var(--q-space-5);
+  align-items: start;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--q-space-3);
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--q-space-3);
+  text-align: center;
+  color: var(--q-ink-500);
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --q-page-gutter: 24px;
+  }
+
+  .page-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

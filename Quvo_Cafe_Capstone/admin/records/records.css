@@ -1,0 +1,64 @@
+/* Styles for records; shared controls remain in shared/css. */
+
+.records-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 15px;
+}
+
+.records-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.record-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.record-item {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--white);
+  padding: 12px;
+}
+
+.record-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.record-item b {
+  font-size: 12px;
+}
+
+.record-item p {
+  margin-top: 5px;
+  font-size: 10px;
+}
+
+@media (max-width: 1280px) {
+  .records-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.records-card {
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-lg);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+
+.record-item {
+  border-color: var(--q-border);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+.record-item p {
+  line-height: 1.45;
+}

@@ -1,0 +1,75 @@
+<div
+  class="modal-backdrop hidden"
+  id="orderPaymentModal"
+>
+  <div
+    aria-labelledby="orderPaymentTitle"
+    aria-modal="true"
+    class="checkout-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close payment confirmation modal"
+      class="modal-close"
+      id="orderPaymentClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div class="eyebrow">Payment confirmation</div>
+    <h2 id="orderPaymentTitle">Confirm payment</h2>
+    <div
+      class="checkout-summary"
+      id="orderPaymentSummary"
+    ></div>
+    <div class="payment-method-static">
+      <span>Customer selected payment</span>
+      <b id="orderPaymentMethod">Cash</b>
+    </div>
+    <div
+      class="amount-field"
+      id="orderCashBlock"
+    >
+      <label>Amount received</label>
+      <input
+        id="orderAmountReceived"
+        min="0"
+        placeholder="0"
+        step="1"
+        type="number"
+      />
+    </div>
+    <div
+      class="change-line"
+      id="orderChangeLine"
+    >
+      <span>Change</span>
+      <b id="orderChangeAmount">₱0</b>
+    </div>
+    <div
+      class="amount-field hidden"
+      id="orderGcashBlock"
+    >
+      <label id="orderReferenceLabel">GCash reference no. optional</label>
+      <input
+        id="orderGcashReference"
+        placeholder="Enter reference number if available"
+        type="text"
+      />
+    </div>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="orderPaymentCancel"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark disabled"
+        disabled=""
+        id="orderPaymentConfirm"
+      >
+        Confirm payment
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,157 @@
+<div
+  class="modal-backdrop hidden"
+  id="itemModal"
+>
+  <div
+    aria-labelledby="itemModalTitle"
+    aria-modal="true"
+    class="item-modal-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close item modal"
+      class="modal-close"
+      id="itemModalClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <div class="eyebrow">Add item</div>
+    <h2 id="itemModalTitle">Menu item</h2>
+    <p id="itemModalPrice">₱0</p>
+    <div class="qty-row">
+      <span>Quantity</span>
+      <div class="qty-control">
+        <button id="qtyMinus">−</button>
+        <b id="itemQty">1</b>
+        <button id="qtyPlus">+</button>
+      </div>
+    </div>
+    <div
+      class="drink-options hidden"
+      id="drinkOptions"
+    >
+      <div class="option-row">
+        <label>Size</label>
+        <div
+          class="choice-grid size-grid"
+          id="sizeChoices"
+        >
+          <button
+            class="choice selected"
+            data-group="size"
+            data-value="Regular"
+          >
+            Regular
+          </button>
+          <button
+            class="choice"
+            data-group="size"
+            data-value="Large"
+          >
+            Large
+          </button>
+        </div>
+      </div>
+      <div class="option-row">
+        <label>Sugar level</label>
+        <div
+          class="choice-grid sugar-grid"
+          id="sugarChoices"
+        >
+          <button
+            class="choice"
+            data-group="sugar"
+            data-value="0% sugar"
+          >
+            0%
+          </button>
+          <button
+            class="choice"
+            data-group="sugar"
+            data-value="25% sugar"
+          >
+            25%
+          </button>
+          <button
+            class="choice selected"
+            data-group="sugar"
+            data-value="50% sugar"
+          >
+            50%
+          </button>
+          <button
+            class="choice"
+            data-group="sugar"
+            data-value="75% sugar"
+          >
+            75%
+          </button>
+          <button
+            class="choice"
+            data-group="sugar"
+            data-value="100% sugar"
+          >
+            100%
+          </button>
+        </div>
+      </div>
+      <div class="option-row">
+        <label>Ice level</label>
+        <div
+          class="choice-grid ice-grid"
+          id="iceChoices"
+        >
+          <button
+            class="choice"
+            data-group="ice"
+            data-value="No ice"
+          >
+            No ice
+          </button>
+          <button
+            class="choice"
+            data-group="ice"
+            data-value="Less ice"
+          >
+            Less ice
+          </button>
+          <button
+            class="choice selected"
+            data-group="ice"
+            data-value="Regular ice"
+          >
+            Regular ice
+          </button>
+          <button
+            class="choice"
+            data-group="ice"
+            data-value="Extra ice"
+          >
+            Extra ice
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="custom-box">
+      <label>Customization notes</label>
+      <textarea
+        id="itemNotes"
+        placeholder="Example: no sugar, extra shot, less ice"
+      ></textarea>
+    </div>
+    <div class="modal-actions">
+      <button
+        class="btn light"
+        id="cancelItemBtn"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn dark"
+        id="addItemBtn"
+      >
+        Add item
+      </button>
+    </div>
+  </div>
+</div>

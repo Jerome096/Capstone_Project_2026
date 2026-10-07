@@ -1,0 +1,45 @@
+<div
+  class="modal-backdrop hidden"
+  id="editOrderModal"
+>
+  <div
+    aria-labelledby="editTitle"
+    aria-modal="true"
+    class="edit-card"
+    role="dialog"
+  >
+    <button
+      aria-label="Close edit order modal"
+      class="modal-close"
+      id="editClose"
+    >
+      <i data-lucide="x"></i>
+    </button>
+    <h2 id="editTitle">Edit or void order</h2>
+    <p class="modal-sub">
+      Order changes and voiding require admin or manager authorization.
+    </p>
+    <div
+      class="edit-summary"
+      id="editSummary"
+    ></div>
+    <div
+      class="edit-list"
+      id="editItems"
+    ></div>
+    <div class="modal-actions">
+      <button
+        class="btn red-outline"
+        id="voidOrderBtn"
+      >
+        Void order
+      </button>
+      <button
+        class="btn dark"
+        id="saveOrderBtn"
+      >
+        Save changes
+      </button>
+    </div>
+  </div>
+</div>

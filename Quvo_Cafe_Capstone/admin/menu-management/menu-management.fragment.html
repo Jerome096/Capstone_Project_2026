@@ -1,0 +1,51 @@
+<section
+  class="screen"
+  id="menuAdmin"
+>
+  <div class="admin-page-note">
+    <i data-lucide="lock-keyhole"></i>
+    <span>Menu maintenance is restricted to authorized admin access.</span>
+  </div>
+  <div class="admin-menu-layout">
+    <section class="admin-menu-list-card">
+      <div class="admin-toolbar">
+        <div>
+          <div class="eyebrow">Menu maintenance</div>
+          <h2>Editable menu items</h2>
+        </div>
+        <button
+          class="btn dark"
+          id="addAdminMenuItemBtn"
+        >
+          <i
+            data-lucide="plus"
+            style="width: 13px; height: 13px; vertical-align: -2px"
+          ></i>
+          Add item
+        </button>
+      </div>
+      <div class="admin-menu-table">
+        <div class="admin-menu-row admin-menu-header">
+          <span>Item</span>
+          <span>Category</span>
+          <span>Price</span>
+          <span>Status</span>
+          <span>Action</span>
+        </div>
+        <div id="adminMenuRows"></div>
+      </div>
+    </section>
+    <aside
+      class="admin-edit-panel"
+      id="adminEditPanel"
+    >
+      <div class="receipt-empty-preview compact-empty">
+        <i data-lucide="square-pen"></i>
+        <h2>Select an item</h2>
+        <p>
+          Choose a menu item to edit its details for the cashier POS and customer menu.
+        </p>
+      </div>
+    </aside>
+  </div>
+</section>

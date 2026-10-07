@@ -1,0 +1,43 @@
+Quvo_Cafe_Frontend_Clean/
+├── index.html                       # Root router
+├── login/
+│   ├── login.html                   # Complete standalone login page
+│   ├── login.fragment.html          # Login markup source
+│   ├── login.css
+│   ├── login.js                     # Shared app/session helpers
+│   └── login-page.js                # Standalone login behavior
+├── cashier/
+│   ├── index.html                   # Cashier workspace (frontend preview)
+│   ├── dashboard/
+│   │   ├── dashboard.html           # Direct module route
+│   │   ├── dashboard.fragment.html  # Module markup
+│   │   ├── dashboard.css
+│   │   └── dashboard.js
+│   ├── menu/
+│   ├── sessions/
+│   ├── orders/
+│   ├── receipts/
+│   └── alerts/
+├── barista/
+│   ├── index.html                   # Barista workspace (frontend preview)
+│   └── dashboard/
+└── admin/
+    ├── index.html                   # Admin workspace (frontend preview)
+    ├── reports/
+    ├── menu-management/
+    ├── records/
+    ├── sales-history/
+    ├── accounts/
+    └── inventory/
+
+shared/
+├── css/
+│   └── portal.css
+├── images/
+├── components/
+└── js/
+    ├── auth.js                      # Frontend-only auth adapter; backend pending
+    ├── workspace-loader.js          # Loads modular screens/scripts
+    ├── state.js
+    ├── navigation.js
+    └── ...

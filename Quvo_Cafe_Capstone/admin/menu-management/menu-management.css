@@ -1,0 +1,147 @@
+/* Styles for menuAdmin; shared controls remain in shared/css. */
+
+.admin-menu-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.admin-menu-list-card,
+.admin-edit-panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 15px;
+}
+
+.admin-menu-table {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--white);
+}
+
+.admin-menu-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.7fr 0.8fr 0.7fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 12px;
+}
+
+.admin-menu-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-menu-header {
+  min-height: 36px;
+  background: var(--surface);
+  color: #9a918a;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-menu-item-name {
+  font-weight: 800;
+}
+
+.admin-edit-panel {
+  min-height: 420px;
+  background: var(--white);
+}
+
+.admin-edit-form {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-edit-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: #9a918a;
+}
+
+.admin-edit-form input,
+.admin-edit-form select {
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 10px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.availability-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.availability-toggle button {
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: #706c67;
+  font-weight: 800;
+}
+
+.availability-toggle button.active {
+  background: var(--sidebar);
+  color: var(--white);
+  border-color: var(--sidebar);
+}
+
+@media (max-width: 1280px) {
+  .admin-menu-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-menu-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 12px;
+  }
+}
+.admin-menu-list-card,
+.admin-edit-panel {
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-lg);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow-xs);
+}
+
+.admin-edit-form input,
+.admin-edit-form select {
+  min-height: 42px;
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-md);
+  background: var(--q-surface);
+  font-size: var(--q-text-sm);
+}
+.admin-menu-header {
+  color: var(--q-ink-500);
+  background: var(--q-surface-muted);
+  font-size: var(--q-text-xs);
+  letter-spacing: 0.05em;
+}
+
+.admin-menu-row {
+  font-size: var(--q-text-sm);
+}
+.availability-toggle button.active {
+  border-color: #211c17;
+  background: linear-gradient(180deg, #211d19 0%, #12110f 100%);
+  color: #fff7e4;
+}

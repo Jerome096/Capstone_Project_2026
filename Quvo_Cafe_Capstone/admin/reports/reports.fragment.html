@@ -1,0 +1,82 @@
+<section
+  class="screen"
+  id="reports"
+>
+  <div class="admin-page-note">
+    <i data-lucide="lock-keyhole"></i>
+    <span>Management reports are restricted to authorized admin access.</span>
+  </div>
+  <section class="report-table-card report-summary-card">
+    <div class="admin-toolbar">
+      <div>
+        <div class="eyebrow">Daily summary</div>
+        <h2>Numeric report overview</h2>
+      </div>
+      <span class="sheet-badge">Tabular report</span>
+    </div>
+    <div class="report-table-wrap">
+      <table class="report-sheet-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Today</th>
+            <th>Reference note</th>
+          </tr>
+        </thead>
+        <tbody id="reportSummaryRows"></tbody>
+      </table>
+    </div>
+  </section>
+  <div class="report-layout">
+    <section class="report-table-card">
+      <div class="eyebrow">Hourly orders</div>
+      <h2>Orders by hour</h2>
+      <div class="report-table-wrap">
+        <table class="report-sheet-table compact">
+          <thead>
+            <tr>
+              <th>Time block</th>
+              <th>Orders</th>
+              <th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="hourlyOrderRows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="report-table-card">
+      <div class="eyebrow">Item movement</div>
+      <h2>Top ordered items</h2>
+      <div class="report-table-wrap">
+        <table class="report-sheet-table compact">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Item</th>
+              <th>Orders</th>
+            </tr>
+          </thead>
+          <tbody id="topItemRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <section class="report-table-card">
+    <div class="eyebrow">Transaction breakdown</div>
+    <h2>Payment and order status summary</h2>
+    <div class="report-table-wrap">
+      <table class="report-sheet-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Cash</th>
+            <th>GCash</th>
+            <th>PayMaya</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="paymentSummaryRows"></tbody>
+      </table>
+    </div>
+  </section>
+</section>

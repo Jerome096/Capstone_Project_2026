@@ -1,0 +1,60 @@
+/* Styles for sessions; shared controls remain in shared/css. */
+
+.summary-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 19px;
+}
+
+.customer-cell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.customer-name {
+  font-weight: 600;
+}
+
+.time-cell {
+  color: #8c9299;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.time-cell svg {
+  width: 12px;
+  height: 12px;
+}
+.customer-name {
+  line-height: 1.45;
+}
+
+/* These controls keep live sessions and saved history readable on narrow staff screens. */
+.dining-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 16px 0;
+}
+.dining-toolbar select {
+  padding: 9px;
+  border: 1px solid #d9cdbb;
+  border-radius: 8px;
+  background: #fffdf9;
+}
+.dining-scroll {
+  overflow-x: auto;
+}
+#sessions .list-card {
+  min-width: 760px;
+}
+#sessionNotice {
+  color: #8b3c21;
+}
+.dining-empty {
+  padding: 20px;
+}

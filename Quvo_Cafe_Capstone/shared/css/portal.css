@@ -1,0 +1,37 @@
+.portal-link {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.portal-link .portal-arrow {
+  width: 13px;
+  height: 13px;
+  opacity: 0.65;
+}
+
+.portal-badge {
+  min-height: 26px;
+  margin: 0 10px 5px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  font-size: 0.6875rem;
+  color: #b9d7c1;
+  background: rgba(67, 122, 82, 0.16);
+  border: 1px solid rgba(110, 168, 126, 0.22);
+}
+
+.portal-security-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 12px 0;
+  color: #8f8176;
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.portal-security-note svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
