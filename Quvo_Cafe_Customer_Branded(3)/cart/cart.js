@@ -20,10 +20,12 @@ function renderCart() {
   subtotalText.textContent = formatCurrency(subtotal);
   totalText.textContent = formatCurrency(subtotal);
 
-  // Prevent prototype-only submission until dine-in orders have a persistent backend.
-  submitOrderBtn.disabled = cartCount === 0 || state.accessMode === "dineIn";
+  const dineIn = state.accessMode === "dineIn";
+  submitOrderBtn.disabled = (cartCount === 0 && !(dineIn && dineOrders.pending)) ||
+    (dineIn && (!state.sessionApproved || dineOrders.busy));
   submitOrderBtn.textContent =
-    state.accessMode === "dineIn" ? "Ordering not available yet" : "Submit order";
+    dineIn && dineOrders.busy ? "Submitting…" : dineIn && dineOrders.pending ? "Retry order" : "Submit order";
+  document.getElementById("dineRetryNote").hidden = !(dineIn && dineOrders.pending);
   updateFulfillmentDisplay();
 
   if (!state.cart.length) {
@@ -90,13 +92,14 @@ function bindCartButtons() {
 }
 
 function updateCartQuantity(cartId, change) {
+  if (dineCartLocked()) return showToast("Retry the pending order before changing your cart.");
   const item = state.cart.find((cartItem) => cartItem.cartId === cartId);
 
   if (!item) {
     return;
   }
 
-  item.quantity += change;
+  item.quantity = Math.min(999, item.quantity + change);
 
   if (item.quantity <= 0) {
     removeCartItem(cartId);
@@ -107,6 +110,7 @@ function updateCartQuantity(cartId, change) {
 }
 
 function removeCartItem(cartId) {
+  if (dineCartLocked()) return showToast("Retry the pending order before changing your cart.");
   state.cart = state.cart.filter((item) => item.cartId !== cartId);
   renderCart();
   showToast("Item removed from cart.");

@@ -296,12 +296,12 @@ function renderReceipts() {
           (receipt) => `
       <button class="receipt-list-item ${receipt.id === state.selectedReceiptId ? "active" : ""}" onclick="showReceipt('${receipt.id}')">
         <div class="receipt-list-top">
-          <b>${receipt.orderNumber}</b>
+          <b>${escapeHtml(receipt.orderNumber)}</b>
           <span class="receipt-status ${receipt.status}">${receipt.status}</span>
         </div>
         <div class="receipt-list-bottom">
-          <span>${receipt.location}</span>
-          <span>₱${receipt.total.toLocaleString("en-PH")} · ${receipt.paymentMethod}</span>
+          <span>${escapeHtml(receipt.location)}</span>
+          <span>₱${receipt.total.toLocaleString("en-PH")} · ${escapeHtml(receipt.paymentMethod || "No payment")}</span>
         </div>
       </button>
     `,
@@ -334,6 +334,7 @@ function showReceipt(receiptId) {
 }
 
 function buildReceiptPaper(receipt) {
+  if (receipt.persisted) return renderSqlReceipt(receipt);
   const amountReceived = Number(receipt.amountReceived || 0);
   const change = Number(receipt.change || 0);
   const method = receipt.paymentMethod || "Cash";

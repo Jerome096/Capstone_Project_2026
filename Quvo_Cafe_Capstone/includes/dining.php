@@ -64,6 +64,15 @@ function dining_change_session(PDO $db, int $actor, int $id, string $action): vo
         if ($status !== "active") {
             throw new DiningError("Only an active session can be closed.");
         }
+        // Keep the visit open until every order is either paid and served or cancelled.
+        $q = $db->prepare("SELECT COUNT(*) FROM dbo.orders o
+            LEFT JOIN dbo.payments p ON p.order_id=o.order_id
+            WHERE o.session_id=? AND o.order_status<>'cancelled'
+            AND (o.order_status<>'served' OR p.payment_id IS NULL)");
+        $q->execute([$id]);
+        if ((int) $q->fetchColumn() > 0) {
+            throw new DiningError("Settle and serve outstanding orders before closing this session.");
+        }
         $db->prepare(
             "UPDATE dbo.customer_sessions SET status='closed',ended_by_staff_id=?,ended_at=SYSUTCDATETIME() WHERE session_id=?",
         )->execute([$actor, $id]);

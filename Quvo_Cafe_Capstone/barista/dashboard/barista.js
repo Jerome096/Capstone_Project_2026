@@ -34,6 +34,7 @@ function renderBaristaTickets() {
 }
 
 function renderBaristaTicketCard(order) {
+  if (order.persisted) return renderSqlOrderCard(order);
   const beverageItems = getBeverageItems(order);
   const foodItems = getFoodItems(order);
   const status = getBaristaStatus(order);

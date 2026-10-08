@@ -25,6 +25,7 @@ function renderOrders() {
 }
 
 function renderOrderCard(order, stage) {
+  if (order.persisted) return renderSqlOrderCard(order);
   return `
     <article class="order-card">
       <div class="order-top">
@@ -114,6 +115,7 @@ function getMenuItemForOrderItem(orderItem) {
 }
 
 function isBeverageOrderItem(orderItem) {
+  if (orderItem.category) return ["coffee", "non-coffee"].includes(orderItem.category.toLowerCase());
   const menuItem = getMenuItemForOrderItem(orderItem);
   if (menuItem) return isDrinkItem(menuItem);
   return (

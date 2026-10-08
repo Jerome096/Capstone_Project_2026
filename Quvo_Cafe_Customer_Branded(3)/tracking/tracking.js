@@ -11,6 +11,10 @@ const trackingStatus = document.getElementById("trackingStatus");
 const trackingUpdatedAt = document.getElementById("trackingUpdatedAt");
 
 function renderTracking() {
+  if (state.accessMode === "dineIn" && state.order?.persisted) {
+    renderDineTracking();
+    return;
+  }
   if (!state.order) {
     trackingOrderCode.textContent = "No order yet";
     trackingPayment.textContent = "Payment";
@@ -149,6 +153,10 @@ function getStatusDescription(status) {
 
 function startOrderStatusWatch() {
   clearOrderStatusTimers();
+  if (state.accessMode === "dineIn") {
+    refreshDineOrders();
+    return;
+  }
   if (!state.order) return;
 
   const orderCode = state.order.orderCode;

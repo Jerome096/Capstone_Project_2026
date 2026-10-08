@@ -8,6 +8,7 @@
     "shared/navigation.js",
     "cart/cart.js",
     "dine-in/dine-in.js",
+    "orders/dine-in-orders.js",
     "login/login.js",
     "register/register.js",
     "menu/menu.js",

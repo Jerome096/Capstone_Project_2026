@@ -26,6 +26,17 @@ For another database name, change QuvoCafeDB consistently in all three scripts b
 
 The export-manifest.json file records which tables and row counts were exported.
 
-## GitHub
+## Dine-in ordering migration
+
+After the base schema and public data have been imported, run
+`03_dine_in_orders.sql` once to add `orders`, `order_items`, and `payments`.
+It preserves the existing tables and stops if any of these new objects already
+exist. Do not rerun scripts 00-02 against an existing working database.
+
+The PHP order backend and session closure checks require this migration.
+See `../ORDER_BACKEND.md` for the API contract and local rollback checks.
+The export manifest describes the original five-table snapshot, not this migration.
+
+## GitHub hosting
 
 These files let you download and recreate the database. Uploading SQL files does not host or run SQL Server, and this export does not change the application or demo configuration.

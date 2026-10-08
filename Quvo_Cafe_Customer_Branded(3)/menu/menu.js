@@ -15,6 +15,8 @@ const menuContextLabel = document.getElementById("menuContextLabel");
 const staffBtnHeader = document.getElementById("staffBtnHeader");
 
 function configureMenuHeader() {
+  document.getElementById("customerPaymentOptions").hidden = state.accessMode === "dineIn";
+  document.getElementById("dineCashierNote").hidden = state.accessMode !== "dineIn";
   if (state.accessMode === "online") {
     accessModeLabel.textContent = "Online order";
     menuCustomerName.textContent = state.customerName || "Online customer";
@@ -31,8 +33,7 @@ function configureMenuHeader() {
   menuContextLabel.textContent = CUSTOMER_DATA.tableNumber;
   staffBtnHeader.style.display = "inline-flex";
   paymentNote.textContent =
-    // Sessions are connected now; order submission is a separate database integration.
-    "Order submission is not available yet. Please place your order with staff.";
+    "Pay at the cashier after submitting. Preparation starts after payment is confirmed.";
   fulfillmentCard.classList.add("hidden");
 }
 

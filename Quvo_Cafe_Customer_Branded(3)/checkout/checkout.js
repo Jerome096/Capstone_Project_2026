@@ -25,9 +25,9 @@ function getSelectedFulfillment() {
 }
 
 function submitOrder() {
-  // Dine-in orders must wait for an order API instead of reporting prototype-only success.
+  // Dine-in success is shown only after the SQL-backed endpoint confirms the order.
   if (state.accessMode === "dineIn") {
-    showToast("Order submission is not available yet. Please order with staff.");
+    submitDineOrder();
     return;
   }
   if (!state.cart.length) {
@@ -108,6 +108,7 @@ function prefillDeliveryDetails(force = false) {
 }
 
 function bindCheckoutEvents() {
+  document.getElementById("dineOrderSelect").addEventListener("change", event => selectDineOrder(event.target.value));
   document.querySelectorAll("input[name='fulfillmentOption']").forEach((input) => {
     input.addEventListener("change", updateFulfillmentDisplay);
   });

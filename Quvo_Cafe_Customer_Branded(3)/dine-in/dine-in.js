@@ -79,10 +79,14 @@ async function applyGuestSession(data, generation) {
     }
     state.customerName = data.session.guest_name;
     state.sessionApproved = true;
+    restoreDinePending(String(data.session.session_id));
+    if (dineOrders.pending && !state.cart.length) state.cart = dineOrders.pending.cart || [];
+    renderCart();
     renderCategories();
     renderMenu();
     configureMenuHeader();
     if (!wasApproved) showScreen("screenMenu");
+    await refreshDineOrders();
   } else if (data.table.active && guestSessionStatus === "pending") {
     lockGuestMenu();
     state.customerName = data.session.guest_name;

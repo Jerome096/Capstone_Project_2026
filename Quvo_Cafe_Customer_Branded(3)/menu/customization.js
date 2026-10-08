@@ -21,6 +21,7 @@ const drinkOptions = document.getElementById("drinkOptions");
 const addToCartBtn = document.getElementById("addToCartBtn");
 
 function openItemModal(itemId) {
+  if (dineCartLocked()) return showToast("Retry the pending order before adding more items.");
   const item = CUSTOMER_DATA.menuItems.find((menuItem) => menuItem.id === itemId);
 
   if (!item) {
@@ -38,7 +39,7 @@ function openItemModal(itemId) {
   modalItemName.textContent = item.name;
   modalItemDesc.textContent = item.description;
 
-  const isDrink = item.category === "Coffee" || item.category === "Non-Coffee";
+  const isDrink = ["coffee", "non-coffee"].includes(item.category.toLowerCase());
   drinkOptions.style.display = isDrink ? "grid" : "none";
 
   itemModal.classList.add("open");
@@ -57,7 +58,7 @@ function getCustomizationSummary() {
   const addons = formData.getAll("addons");
   const notes = document.getElementById("itemNotes").value.trim();
   const isDrink =
-    state.selectedItem && ["Coffee", "Non-Coffee"].includes(state.selectedItem.category);
+    state.selectedItem && ["coffee", "non-coffee"].includes(state.selectedItem.category.toLowerCase());
 
   return {
     size,
@@ -87,6 +88,8 @@ function updateModalPrice() {
 
 function handleAddToCart(event) {
   event.preventDefault();
+  if (dineCartLocked()) return showToast("Retry the pending order before changing your cart.");
+  if (state.cart.length >= 50) return showToast("An order can contain up to 50 item lines.");
 
   if (!state.selectedItem) {
     return;
@@ -120,7 +123,7 @@ function bindCustomizationEvents() {
     updateModalPrice();
   });
   increaseQty.addEventListener("click", () => {
-    state.modalQuantity += 1;
+    state.modalQuantity = Math.min(999, state.modalQuantity + 1);
     updateModalPrice();
   });
   customizeForm.addEventListener("change", updateModalPrice);

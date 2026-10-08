@@ -1018,6 +1018,9 @@ p {
   height: 28px;
 }
 
+[hidden] {
+  display: none !important;
+}
 .hidden {
   display: none !important;
 }
