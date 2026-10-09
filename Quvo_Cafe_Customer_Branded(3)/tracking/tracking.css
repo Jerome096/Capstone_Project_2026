@@ -68,3 +68,72 @@
 .ticket-row strong {
   color: var(--coffee-dark);
 }
+.cashier-payment-dialog {
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 26px;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 22px;
+  background: #fffaf4;
+  color: var(--coffee-dark);
+  box-shadow: 0 24px 70px rgba(40, 25, 16, 0.3);
+  text-align: center;
+}
+
+.cashier-payment-dialog::backdrop {
+  background: rgba(30, 22, 17, 0.55);
+}
+
+.cashier-payment-dialog h2 {
+  margin-bottom: 12px;
+}
+
+.cashier-payment-dialog p:not(.eyebrow) {
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.payment-popup-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #e6efdf;
+  color: #406033;
+  font-size: 26px;
+}
+
+.payment-popup-summary {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f2e8dc;
+  text-align: left;
+}
+
+.payment-popup-summary div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.86rem;
+}
+
+.payment-popup-button {
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--coffee-dark);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

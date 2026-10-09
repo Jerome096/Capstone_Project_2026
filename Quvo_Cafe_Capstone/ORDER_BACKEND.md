@@ -1,6 +1,6 @@
 # Dine-in ordering backend
 
-Requires the existing PHP SQL connection and database/03_dine_in_orders.sql.
+Requires the existing PHP SQL connection and migrations 03, 04 and 05 in `database/`.
 Customer dine-in checkout, tracking, cashier orders, payment confirmation and
 receipt records now use these endpoints. Online ordering and manual POS retain
 their existing prototype behavior.
@@ -108,7 +108,13 @@ and editing/deleting submitted items or confirmed payments have no endpoints.
 Order status and payment status are separate. payment_status is derived:
 unpaid (no payment), paid (confirmed payment), or not_due (cancelled unpaid order).
 Submitted item names, prices and customer names are historical snapshots.
-Closing a visit now requires all orders to be paid and served, or cancelled.
+Closing a visit requires paid orders to be served. Any unpaid orders are cancelled
+in the same transaction, preserving history and recording the staff actor and reason.
+The ten-minute inactivity clock runs while orders are unpaid, pauses while any paid
+order remains outstanding, and restarts with ten minutes after the final paid order
+is served. Automatic expiry also cancels unpaid orders, recording `cancellation_source`
+as `session` and leaving the staff actor empty. Cancelling an unpaid order does not
+restart the inactivity clock. Expired orders cannot receive a late payment.
 
 All mutations run in transactions and lock the cafe table before the order, matching
 session closure's locking order. Failed requests roll back. Error responses use

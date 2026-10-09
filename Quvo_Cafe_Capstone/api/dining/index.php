@@ -21,6 +21,7 @@ try {
         quvo_json(["ok" => false, "error" => "Unknown session resource."], 404);
     }
     $db = quvo_db();
+    dining_expire_sessions($db);
     if ($method === "POST") {
         quvo_require_post();
         $input = json_decode(file_get_contents("php://input"), true);

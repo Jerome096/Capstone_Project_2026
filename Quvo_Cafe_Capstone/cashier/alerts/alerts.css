@@ -101,3 +101,17 @@
   background: var(--q-surface);
   box-shadow: var(--q-shadow-xs);
 }
+.alert-concern {
+  margin: 8px 0 0;
+  max-width: 420px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .alert-card { gap: 12px; flex-wrap: wrap; }
+  .alert-left { min-width: 0; align-items: flex-start; }
+  .bell-circle { flex-shrink: 0; }
+  .alert-banner { min-width: 0; width: 100%; }
+}

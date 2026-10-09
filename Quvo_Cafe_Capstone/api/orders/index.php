@@ -17,6 +17,7 @@ try {
         throw new OrderError("Unsupported request.", 405);
     }
     $db = quvo_db();
+    dining_expire_sessions($db);
     if ($method === "GET") {
         if (isset($_GET["id"])) {
             quvo_json(["ok" => true, "order" => orders_get($db, orders_id($_GET["id"]))]);

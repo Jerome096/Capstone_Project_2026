@@ -127,7 +127,6 @@ async function refreshDineCartPrices() {
 async function submitDineOrder() {
   if (dineOrders.busy || !state.sessionApproved) return;
   if (!state.cart.length && !dineOrders.pending) return;
-  if (!dineOrders.pending && !window.confirm("Submit this order for " + formatCurrency(dineMoneyTotal()) + "? Pay the full amount at the cashier.")) return;
   dineOrders.busy = true;
   let accepted = false;
   try {
@@ -146,7 +145,8 @@ async function submitDineOrder() {
     state.cart = [];
     setDineOrder(result.order);
     showScreen("screenTracking");
-    showToast(result.replayed ? "Your saved order has been restored." : "Order submitted. Please pay at the cashier.");
+    if (result.order.payment_status === "unpaid") showCashierPaymentPopup(result.order);
+    else showToast(result.replayed ? "Your saved order has been restored." : "Order submitted.");
   } catch (error) {
     if (["price_changed", "item_unavailable"].includes(error.code) || [400, 413, 422].includes(error.status)) {
       try { saveDinePending(null); } catch { dineOrders.pending = null; }
@@ -163,6 +163,15 @@ async function submitDineOrder() {
     if (accepted) await refreshDineOrders();
   }
 }
+function showCashierPaymentPopup(order) {
+  const dialog = document.getElementById("cashierPaymentDialog");
+  document.getElementById("cashierPaymentOrderNumber").textContent = order.order_number;
+  document.getElementById("cashierPaymentTotal").textContent = formatCurrency(order.total_amount);
+  document.getElementById("cashierPaymentInstruction").textContent =
+    "Please go to the cashier and show your order number to pay. We will start preparing your order once your payment is confirmed.";
+  if (!dialog.open) dialog.showModal();
+}
+
 function renderDineTracking() {
   const order = state.order;
   const labels = { received: "Waiting for payment", preparing: "Preparing", ready: "Ready", served: "Served", cancelled: "Cancelled" };

@@ -103,12 +103,6 @@ try {
         "preserve historical menu name and price");
     check(orders_submit($db, $tableId, $token, $input)["replayed"], "retry survives menu changes");
     rejected(fn() => orders_status($db, (int) $adminId, $id, "ready"), 409, "block preparation progress before payment");
-    try {
-        dining_change_session($db, (int) $adminId, $sessionId, "close");
-        throw new RuntimeException("FAIL: unpaid session closed");
-    } catch (DiningError) {
-        check(true, "block session closure with unpaid orders");
-    }
     rejected(fn() => orders_pay($db, (int) $adminId, $id, ["payment_method" => "Cash", "amount_received" => "30.00"]),
         422, "reject partial cash payments");
     rejected(fn() => orders_pay($db, (int) $adminId, $id, ["payment_method" => "GCash", "amount_received" => "31.00"]),
@@ -117,6 +111,12 @@ try {
     $paid = orders_pay($db, (int) $adminId, $id, $payment);
     check($paid["order"]["change_amount"] === "19.50" && $paid["order"]["order_status"] === "preparing",
         "cash payment saves exact change and starts preparation");
+    try {
+        dining_change_session($db, (int) $adminId, $sessionId, "close");
+        throw new RuntimeException("FAIL: paid unserved session closed");
+    } catch (DiningError) {
+        check(true, "block session closure with paid outstanding orders");
+    }
     $again = orders_pay($db, (int) $adminId, $id, $payment);
     check($again["replayed"] && $again["order"]["payment_id"] === $paid["order"]["payment_id"], "do not charge twice on retry");
     rejected(fn() => orders_pay($db, (int) $adminId, $id, ["payment_method" => "Cash", "amount_received" => "100.00"]),

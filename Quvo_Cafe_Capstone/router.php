@@ -21,7 +21,7 @@ if (str_starts_with($path, "/customer/")) {
         http_response_code(404);
         exit("Not found");
     }
-    if (in_array($relative, ["api/session.php", "api/orders.php"], true)) {
+    if (in_array($relative, ["api/session.php", "api/orders.php", "api/assistance.php"], true)) {
         require $file;
         return true;
     }

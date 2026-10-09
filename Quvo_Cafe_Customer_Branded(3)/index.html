@@ -40,6 +40,32 @@
         <template data-fragment="cart/cart-button.html"></template>
         <template data-fragment="menu/item-modal.html"></template>
         <div class="toast" id="toast"></div>
+        <dialog class="cashier-payment-dialog" id="staffAssistanceDialog" aria-labelledby="staffAssistanceTitle">
+          <p class="eyebrow">Need assistance?</p>
+          <h2 id="staffAssistanceTitle">Call a staff member</h2>
+          <p>Tell us what you need. Your request stays active for one minute.</p>
+          <form id="staffAssistanceForm">
+            <label for="staffConcern">Your concern (optional)</label>
+            <textarea id="staffConcern" maxlength="500" rows="4" placeholder="Example: Could we have extra utensils?"></textarea>
+            <p id="staffAssistanceStatus" role="status"></p>
+            <button class="payment-popup-button" id="sendStaffAssistance" type="submit">Send request</button>
+          </form>
+          <button class="assistance-close-button" id="closeStaffAssistance" type="button">Close</button>
+        </dialog>
+        <dialog class="cashier-payment-dialog" id="cashierPaymentDialog"
+          aria-labelledby="cashierPaymentTitle" aria-describedby="cashierPaymentInstruction">
+          <div class="payment-popup-icon" aria-hidden="true">&#10003;</div>
+          <p class="eyebrow">Order placed</p>
+          <h2 id="cashierPaymentTitle">Pay at the cashier</h2>
+          <p id="cashierPaymentInstruction"></p>
+          <div class="payment-popup-summary">
+            <div><span>Order number</span><strong id="cashierPaymentOrderNumber"></strong></div>
+            <div><span>Total to pay</span><strong id="cashierPaymentTotal"></strong></div>
+          </div>
+          <form method="dialog">
+            <button class="payment-popup-button" type="submit" autofocus>Got it</button>
+          </form>
+        </dialog>
       </section>
     </main>
 

@@ -11,6 +11,68 @@ let guestGeneration = 0;
 let guestActionBusy = false;
 let guestSessionStatus = null;
 let guestActionError = "";
+let guestIdleClock = null;
+let guestActivityTimer = null;
+let guestActivityBusy = false;
+let guestLastActivitySent = -Infinity;
+
+function updateGuestIdleNotice(session) {
+  guestIdleClock = session?.status === "active"
+    ? { paused: Boolean(Number(session.idle_paused)),
+        remaining: Number(session.idle_remaining_seconds), received: Date.now() }
+    : null;
+  renderGuestIdleNotice();
+}
+
+function renderGuestIdleNotice() {
+  const notice = document.getElementById("dineSessionTimeout");
+  if (!notice) return;
+  notice.hidden = state.accessMode !== "dineIn" || !guestIdleClock || !state.sessionApproved;
+  if (notice.hidden) return;
+  if (guestIdleClock.paused) {
+    notice.textContent = "Session timer paused while your paid orders are being prepared or served.";
+    return;
+  }
+  const remaining = Math.max(0, Math.ceil(guestIdleClock.remaining - (Date.now() - guestIdleClock.received) / 1000));
+  notice.textContent = remaining === 0
+    ? "Checking session expiry..."
+    : `Session ends after inactivity: ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}. Using this page resets the timer.`;
+}
+
+async function sendGuestActivity() {
+  guestActivityTimer = null;
+  if (!state.sessionApproved || state.accessMode !== "dineIn") return;
+  if (guestActivityBusy || guestActionBusy) {
+    guestActivityTimer = setTimeout(sendGuestActivity, 500);
+    return;
+  }
+  const generation = guestGeneration;
+  guestActivityBusy = true;
+  guestLastActivitySent = Date.now();
+  try {
+    const data = await guestSessionApi({ action: "activity" });
+    if (generation !== guestGeneration) return;
+    updateGuestIdleNotice(data.session);
+    if (data.session?.status !== "active") await applyGuestSession(data, generation);
+  } catch {
+    // Regular polling verifies failures; a failed activity request never extends the local clock.
+  } finally {
+    guestActivityBusy = false;
+  }
+}
+
+function recordGuestActivity(event) {
+  if (!event.isTrusted || document.visibilityState !== "visible" ||
+      state.accessMode !== "dineIn" || !state.sessionApproved) return;
+  clearTimeout(guestActivityTimer);
+  // Send immediately after a quiet period, otherwise batch typing/scrolling and send the final event.
+  guestActivityTimer = setTimeout(sendGuestActivity, Date.now() - guestLastActivitySent >= 15000 ? 0 : 1000);
+}
+// Wheel/touch input counts as scrolling; programmatic scroll events do not.
+for (const type of ["pointerdown", "keydown", "input", "wheel", "touchmove"]) {
+  document.addEventListener(type, recordGuestActivity, { capture: true, passive: true });
+}
+setInterval(renderGuestIdleNotice, 1000);
 function applyTableContextFromUrl() {
   guestTableCode = new URLSearchParams(location.search).get("table") || "";
   return /^[A-Za-z0-9-]{1,20}$/.test(guestTableCode);
@@ -48,6 +110,9 @@ function clearSessionApprovalTimer() {
   state.sessionApprovalTimer = null;
 }
 function lockGuestMenu() {
+  if (typeof resetGuestAssistance === "function") resetGuestAssistance();
+  const paymentDialog = document.getElementById("cashierPaymentDialog");
+  if (paymentDialog?.open) paymentDialog.close();
   // Closing a session or losing verification clears protected menu and cart state immediately.
   state.sessionApproved = false;
   state.cart = [];
@@ -64,6 +129,7 @@ async function applyGuestSession(data, generation) {
   CUSTOMER_DATA.tableNumber = data.table.name;
   setTableLabels();
   guestSessionStatus = data.session?.status || null;
+  updateGuestIdleNotice(data.session);
   nameForm.querySelector('button[type="submit"]').disabled = !data.table.active;
   if (data.table.active && guestSessionStatus === "active") {
     const wasApproved = state.sessionApproved;
@@ -79,6 +145,7 @@ async function applyGuestSession(data, generation) {
     }
     state.customerName = data.session.guest_name;
     state.sessionApproved = true;
+    renderGuestIdleNotice();
     restoreDinePending(String(data.session.session_id));
     if (dineOrders.pending && !state.cart.length) state.cart = dineOrders.pending.cart || [];
     renderCart();
@@ -87,6 +154,7 @@ async function applyGuestSession(data, generation) {
     configureMenuHeader();
     if (!wasApproved) showScreen("screenMenu");
     await refreshDineOrders();
+    if (typeof refreshGuestAssistance === "function") await refreshGuestAssistance();
   } else if (data.table.active && guestSessionStatus === "pending") {
     lockGuestMenu();
     state.customerName = data.session.guest_name;
@@ -106,6 +174,8 @@ async function applyGuestSession(data, generation) {
         ? "This table is not accepting requests. Please ask staff."
         : guestSessionStatus === "rejected"
           ? "Your request was declined. Please speak to a staff member."
+          : data.session?.idle_expired_at
+            ? "Session expired after 10 minutes of inactivity. Any unpaid orders were cancelled. Please request staff approval again."
           : guestSessionStatus === "closed"
             ? "Your session has ended. A new visit needs a new approval."
             : guestSessionStatus === "cancelled"
@@ -139,6 +209,10 @@ async function refreshGuestSession(generation = guestGeneration) {
   }
 }
 async function startDineInFlow() {
+  clearTimeout(guestActivityTimer);
+  guestActivityTimer = null;
+  guestLastActivitySent = -Infinity;
+  updateGuestIdleNotice(null);
   state.accessMode = "dineIn";
   state.onlineCustomer = null;
   state.order = null;
@@ -191,9 +265,6 @@ async function changeGuestSession(input) {
 function cancelSessionRequest() {
   if (window.confirm("Cancel your pending session request?"))
     changeGuestSession({ action: "cancel" });
-}
-function requestStaffAssistance() {
-  showToast("Please speak to a café staff member for assistance.");
 }
 function bindDineInEvents() {
   nameForm.addEventListener("submit", handleNameSubmit);

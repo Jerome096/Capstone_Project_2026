@@ -100,7 +100,7 @@ async function changeDiningSession(id, action) {
   if (
     !session ||
     !diningConfirm(
-      `${capitalize(action)} the session for ${session.guest_name} at ${session.table_name}?${action === "close" ? " Customer access will end." : ""}`,
+      `${capitalize(action)} the session for ${session.guest_name} at ${session.table_name}?${action === "close" ? " Customer access will end and unpaid orders will be cancelled. Paid orders must be served first." : ""}`,
     )
   )
     return;

@@ -370,7 +370,9 @@ function renderOrderActions(order) {
 
   if (order.stage === "preparing") {
     return `
-      <div class="prep-notice">Waiting for kitchen/barista to mark ready</div>
+      <div class="card-actions">
+        <button class="btn green" onclick="markReady(${order.id})">Mark order ready</button>
+      </div>
     `;
   }
 
@@ -410,6 +412,12 @@ function startPreparing(id) {
 function markReady(id) {
   const order = state.orders.find((entry) => entry.id === id);
   if (!order) return;
+
+  if (order.persisted) {
+    return changeSqlOrderStatus(order.sqlId, "ready");
+  }
+
+  if (order.stage !== "preparing" || !isOrderPaymentConfirmed(order)) return;
 
   order.stage = "ready";
 

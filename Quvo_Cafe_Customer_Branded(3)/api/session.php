@@ -26,6 +26,7 @@ try {
     }
     $id = (int) $table["table_id"];
     $token = $_SESSION["tables"][$id] ?? null;
+    dining_expire_sessions($db, $id);
     if ($method === "POST") {
         if (!hash_equals($csrf, $_SERVER["HTTP_X_CSRF_TOKEN"] ?? "")) {
             quvo_json(["ok" => false, "error" => "Refresh this page and try again."], 403);
@@ -47,6 +48,8 @@ try {
             [$session, $token] = dining_guest_request($db, $id, $name, $token);
         } elseif (($input["action"] ?? "") === "cancel") {
             dining_guest_cancel($db, $id, $token);
+        } elseif (($input["action"] ?? "") === "activity") {
+            dining_guest_activity($db, $id, $token);
         } else {
             throw new DiningError("Unknown session action.");
         }

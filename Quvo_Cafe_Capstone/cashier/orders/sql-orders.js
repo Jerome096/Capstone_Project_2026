@@ -45,6 +45,7 @@ function sqlReceipt(row) {
 }
 function sqlRender() {
   renderOrders(); renderBaristaTickets(); renderReceipts(); renderStats(); lucide.createIcons();
+  if (typeof refreshDashboardCompletion === "function") refreshDashboardCompletion();
 }
 function sqlUpdateReceipts() {
   state.receipts = [

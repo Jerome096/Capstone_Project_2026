@@ -206,6 +206,7 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     $expectedTotal = orders_cents($input["expected_total"] ?? null);
     $hash = hash("sha256", json_encode([$lines, $expectedTotal], JSON_THROW_ON_ERROR));
     $table = dining_table($db, $tableId);
+    dining_expire_table($db, $tableId);
     $session = dining_guest_session($db, $tableId, $token);
     if (!$session) {
         throw new OrderError("Your customer session was not found.", 403);
@@ -282,6 +283,7 @@ function orders_lock(PDO $db, int $id): array
         throw new OrderError("Order not found.", 404);
     }
     dining_table($db, (int) $tableId);
+    dining_expire_table($db, (int) $tableId);
     $query = $db->prepare("SELECT order_id,order_status,total_amount FROM dbo.orders
         WITH (UPDLOCK,HOLDLOCK) WHERE order_id=?");
     $query->execute([$id]);

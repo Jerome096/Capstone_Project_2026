@@ -26,6 +26,7 @@ try {
     }
     $tableId = (int) $tableId;
     $token = $_SESSION["tables"][$tableId] ?? null;
+    dining_expire_sessions($db, $tableId);
     if ($method === "POST") {
         $input = orders_input();
         if (($input["action"] ?? "") !== "submit") {
