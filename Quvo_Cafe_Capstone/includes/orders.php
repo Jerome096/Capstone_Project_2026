@@ -108,11 +108,14 @@ function orders_header_sql(): string
 {
     return "SELECT o.order_id,o.order_number,o.session_id,o.customer_name,o.total_amount,
         o.order_status,o.created_at,o.updated_at,o.cancelled_at,o.cancellation_reason,
-        t.table_name,p.payment_id,p.payment_method,p.amount_applied,p.amount_received,
+        o.order_source,o.customer_account_id,o.preferred_payment_method,
+        COALESCE(t.table_name,CASE WHEN f.fulfillment_type='delivery' THEN 'Online delivery' ELSE 'Online pickup' END) AS table_name,
+        f.fulfillment_type,f.recipient_name,f.contact_snapshot,f.address_snapshot,p.payment_id,p.payment_method,p.amount_applied,p.amount_received,
         p.change_amount,p.payment_reference,p.received_by_staff_id,p.paid_at
         FROM dbo.orders o
-        JOIN dbo.customer_sessions s ON s.session_id=o.session_id
-        JOIN dbo.cafe_tables t ON t.table_id=s.table_id
+        LEFT JOIN dbo.customer_sessions s ON s.session_id=o.session_id
+        LEFT JOIN dbo.cafe_tables t ON t.table_id=s.table_id
+        LEFT JOIN dbo.order_fulfillments f ON f.order_id=o.order_id
         LEFT JOIN dbo.payments p ON p.order_id=o.order_id";
 }
 
@@ -225,6 +228,27 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     if (!(bool) $table["is_active"] || $session["status"] !== "active") {
         throw new OrderError("An active, approved customer session is required.", 403);
     }
+    [$catalog, $total] = orders_catalog($db, $lines, $expectedTotal);
+    $query = $db->prepare("INSERT INTO dbo.orders
+        (session_id,customer_name,submission_key,submission_hash,total_amount)
+        OUTPUT INSERTED.order_id VALUES(?,?,?,CONVERT(binary(32),?,2),?)");
+    $query->execute([$sessionId, $session["guest_name"], $key, $hash, orders_money($total)]);
+    $id = (int) $query->fetchColumn();
+    $query->closeCursor();
+    $itemQuery = $db->prepare("INSERT INTO dbo.order_items
+        (order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes)
+        VALUES(?,?,?,?,?,?,?,?,?)");
+    foreach ($lines as $index => $line) {
+        $menu = $catalog[$line["menu_item_id"]];
+        $itemQuery->execute([$id, $index + 1, $line["menu_item_id"], $menu["item_name"],
+            $menu["category"], $menu["price"], $line["quantity"],
+            json_encode($line["customization"], JSON_THROW_ON_ERROR), $line["notes"]]);
+    }
+    return ["order" => orders_get($db, $id, $sessionId), "replayed" => false];
+}
+
+function orders_catalog(PDO $db, array $lines, int $expectedTotal): array
+{
     // Hold menu read locks until commit so all saved names and prices form one transaction.
     $menuQuery = $db->prepare("SELECT menu_item_id,item_name,category,price,is_available
         FROM dbo.menu_items WITH (HOLDLOCK) WHERE menu_item_id=?");
@@ -255,36 +279,23 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     if ($total !== $expectedTotal) {
         throw new OrderError("Menu prices have changed. Refresh the menu and review your total.", 409, "price_changed");
     }
-    $query = $db->prepare("INSERT INTO dbo.orders
-        (session_id,customer_name,submission_key,submission_hash,total_amount)
-        OUTPUT INSERTED.order_id VALUES(?,?,?,CONVERT(binary(32),?,2),?)");
-    $query->execute([$sessionId, $session["guest_name"], $key, $hash, orders_money($total)]);
-    $id = (int) $query->fetchColumn();
-    $query->closeCursor();
-    $itemQuery = $db->prepare("INSERT INTO dbo.order_items
-        (order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes)
-        VALUES(?,?,?,?,?,?,?,?,?)");
-    foreach ($lines as $index => $line) {
-        $menu = $catalog[$line["menu_item_id"]];
-        $itemQuery->execute([$id, $index + 1, $line["menu_item_id"], $menu["item_name"],
-            $menu["category"], $menu["price"], $line["quantity"],
-            json_encode($line["customization"], JSON_THROW_ON_ERROR), $line["notes"]]);
-    }
-    return ["order" => orders_get($db, $id, $sessionId), "replayed" => false];
+    return [$catalog, $total];
 }
 
 function orders_lock(PDO $db, int $id): array
 {
     $query = $db->prepare("SELECT s.table_id FROM dbo.orders o
-        JOIN dbo.customer_sessions s ON s.session_id=o.session_id WHERE o.order_id=?");
+        LEFT JOIN dbo.customer_sessions s ON s.session_id=o.session_id WHERE o.order_id=?");
     $query->execute([$id]);
     $tableId = $query->fetchColumn();
     if ($tableId === false) {
         throw new OrderError("Order not found.", 404);
     }
-    dining_table($db, (int) $tableId);
-    dining_expire_table($db, (int) $tableId);
-    $query = $db->prepare("SELECT order_id,order_status,total_amount FROM dbo.orders
+    if ($tableId !== null) {
+        dining_table($db, (int) $tableId);
+        dining_expire_table($db, (int) $tableId);
+    }
+    $query = $db->prepare("SELECT order_id,order_status,total_amount,order_source FROM dbo.orders
         WITH (UPDLOCK,HOLDLOCK) WHERE order_id=?");
     $query->execute([$id]);
     return $query->fetch() ?: throw new OrderError("Order not found.", 404);
@@ -325,6 +336,7 @@ function orders_pay(PDO $db, int $actorId, int $id, array $input): array
         orders_money($received - $total), $reference === "" ? null : $reference, $actorId]);
     $db->prepare("UPDATE dbo.orders SET order_status='preparing',updated_at=SYSUTCDATETIME(),
         updated_by_staff_id=? WHERE order_id=?")->execute([$actorId, $id]);
+    orders_online_history($db, $id, 'received', 'preparing', $actorId);
     return ["order" => orders_get($db, $id), "replayed" => false];
 }
 
@@ -346,14 +358,16 @@ function orders_status(PDO $db, int $actorId, int $id, mixed $next): array
         }
         $db->prepare("UPDATE dbo.orders SET order_status=?,updated_at=SYSUTCDATETIME(),
             updated_by_staff_id=? WHERE order_id=?")->execute([$next, $actorId, $id]);
+        orders_online_history($db, $id, $expected, $next, $actorId);
+        if ($next === 'served') $db->prepare("UPDATE dbo.order_fulfillments SET completed_at=SYSUTCDATETIME(),fulfilled_by_staff_id=? WHERE order_id=? AND completed_at IS NULL")->execute([$actorId,$id]);
     }
     return orders_get($db, $id);
 }
 
 function orders_cancel(PDO $db, array $actor, int $id, mixed $reason): array
 {
-    if ($actor["role"] !== "admin") {
-        throw new OrderError("Only an Admin can cancel an unpaid order.", 403);
+    if (!in_array($actor["role"], ["admin", "staff"], true)) {
+        throw new OrderError("Only an Admin or cashier can cancel an unpaid order.", 403);
     }
     $reason = orders_text($reason, 500, true);
     $order = orders_lock($db, $id);
@@ -371,7 +385,15 @@ function orders_cancel(PDO $db, array $actor, int $id, mixed $reason): array
     $db->prepare("UPDATE dbo.orders SET order_status='cancelled',cancelled_at=SYSUTCDATETIME(),
         cancelled_by_staff_id=?,cancellation_reason=?,updated_at=SYSUTCDATETIME(),
         updated_by_staff_id=? WHERE order_id=?")->execute([$actor["staff_id"], $reason, $actor["staff_id"], $id]);
+    orders_online_history($db, $id, 'received', 'cancelled', $actor['staff_id'], $reason);
     return orders_get($db, $id);
+}
+
+function orders_online_history(PDO $db, int $id, ?string $from, string $to, int $actor, ?string $reason=null): void
+{
+    $db->prepare("INSERT dbo.order_status_history(order_id,from_status,to_status,changed_by_staff_id,reason)
+        SELECT order_id,?,?,?,? FROM dbo.orders WHERE order_id=? AND order_source='online'")
+        ->execute([$from,$to,$actor,$reason,$id]);
 }
 
 function orders_error(?PDO $db, Throwable $error): never

@@ -122,6 +122,8 @@ try {
     rejected(fn() => orders_pay($db, (int) $adminId, $id, ["payment_method" => "Cash", "amount_received" => "100.00"]),
         409, "reject replacing confirmed payment");
     rejected(fn() => orders_cancel($db, $admin, $id, "Cannot refund"), 409, "block cancelling a paid order");
+    rejected(fn() => orders_cancel($db, ["staff_id" => (int) $adminId, "role" => "staff"], $id, "Customer request"),
+        409, "cashier cannot cancel a paid order");
     rejected(fn() => orders_status($db, (int) $adminId, $id, "served"), 409, "prevent skipping ready status");
     check(orders_status($db, (int) $adminId, $id, "ready")["order_status"] === "ready", "mark paid order ready");
     check(orders_status($db, (int) $adminId, $id, "served")["order_status"] === "served", "mark ready order served");
@@ -129,10 +131,14 @@ try {
     $input["expected_total"] = "32.00";
     $second = orders_submit($db, $tableId, $token, $input);
     $secondId = (int) $second["order"]["order_id"];
-    rejected(fn() => orders_cancel($db, ["staff_id" => (int) $adminId, "role" => "staff"], $secondId, "Cancelled"),
-        403, "staff cannot use admin cancellation");
+    rejected(fn() => orders_cancel($db, ["staff_id" => (int) $adminId, "role" => "barista"], $secondId, "Cancelled"),
+        403, "other roles cannot cancel orders");
+    rejected(fn() => orders_cancel($db, ["staff_id" => (int) $adminId, "role" => "staff"], $secondId, ""),
+        422, "cashier cancellation requires a reason");
+    check(orders_cancel($db, ["staff_id" => (int) $adminId, "role" => "staff"], $secondId, "Customer changed their mind")["order_status"] === "cancelled",
+        "cashier can cancel and retain unpaid orders");
     check(orders_cancel($db, $admin, $secondId, "Customer changed their mind")["order_status"] === "cancelled",
-        "retain cancelled unpaid orders");
+        "admin cancellation retry remains supported");
     rejected(fn() => orders_pay($db, (int) $adminId, $secondId, ["payment_method" => "Cash", "amount_received" => "32.00"]),
         409, "block payment on cancelled order");
     $input["submission_key"] = "33333333-3333-4333-8333-333333333333";

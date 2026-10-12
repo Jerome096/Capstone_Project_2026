@@ -15,26 +15,12 @@ const menuContextLabel = document.getElementById("menuContextLabel");
 const staffBtnHeader = document.getElementById("staffBtnHeader");
 
 function configureMenuHeader() {
-  document.getElementById("customerPaymentOptions").hidden = state.accessMode === "dineIn";
-  document.getElementById("dineCashierNote").hidden = state.accessMode !== "dineIn";
-  if (state.accessMode === "online") {
-    accessModeLabel.textContent = "Online order";
-    menuCustomerName.textContent = state.customerName || "Online customer";
-    menuContextLabel.textContent = "Pickup or delivery request";
-    staffBtnHeader.style.display = "none";
-    paymentNote.textContent =
-      "Your selected payment method will be confirmed by Quvo Café staff before preparation begins.";
-    fulfillmentCard.classList.remove("hidden");
-    return;
-  }
-
   accessModeLabel.textContent = "Dine-in QR";
   menuCustomerName.textContent = state.customerName || "Customer";
   menuContextLabel.textContent = CUSTOMER_DATA.tableNumber;
   staffBtnHeader.style.display = "inline-flex";
   paymentNote.textContent =
     "Pay at the cashier after submitting. Preparation starts after payment is confirmed.";
-  fulfillmentCard.classList.add("hidden");
 }
 
 function renderCategories() {

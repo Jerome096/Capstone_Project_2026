@@ -22,7 +22,8 @@ function sqlMapOrder(row) {
   return {
     id: "sql" + row.order_id, sqlId: row.order_id, persisted: true, number: row.order_number,
     table: row.table_name, customerName: row.customer_name, total: Number(row.total_amount),
-    time: sqlDate(row.created_at), stage: row.order_status, source: "qr",
+    time: sqlDate(row.created_at), stage: row.order_status, source: row.order_source === "online" ? "online" : "qr",
+    fulfillment: row.fulfillment_type === "delivery" ? "Delivery request" : "Pickup",
     paid: row.payment_status === "paid", paymentStatus: row.payment_status === "paid" ? "confirmed" : "pending",
     paymentMethod: row.payment_method, amountReceived: Number(row.amount_received || 0),
     change: Number(row.change_amount || 0), gcashReference: row.payment_reference || "",
@@ -38,7 +39,7 @@ function sqlReceipt(row) {
   const order = sqlMapOrder(row);
   return {
     ...order, id: "sqlreceipt" + row.order_id, orderNumber: row.order_number,
-    location: row.table_name, source: "Dine-in QR",
+    location: row.table_name, source: row.order_source === "online" ? "Online order" : "Dine-in QR",
     status: row.order_status === "cancelled" ? "voided" : row.order_status === "served" ? "served" : "paid",
     time: sqlDate(row.paid_at || row.updated_at),
   };
@@ -132,7 +133,7 @@ function renderSqlOrderCard(order) {
   let actions = "";
   if (row.order_status === "received") {
     actions = '<button class="btn dark" onclick="openSqlPayment(\'' + order.id + '\')">Collect payment</button>';
-    if (QUVO_AUTH.getSession()?.role === "admin") {
+    if (row.payment_status === "unpaid" && ["admin", "staff"].includes(QUVO_AUTH.getSession()?.role)) {
       actions += '<button class="btn light" onclick="cancelSqlOrder(\'' + order.sqlId + '\')">Cancel order</button>';
     }
   } else {
@@ -141,7 +142,11 @@ function renderSqlOrderCard(order) {
   }
   return '<article class="order-card"><div class="order-top"><strong>' + e(order.number) +
     '</strong><span class="table-chip">' + e(order.table) + '</span></div><p class="order-context">Customer: ' +
-    e(order.customerName) + '</p><div class="order-total">' + sqlMoney(row.total_amount) +
+    e(order.customerName) + '</p>' + (row.order_source === "online" ?
+      '<p class="order-context">Online · ' + e(order.fulfillment) + '<br>Contact: ' + e(row.contact_snapshot || "") +
+      (row.address_snapshot ? '<br>Address: ' + e(row.address_snapshot) : "") +
+      '<br>Preferred payment: ' + e(row.preferred_payment_method || "Cash") + '</p>' : "") +
+    '<div class="order-total">' + sqlMoney(row.total_amount) +
     '</div><div class="order-payment ' + (order.paid ? "confirmed" : "pending") + '">' +
     (order.paid ? "Paid · " + e(order.paymentMethod) : "Unpaid · Cashier payment required") +
     '</div><div class="item-list">' + order.items.map(item => '<div class="item-row"><span>' +
@@ -157,7 +162,7 @@ function openSqlPayment(id) {
   sqlOrders.paymentAttempt = null;
   document.getElementById("sqlPaymentTitle").textContent = "Collect payment · " + order.number;
   document.getElementById("sqlPaymentTotal").textContent = sqlMoney(order.total);
-  document.getElementById("sqlPaymentMethod").value = "Cash";
+  document.getElementById("sqlPaymentMethod").value = order.raw.preferred_payment_method || "Cash";
   document.getElementById("sqlAmountReceived").value = "";
   document.getElementById("sqlPaymentReference").value = "";
   document.getElementById("sqlPaymentError").textContent = "";
@@ -238,7 +243,7 @@ function renderSqlReceipt(receipt) {
   const raw = receipt.raw, e = escapeHtml;
   const row = (label, value) => '<div class="receipt-line"><span>' + e(label) + "</span><b>" + e(value) + "</b></div>";
   return '<div class="receipt-paper"><h3>Quvo Café</h3><p>Payment record</p>' +
-    row("Order", raw.order_number) + row("Customer", raw.customer_name) + row("Table", raw.table_name) +
+    row("Order", raw.order_number) + row("Customer", raw.customer_name) + row(raw.order_source === "online" ? "Fulfillment" : "Table", raw.table_name) +
     row("Status", raw.order_status) + row("Time", receipt.time) +
     '<div class="receipt-items">' + receipt.items.map(item =>
       row(item.qty + " × " + item.name, sqlMoney(item.qty * item.price)) +

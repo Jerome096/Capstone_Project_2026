@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-// The PHP development router serves both apps on one origin and hides private project files.
+// The PHP development router serves the staff, dine-in, and online apps on one origin and hides private project files.
 $path = rawurldecode(parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH) ?: "/");
 if (
     str_contains($path, "\0") ||
@@ -9,9 +9,10 @@ if (
     http_response_code(404);
     exit("Not found");
 }
-if (str_starts_with($path, "/customer/")) {
-    $root = realpath(__DIR__ . "/../Quvo_Cafe_Customer_Branded(3)");
-    $relative = substr($path, 10) ?: "index.html";
+if (str_starts_with($path, "/customer/") || str_starts_with($path, "/online/")) {
+    $online = str_starts_with($path, "/online/");
+    $root = realpath(__DIR__ . ($online ? "/../Quvo_Cafe_Online_Ordering" : "/../Quvo_Cafe_Customer_Branded(3)"));
+    $relative = substr($path, $online ? 8 : 10) ?: "index.html";
     $file = realpath($root . "/" . $relative);
     if (
         !$file ||
@@ -21,7 +22,8 @@ if (str_starts_with($path, "/customer/")) {
         http_response_code(404);
         exit("Not found");
     }
-    if (in_array($relative, ["api/session.php", "api/orders.php", "api/assistance.php"], true)) {
+    if (($online && $relative === "api/index.php") ||
+        (!$online && in_array($relative, ["api/session.php", "api/orders.php", "api/assistance.php"], true))) {
         require $file;
         return true;
     }
@@ -42,8 +44,8 @@ if (str_starts_with($path, "/customer/")) {
     readfile($file);
     return true;
 }
-if ($path === "/customer") {
-    header("Location: /customer/");
+if ($path === "/customer" || $path === "/online") {
+    header("Location: " . $path . "/");
     return true;
 }
 if (preg_match('~\.(?:sql|md|json|txt|log|bak|zip)$~i', $path)) {

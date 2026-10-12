@@ -1,0 +1,16 @@
+const state = {
+  currentScreen: null,
+  accessMode: "online",
+  authMode: "login",
+  customerName: "",
+  onlineCustomer: null,
+  selectedCategory: "All",
+  searchTerm: "",
+  selectedItem: null,
+  modalQuantity: 1,
+  cart: [],
+  order: null,
+  orderStatusIndex: 0,
+  onlineOrders: [],
+  orderStatusTimers: [],
+};

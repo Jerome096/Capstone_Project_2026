@@ -17,12 +17,12 @@ const row = {
   total_amount:"30.50",order_status:"received",payment_status:"unpaid",created_at:"2026-10-09 12:00:00",updated_at:"2026-10-09 12:00:00",
   items:[{menu_item_id:"1",item_name:"<Coffee>",category:"coffee",unit_price:"15.25",quantity:2,line_total:"30.50",customization:{sugarLevel:"50%",iceLevel:"Less ice"},notes:"<note>"}],
 };
-let current = structuredClone(row), requests = [], fail = false;
+let current = structuredClone(row), requests = [], fail = false, staffRole = "admin";
 const context = vm.createContext({
   console, Intl, Date, Map, Number, String, Array, Boolean, Math, JSON, Error, AbortSignal,
   structuredClone, crypto:require("node:crypto").webcrypto, Uint8Array,
   document:{getElementById:el,querySelectorAll:()=>[]},
-  window:{confirm:()=>true,QUVO_CSRF:"test"},QUVO_AUTH:{getSession:()=>({role:"admin"})},
+  window:{confirm:()=>true,prompt:()=>"Customer requested cancellation",QUVO_CSRF:"test"},QUVO_AUTH:{getSession:()=>({role:staffRole})},
   state:{orders:[],receipts:[],accessMode:"dineIn",sessionApproved:true,cart:[]},
   quvoPath:p=>p, escapeHtml:escape,escapeCustomerHtml:escape,
   renderOrders(){},renderBaristaTickets(){},renderReceipts(){},renderStats(){},renderCart(){},renderTracking(){},showToast(){},showScreen(){},
@@ -35,10 +35,11 @@ const context = vm.createContext({
       if (fail) {fail=false; throw new Error("Lost response");}
       if(body.action==="pay") current={...current,order_status:"preparing",payment_status:"paid",payment_method:body.payment_method,amount_received:body.amount_received,change_amount:"19.50",paid_at:"2026-10-09 12:01:00"};
       if(body.action==="status") current={...current,order_status:body.status};
+      if(body.action==="cancel") current={...current,order_status:"cancelled",payment_status:"not_due",cancellation_reason:body.reason};
       return {ok:true,json:async()=>({ok:true,order:structuredClone(current)})};
     }
     if (url.includes("id=")) return {ok:true,json:async()=>({ok:true,order:structuredClone(current)})};
-    return {ok:true,json:async()=>({ok:true,orders:url.includes("status=open") && current.order_status==="served"?[]:[structuredClone(current)],next_offset:null})};
+    return {ok:true,json:async()=>({ok:true,orders:url.includes("status=open") && ["served","cancelled"].includes(current.order_status)?[]:[structuredClone(current)],next_offset:null})};
   }
 });
 const run = s => vm.runInContext(s,context);
@@ -49,6 +50,11 @@ run(read("Quvo_Cafe_Customer_Branded(3)/orders/dine-in-orders.js"));
   assert.equal(run("state.orders[0].number"),"QVO-12");
   assert.match(run("renderSqlOrderCard(state.orders[0])"), /&lt;Coffee&gt;/);
   assert.match(run("renderSqlOrderCard(state.orders[0])"), /Collect payment/);
+  staffRole="staff";
+  assert.match(run("renderSqlOrderCard(state.orders[0])"), /Cancel order/, "cashier can cancel an unpaid order");
+  staffRole="barista";
+  assert.doesNotMatch(run("renderSqlOrderCard(state.orders[0])"), /Cancel order/, "other roles cannot cancel");
+  staffRole="staff";
   run("openSqlPayment('sql12')");
   el("sqlAmountReceived").value="20";
   await run("confirmSqlPayment({preventDefault(){}})");
@@ -60,12 +66,20 @@ run(read("Quvo_Cafe_Customer_Branded(3)/orders/dine-in-orders.js"));
   await run("confirmSqlPayment({preventDefault(){}})");
   assert.deepEqual(requests[0],requests[1],"lost payment response retries identical payload");
   assert.equal(run("state.orders[0].stage"),"preparing");
+  assert.doesNotMatch(run("renderSqlOrderCard(state.orders[0])"), /Cancel order/, "paid orders have no cancellation action");
   assert.match(run("renderSqlReceipt(state.receipts[0])"),/19.50/);
   await run("changeSqlOrderStatus('12','ready')");
   assert.equal(run("state.orders[0].stage"),"ready");
   await run("changeSqlOrderStatus('12','served')");
   assert.equal(run("state.orders.length"),0);
   assert.equal(run("state.receipts[0].status"),"served");
+  current=structuredClone(row);
+  await run("loadSqlOrders()");
+  await run("cancelSqlOrder('12')");
+  assert.equal(requests.at(-1).action,"cancel");
+  assert.equal(requests.at(-1).reason,"Customer requested cancellation");
+  assert.equal(run("state.orders.length"),0,"cancelled order leaves the active queue");
+  assert.equal(run("sqlOrders.known.get('12').order_status"),"cancelled","cancelled history is retained");
   current=structuredClone(row);
   requests=[];
   run('restoreDinePending("8"); state.cart=[{itemId:"1",name:"Coffee",quantity:2,unitPrice:15.25,customization:{sugarLevel:"50%",iceLevel:"Less ice",notes:""}}]');

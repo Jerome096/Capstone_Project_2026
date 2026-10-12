@@ -312,7 +312,9 @@ function confirmPaidOrder() {
   const total = getCartTotal();
   if (!selectedPaymentMethod || total <= 0) return;
 
-  const nextId = Math.max(...state.orders.map((order) => order.id), 0) + 1;
+  const nextId = state.orders.reduce((highest, order) =>
+    !order.persisted && Number.isSafeInteger(order.id) && order.id > highest
+      ? order.id : highest, 0) + 1;
   const nextNumber = `#${String(nextId).padStart(3, "0")}`;
   const customerName =
     document.getElementById("counterCustomerName").value.trim() || "Walk-in customer";

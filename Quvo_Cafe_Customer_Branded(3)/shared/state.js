@@ -1,7 +1,6 @@
 const state = {
   currentScreen: null,
-  accessMode: null,
-  authMode: "login",
+  accessMode: "dineIn",
   customerName: "",
   onlineCustomer: null,
   selectedCategory: "All",
@@ -11,8 +10,6 @@ const state = {
   cart: [],
   order: null,
   orderStatusIndex: 0,
-  onlineOrders: [],
-  accounts: [],
   sessionRequestCode: "",
   sessionApproved: false,
   sessionApprovalTimer: null,

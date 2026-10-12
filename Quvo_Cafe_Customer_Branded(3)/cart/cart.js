@@ -26,7 +26,6 @@ function renderCart() {
   submitOrderBtn.textContent =
     dineIn && dineOrders.busy ? "Submitting…" : dineIn && dineOrders.pending ? "Retry order" : "Submit order";
   document.getElementById("dineRetryNote").hidden = !(dineIn && dineOrders.pending);
-  updateFulfillmentDisplay();
 
   if (!state.cart.length) {
     cartItems.innerHTML = `
