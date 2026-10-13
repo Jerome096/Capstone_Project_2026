@@ -1,14 +1,16 @@
 <div class="modal-backdrop hidden" id="sqlPaymentModal">
   <section class="checkout-card" role="dialog" aria-modal="true" aria-labelledby="sqlPaymentTitle">
     <button type="button" class="modal-close" id="sqlPaymentClose" aria-label="Close payment">×</button>
-    <p class="eyebrow">Cashier payment</p>
+    <p class="eyebrow" id="sqlPaymentEyebrow">Cashier payment</p>
     <h2 id="sqlPaymentTitle">Collect payment</h2>
-    <div class="checkout-row checkout-total"><span>Total due</span><strong id="sqlPaymentTotal"></strong></div>
+    <div class="checkout-row checkout-total"><span id="sqlPaymentAmountLabel">Total due</span><strong id="sqlPaymentTotal"></strong></div>
     <form id="sqlPaymentForm">
       <div class="amount-field">
         <label for="sqlPaymentMethod">Payment method</label>
         <select id="sqlPaymentMethod"><option>Cash</option><option>GCash</option><option>PayMaya</option></select>
+        <div id="sqlOnlinePaymentMethod" class="sql-selected-payment" hidden></div>
       </div>
+      <p class="helper-text" id="sqlOnlinePaymentHelp" hidden>Review the customer's receipt in View customer details and verify the full payment reached the café's account before approving.</p>
       <div id="sqlCashFields">
         <div class="amount-field">
           <label for="sqlAmountReceived">Amount received</label>

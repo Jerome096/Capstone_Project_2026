@@ -19,7 +19,7 @@ if (empty($_SESSION["admin_confirmed"])) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quvo Café | Admin Workspace</title>
+  <title>Quvo CafÃ© | Admin Workspace</title>
   <link rel="icon" type="image/png" href="../shared/images/quvo-favicon.png" />
   <link rel="stylesheet" href="../shared/css/styles.css" />
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
@@ -28,8 +28,8 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../cashier/dashboard/dashboard.css" />
   <link rel="stylesheet" href="../cashier/menu/menu.css" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css" />
-  <link rel="stylesheet" href="../cashier/orders/orders.css" />
-  <link rel="stylesheet" href="../cashier/receipts/receipts.css" />
+  <link rel="stylesheet" href="../cashier/orders/orders.css?v=food-ready-1" />
+  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
   <link rel="stylesheet" href="../barista/dashboard/barista.css" />
   <link rel="stylesheet" href="../admin/reports/reports.css" />
@@ -61,12 +61,12 @@ if (empty($_SESSION["admin_confirmed"])) {
 <body class="logged-in">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark brand-mark-image"><img alt="Quvo Café logo" class="sidebar-logo-img" src="../shared/images/quvo-logo.jpg" /></div>
-      <div class="brand-name">Quvo Café</div>
+      <div class="brand-mark brand-mark-image"><img alt="Quvo CafÃ© logo" class="sidebar-logo-img" src="../shared/images/quvo-logo.jpg" /></div>
+      <div class="brand-name">Quvo CafÃ©</div>
       <div class="brand-sub">Admin Workspace</div>
     </div>
     <nav class="nav">
-      
+
 <div class="nav-section-label nav-section-label-first">Administration</div>
 <div class="portal-badge"><strong>Staff workspace</strong></div>
 <button class="nav-item active" data-admin-screen="reports"><i data-lucide="bar-chart-3"></i><span>Reports</span></button>
@@ -75,6 +75,7 @@ if (empty($_SESSION["admin_confirmed"])) {
 <button class="nav-item" data-admin-screen="salesHistory"><i data-lucide="calendar-days"></i><span>Sales history</span></button>
 <button class="nav-item" data-admin-screen="accounts"><i data-lucide="user-cog"></i><span>Accounts</span></button>
 <button class="nav-item" data-admin-screen="inventory"><i data-lucide="boxes"></i><span>Inventory</span></button>
+<a class="nav-item portal-link" href="payment-qr.php"><i data-lucide="qr-code"></i><span>Payment QR codes</span></a>
 <div class="nav-divider"></div>
 <div class="nav-section-label">Other workspaces</div>
 <a class="nav-item portal-link" href="../cashier/index.php"><i data-lucide="monitor-dot"></i><span>Cashier</span><i class="portal-arrow" data-lucide="arrow-up-right"></i></a>
@@ -87,11 +88,11 @@ if (empty($_SESSION["admin_confirmed"])) {
       <div class="staff-session-copy"><strong id="staffSessionName">Staff</strong><span id="staffSessionRole">Administrator</span></div>
       <button aria-label="Log out" class="staff-logout-button" id="logoutBtn" type="button"><i data-lucide="log-out"></i></button>
     </div>
-    
+
   </aside>
   <main class="main">
     <header class="topbar">
-      <div><div class="eyebrow" id="screenEyebrow">Workspace</div><h1 id="screenTitle">Loading…</h1><p id="screenSub">Preparing workspace</p></div>
+      <div><div class="eyebrow" id="screenEyebrow">Workspace</div><h1 id="screenTitle">Loadingâ€¦</h1><p id="screenSub">Preparing workspace</p></div>
       <div class="topbar-right">
         <div class="clock"><i data-lucide="clock-3"></i><span id="liveClock">00:00:00</span></div>
         <div class="system-status"><span class="pulse"></span>Staff session active</div>
@@ -102,6 +103,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js"></script>
+  <script src="../shared/js/workspace-loader.js?v=food-ready-1"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-// The PHP development router serves the staff, dine-in, and online apps on one origin and hides private project files.
+// Serve staff, customer and kitchen apps while hiding private project files.
 $path = rawurldecode(parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH) ?: "/");
 if (
     str_contains($path, "\0") ||
@@ -9,10 +9,11 @@ if (
     http_response_code(404);
     exit("Not found");
 }
-if (str_starts_with($path, "/customer/") || str_starts_with($path, "/online/")) {
+if (str_starts_with($path, "/customer/") || str_starts_with($path, "/online/") || str_starts_with($path, "/kitchen/")) {
     $online = str_starts_with($path, "/online/");
-    $root = realpath(__DIR__ . ($online ? "/../Quvo_Cafe_Online_Ordering" : "/../Quvo_Cafe_Customer_Branded(3)"));
-    $relative = substr($path, $online ? 8 : 10) ?: "index.html";
+    $kitchen = str_starts_with($path, "/kitchen/");
+    $root = realpath(__DIR__ . ($kitchen ? "/../kitchen" : ($online ? "/../Quvo_Cafe_Online_Ordering" : "/../Quvo_Cafe_Customer_Branded(3)")));
+    $relative = substr($path, $kitchen ? 9 : ($online ? 8 : 10)) ?: "index.html";
     $file = realpath($root . "/" . $relative);
     if (
         !$file ||
@@ -22,8 +23,8 @@ if (str_starts_with($path, "/customer/") || str_starts_with($path, "/online/")) 
         http_response_code(404);
         exit("Not found");
     }
-    if (($online && $relative === "api/index.php") ||
-        (!$online && in_array($relative, ["api/session.php", "api/orders.php", "api/assistance.php"], true))) {
+    if ((($online || $kitchen) && $relative === "api/index.php") ||
+        (!$online && !$kitchen && in_array($relative, ["api/session.php", "api/orders.php", "api/assistance.php"], true))) {
         require $file;
         return true;
     }
@@ -44,7 +45,7 @@ if (str_starts_with($path, "/customer/") || str_starts_with($path, "/online/")) 
     readfile($file);
     return true;
 }
-if ($path === "/customer" || $path === "/online") {
+if ($path === "/customer" || $path === "/online" || $path === "/kitchen") {
     header("Location: " . $path . "/");
     return true;
 }

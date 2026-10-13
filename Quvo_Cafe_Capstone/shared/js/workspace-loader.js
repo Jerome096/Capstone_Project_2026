@@ -21,6 +21,8 @@ const QUVO_MODAL_FRAGMENTS = [
   "cashier/menu/checkout-modal.html",
   "cashier/orders/order-payment-modal.html",
   "cashier/orders/sql-payment-modal.html",
+  "cashier/orders/online-order-details-modal.html",
+  "cashier/orders/preparation-tickets.html",
   "barista/dashboard/barista-ticket-modal.html",
   "cashier/receipts/payment-review-modal.html",
   "cashier/receipts/receipt-success-modal.html",
@@ -34,9 +36,12 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "shared/js/navigation.js",
   "cashier/dashboard/dashboard.js",
   "cashier/menu/menu.js",
+  "cashier/menu/pos-sql.js",
   "cashier/sessions/sessions.js",
   "cashier/orders/orders.js",
   "cashier/orders/sql-orders.js",
+  "shared/js/thermal-print.js",
+  "cashier/orders/preparation-tickets.js",
   "barista/dashboard/barista.js",
   "cashier/receipts/receipts.js",
   "cashier/alerts/alerts.js",
@@ -68,7 +73,8 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path);
+    const printModule = ["cashier/orders/sql-orders.js", "shared/js/thermal-print.js", "cashier/orders/preparation-tickets.js", "cashier/receipts/receipts.js"].includes(path);
+    script.src = quvoPath(path) + (printModule ? "?v=food-ready-1" : "");
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

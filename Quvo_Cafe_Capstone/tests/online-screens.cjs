@@ -13,6 +13,7 @@ const ctx=vm.createContext({console,AbortSignal,Error,Number,Math,JSON,Array,Dat
   CUSTOMER_DATA:{},document:{getElementById:el,querySelector(selector){return selector.includes('fulfillmentOption')?fulfillment.find(x=>x.checked):payment.find(x=>x.checked);},querySelectorAll(selector){return selector.includes('fulfillmentOption')?fulfillment:selector.includes('paymentMethod')?payment:[];}},
   sessionStorage:{getItem:key=>store.get(key)||null,setItem:(key,value)=>store.set(key,value),removeItem:key=>store.delete(key)},
   renderCart(){},renderHistory(){},renderTracking(){},showToast(){},showScreen(screen){ctx.state.currentScreen=screen;},
+  getCartSubtotal:()=>ctx.state.cart.reduce((sum,item)=>sum+item.unitPrice*item.quantity,0),
   async fetch(url,options){
     const body=JSON.parse(options.body);requests.push(body);
     if(!saved.has(body.submission_key))saved.set(body.submission_key,{order_id:'40',order_number:'QVO-40',order_status:'received',payment_status:'unpaid',items:[]});
@@ -21,9 +22,13 @@ const ctx=vm.createContext({console,AbortSignal,Error,Number,Math,JSON,Array,Dat
   }
 });
 const run=source=>vm.runInContext(source,ctx);
-for(const file of ['shared/storage.js','checkout/checkout.js'])run(fs.readFileSync(path.join(root,file),'utf8'));
+for(const file of ['shared/storage.js','checkout/checkout.js','checkout/payment.js'])run(fs.readFileSync(path.join(root,file),'utf8'));
 (async()=>{
   el('deliveryAddress').value='Delivery address';el('deliveryContact').value='09123456789';
+  await run('submitOrder()');assert.equal(requests.length,0,'no QR blocks submission');
+  run("checkoutPayment.methods={GCash:{available:true,version:'11111111-1111-4111-8111-111111111111'}};checkoutPayment.qrLoaded=true");
+  await run('submitOrder()');assert.equal(requests.length,0,'no receipt blocks submission');
+  run("checkoutPayment.receipt='data:image/png;base64,test-image';checkoutPayment.receiptCents=15000");
   await run('submitOrder()');
   assert.equal(saved.size,1);assert.equal(run('state.cart.length'),1);assert.equal(run('onlineCartLocked()'),true);
   assert.equal(run('online.pending.payload.fulfillment'),'delivery');

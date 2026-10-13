@@ -79,8 +79,8 @@ belong to only one closure. The counter stays reset through refreshes, receipt
 pagination and staff logins; newly served orders start counting again.
 
 This stores the dashboard completion boundary. Other report totals still use the
-existing frontend EOD summary. Counter/manual POS receipts remain prototype data;
-completed manual receipts are marked closed in memory when EOD succeeds.
+existing frontend EOD summary. Walk-in POS receipts are stored in SQL after migration 12;
+Only legacy browser receipts use the old in-memory closure behavior.
 
 Verify with `C:\php85\php.exe tests/dashboard-eod.php` (all test changes roll back)
 and `node tests/dashboard-eod.cjs`.
@@ -95,3 +95,81 @@ active for 60 seconds; resolving early does not shorten the customer cooldown.
 Requests and expiry are enforced through SQL/PHP. See `../ASSISTANCE_BACKEND.md`.
 
 These files let you download and recreate the database. Uploading SQL files does not host or run SQL Server, and this export does not change the application or demo configuration.
+
+## Online payments and images
+
+Apply `09_online_ordering.sql`, then `10_online_payment_images.sql`. Migration 10 adds
+`payment_qr_codes` (one administrator-configured image per supported method) and
+`online_payment_receipts` (one immutable payment proof per submitted order). It seeds
+no QR images or receipts. The local database receives these tables without deleting
+existing orders. The admin QR page requires confirmed admin access and CSRF protection.
+
+PNG/JPG images up to 2 MB are stored in SQL rather than executable upload folders.
+Receipt endpoints require the owning customer or authorized cashier/admin staff.
+New online orders require a configured method, the current QR version, and a receipt;
+the receipt never marks an order paid automatically. Identical accepted submissions
+can still be recovered after a QR is replaced. The admin receipt gallery is deferred.
+
+Run `C:\php85\php.exe tests/online-ordering.php` and `node tests/online-screens.cjs`.
+SQL tests roll back all fixtures, including temporary QR images and receipts.
+
+## Administrator-managed payment methods
+
+Apply `11_manage_online_payment_methods.sql` after migration 10. It registers the
+existing GCash/PayMaya methods and preserves their QR images. Additional methods use
+stable internal codes and human-readable names. Removing a QR disables that method;
+removing a method deactivates it and removes its QR from new checkouts without
+deleting orders, payments, or customer receipt images. Re-adding a removed name
+restores the same identity. New online submissions require an active method and QR;
+accepted retries and cashier settlement of historical orders remain supported.
+
+The admin controls require confirmed admin access and CSRF. Checkout lists are
+loaded from SQL; the cashier sees each order's selected method, including removed
+methods needed for settling existing orders. Cash and dine-in/POS workflows keep
+their existing payment choices. `tests/online-ordering.php` covers removal, QR
+replacement, dynamic-method settlement, and preservation of history transactionally.
+
+## Receipt operation dates
+
+The staff Receipts screen defaults to the current Philippine calendar date. Its
+date picker queries paid/served and voided records for that date directly, with
+pagination confined to the chosen day. Paid receipts use the payment date; voided
+receipts use the cancellation date. UTC SQL timestamps are converted to Asia/Manila
+for these day boundaries. Date selection does not delete records or change EOD.
+Tests: `node tests/receipt-dates.cjs` and `C:\php85\php.exe tests/online-ordering.php`.
+
+## Walk-in POS
+
+Apply `12_pos_walkin.sql` once after migration 11. It adds the originating cashier
+to walk-in orders and a unique cashier/submission key without changing existing
+dine-in or online records. No customer account or dining session is required.
+
+`api/pos/index.php` requires a signed-in cashier/admin and CSRF token. SQL validates
+the current catalog price and availability, then saves the order, item snapshots
+and full payment in one transaction. Cash stores received amount and change;
+GCash/PayMaya store the exact total and optional reference. A successful checkout
+enters Preparing, offers the existing food/drink print tickets, and appears in
+SQL order management, dated receipts and completed-order EOD counts.
+
+Interrupted requests retain the same payload and submission key in the cashier's
+tab for safe retry after refresh. Accepted retries never create another payment.
+Previous browser-only POS orders are not imported. Inventory remains the existing
+prototype behavior. Kitchen SQL readiness is added by migration 13 below.
+
+Verify with `C:\php85\php.exe tests/pos-sql.php` (all fixture rows roll back) and
+`node tests/pos-orders.cjs`.
+
+## Kitchen food readiness
+
+Apply `13_kitchen_tickets.sql` once. It adds kitchen_ticket_readiness with one
+readiness record per order, linked to the originating staff member. It does not
+replace existing orders, payments or item snapshots. Open `/kitchen/` on the PHP
+server and use an existing Staff/Admin account (Kitchen role also accepted).
+
+Only paid Preparing/Ready food tickets are listed, across all order sources.
+Food-only Ready actions update the existing order to Ready; mixed tickets save
+food readiness separately and leave the full order Preparing for the existing
+cashier/barista workflow. The kitchen cannot collect payments, cancel or serve
+orders. Repeated Ready submissions are idempotent. All API actions require a
+server-checked staff session, and writes require CSRF. Verify with
+`C:\php85\php.exe tests/kitchen.php`; all test fixtures roll back.

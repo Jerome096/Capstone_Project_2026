@@ -27,6 +27,7 @@ function getSelectedFulfillment() {
 async function submitOrder(){
   if(online.busy||!state.onlineCustomer)return;
   if(!state.cart.length&&!online.pending)return showToast("Add an item first.");
+  if(!online.pending&&!onlinePaymentReady())return showToast("Choose an available payment method and upload your payment receipt first.");
   online.busy=true;online.revision++;
   try{
     if(!online.pending){
@@ -39,20 +40,23 @@ async function submitOrder(){
       const key=[hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join("-");
       const cents=state.cart.reduce((sum,item)=>sum+Math.round(item.unitPrice*100)*item.quantity,0);
       const payload={action:"submit",submission_key:key,expected_total:(cents/100).toFixed(2),fulfillment,address,contact,
-        payment_method:document.querySelector('input[name="paymentMethod"]:checked').value,
+        payment_method:selectedOnlinePayment(),payment_qr_version:checkoutPayment.methods[selectedOnlinePayment()].version,
+        receipt_image:checkoutPayment.receipt,
         items:state.cart.map(item=>({itemId:item.itemId,quantity:item.quantity,customization:item.customization}))};
       saveOnlinePending({customerId:state.onlineCustomer.id,payload,cart:structuredClone(state.cart)});
     }
     renderCart();
     const result=await onlineApi(online.pending.payload);
     try{saveOnlinePending(null);}catch{online.pending=null;}
+    clearOnlinePaymentReceipt();
     state.cart=[];online.selectedId=result.order.order_id;state.order=result.order;
     state.onlineOrders=[result.order,...state.onlineOrders.filter(order=>order.order_id!==result.order.order_id)];
     renderHistory();renderTracking();showScreen("screenTracking");showToast("Order received. Payment will be confirmed by the cashier.");
   }catch(error){
-    if([400,413,422].includes(error.status)||["price_changed","item_unavailable"].includes(error.code)){
+    if([400,413,422].includes(error.status)||["price_changed","item_unavailable","payment_qr_changed"].includes(error.code)){
       try{saveOnlinePending(null);}catch{online.pending=null;}
       if(["price_changed","item_unavailable"].includes(error.code))await refreshOnlineMenu(true).catch(()=>{});
+      if(["payment_qr_changed","payment_unavailable"].includes(error.code))await refreshOnlinePayment();
     }
     showToast(error.message);
   }finally{online.busy=false;renderCart();}
@@ -65,6 +69,7 @@ function prefillDeliveryDetails(force=false){
   if(force||!contact.value.trim())contact.value=state.onlineCustomer.contact||"";
 }
 function bindCheckoutEvents(){
+  bindOnlinePayment();
   document.querySelectorAll('input[name="fulfillmentOption"]').forEach(input=>input.addEventListener("change",updateFulfillmentDisplay));
   submitOrderBtn.addEventListener("click",submitOrder);
 }

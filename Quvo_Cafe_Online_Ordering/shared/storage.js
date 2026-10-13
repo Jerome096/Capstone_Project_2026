@@ -37,6 +37,7 @@ function restoreOnlinePending(){
 }
 function onlineCartLocked(){return online.busy||Boolean(online.pending);}
 function resetOnlineView(){
+  checkoutPayment.request++;checkoutPayment.methods={};checkoutPayment.loading=false;checkoutPayment.qrLoaded=false;clearOnlinePaymentReceipt();renderOnlinePaymentOptions();
   online.generation++;clearTimeout(online.poll);online.poll=null;online.pending=null;online.selectedId=null;online.error="";online.nextOffset=null;
   state.onlineCustomer=null;state.customerName="";state.order=null;state.onlineOrders=[];state.cart=[];
   CUSTOMER_DATA.menuItems=[];CUSTOMER_DATA.categories=["All"];state.selectedCategory="All";state.searchTerm="";
@@ -47,7 +48,7 @@ async function enterOnlineAccount(account){
   online.generation++;state.onlineCustomer=account;state.customerName=account.name;
   restoreOnlinePending();configureMenuHeader();renderAccount();prefillDeliveryDetails(true);renderCart();
   showScreen("screenMenu");
-  await Promise.all([refreshOnlineMenu().catch(error=>showToast(error.message)),refreshOnlineOrders()]);
+  await Promise.all([refreshOnlineMenu().catch(error=>showToast(error.message)),refreshOnlineOrders(),refreshOnlinePayment()]);
   startOrderStatusWatch();
 }
 async function refreshOnlineMenu(reviewCart=false){

@@ -1,0 +1,16 @@
+.alert-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.alert-card.urgent {
+  border-color: rgba(155, 63, 51, 0.34);
+  background: #fff6f4;
+}
+
+.alert-card.warning {
+  border-color: rgba(165, 106, 37, 0.34);
+  background: #fff8ee;
+}

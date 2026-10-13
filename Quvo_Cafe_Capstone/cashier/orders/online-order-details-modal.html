@@ -1,0 +1,14 @@
+<dialog class="online-order-details" id="onlineOrderDetailsModal" aria-labelledby="onlineOrderDetailsTitle">
+  <form method="dialog">
+    <button class="modal-close" aria-label="Close customer details" autofocus>&times;</button>
+  </form>
+  <p class="eyebrow">Online order details</p>
+  <h2 id="onlineOrderDetailsTitle"></h2>
+  <dl id="onlineOrderCustomerDetails" class="online-order-customer"></dl>
+  <section class="online-order-proof" aria-labelledby="onlineOrderProofTitle">
+    <h3 id="onlineOrderProofTitle">Payment receipt</h3>
+    <p class="helper-text" id="onlineOrderProofStatus">No receipt image available.</p>
+    <img id="onlineOrderProofImage" alt="Customer payment receipt" hidden />
+  </section>
+  <p class="helper-text">Verify the payment in the receiving account before confirming it.</p>
+</dialog>

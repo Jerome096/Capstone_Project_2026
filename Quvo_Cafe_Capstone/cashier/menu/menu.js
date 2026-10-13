@@ -54,6 +54,7 @@ function renderMenu() {
 }
 
 function openItemModal(itemId) {
+  if(posCartLocked())return showToast('Retry the pending POS order before changing the cart.');
   const item = state.menu.find((entry) => entry.id === itemId);
   if (!item || !item.available) return;
 
@@ -110,6 +111,7 @@ function bindItemModal() {
   });
 
   document.getElementById("addItemBtn").addEventListener("click", () => {
+    if(posCartLocked())return;
     if (!selectedMenuItem) return;
 
     const note = document.getElementById("itemNotes").value.trim();
@@ -127,6 +129,7 @@ function bindItemModal() {
     state.posCart.push({
       cartId: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
       menuId: selectedMenuItem.id,
+      category: selectedMenuItem.category,
       name: selectedMenuItem.name,
       price: selectedMenuItem.price,
       qty: selectedItemQty,
@@ -135,9 +138,10 @@ function bindItemModal() {
       drinkOptions: isDrinkItem(selectedMenuItem) ? { ...selectedDrinkOptions } : null,
     });
 
+    const addedItemName = selectedMenuItem.name;
     closeItemModal();
     renderCart();
-    showToast(`${selectedMenuItem.name} added to manual order.`);
+    showToast(`${addedItemName} added to manual order.`);
   });
 }
 
@@ -153,6 +157,9 @@ function renderCart() {
   const empty = document.getElementById("cartEmpty");
   const total = getCartTotal();
   const proceed = document.getElementById("proceedOrderBtn");
+  if(posCartLocked()){
+    proceed.disabled=true;document.getElementById('clearCartBtn').disabled=true;
+  }
 
   if (state.posCart.length === 0) {
     list.innerHTML = "";
@@ -161,7 +168,7 @@ function renderCart() {
     proceed.classList.add("disabled");
   } else {
     empty.classList.add("hidden");
-    proceed.disabled = false;
+    proceed.disabled = posCartLocked();
     proceed.classList.remove("disabled");
     list.innerHTML = state.posCart
       .map(
@@ -187,11 +194,13 @@ function renderCart() {
 }
 
 function removeCartItem(cartId) {
+  if(posCartLocked())return;
   state.posCart = state.posCart.filter((item) => item.cartId !== cartId);
   renderCart();
 }
 
 function clearCart() {
+  if(posCartLocked())return;
   state.posCart = [];
   document.getElementById("counterCustomerName").value = "";
   document.getElementById("paidState").classList.add("hidden");
@@ -242,6 +251,8 @@ function bindCheckoutModal() {
 }
 
 function openCheckoutModal() {
+  if(posSql.pending)return openPosPendingReview();
+  if(posSql.busy)return;
   if (state.posCart.length === 0) return;
 
   selectedPaymentMethod = null;
@@ -308,51 +319,7 @@ function validateCheckout() {
   }
 }
 
-function confirmPaidOrder() {
-  const total = getCartTotal();
-  if (!selectedPaymentMethod || total <= 0) return;
-
-  const nextId = state.orders.reduce((highest, order) =>
-    !order.persisted && Number.isSafeInteger(order.id) && order.id > highest
-      ? order.id : highest, 0) + 1;
-  const nextNumber = `#${String(nextId).padStart(3, "0")}`;
-  const customerName =
-    document.getElementById("counterCustomerName").value.trim() || "Walk-in customer";
-  const amountReceived =
-    selectedPaymentMethod === "Cash"
-      ? Number(document.getElementById("amountReceived").value)
-      : total;
-  const change =
-    selectedPaymentMethod === "Cash" ? Math.max(0, amountReceived - total) : 0;
-  const paymentReference = isDigitalPayment(selectedPaymentMethod)
-    ? document.getElementById("paymentReference").value.trim()
-    : "";
-  const receiptItems = state.posCart.map((item) => ({
-    name: item.name,
-    qty: item.qty,
-    price: item.price,
-    customizations: item.customizations,
-    note: item.note || (item.drinkOptions ? formatDrinkOptions(item.drinkOptions) : ""),
-  }));
-
-  pendingPaymentReview = {
-    type: "manual",
-    nextId,
-    orderNumber: nextNumber,
-    location: "Counter",
-    source: "Manual counter",
-    customerName,
-    paymentMethod: selectedPaymentMethod,
-    total,
-    amountReceived,
-    change,
-    gcashReference: paymentReference,
-    items: receiptItems,
-  };
-
-  closeCheckoutModal();
-  openPaymentReviewModal();
-}
+function confirmPaidOrder() { startSqlPosReview(); }
 
 function closeCheckoutModal() {
   document.getElementById("checkoutModal").classList.add("hidden");

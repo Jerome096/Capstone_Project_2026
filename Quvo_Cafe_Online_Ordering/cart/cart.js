@@ -20,7 +20,8 @@ function renderCart() {
   subtotalText.textContent = formatCurrency(subtotal);
   totalText.textContent = formatCurrency(subtotal);
 
-  submitOrderBtn.disabled = online.busy || (cartCount === 0 && !online.pending);
+  renderOnlinePayment();
+  submitOrderBtn.disabled = online.busy || (!online.pending && (cartCount === 0 || !onlinePaymentReady()));
   document.getElementById("onlineRetryNote").hidden = !online.pending;
   document.querySelectorAll('input[name="fulfillmentOption"],input[name="paymentMethod"],#deliveryAddress,#deliveryContact').forEach(input=>input.disabled=onlineCartLocked());
   submitOrderBtn.textContent = online.busy ? "Submitting…" : online.pending ? "Retry order" : "Submit order";

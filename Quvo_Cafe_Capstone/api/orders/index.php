@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . "/../../includes/auth.php";
 require_once __DIR__ . "/../../includes/orders.php";
+require_once __DIR__ . "/../../includes/payment-images.php";
 $db = null;
 try {
     $actor = quvo_current_user();
@@ -19,10 +20,11 @@ try {
     $db = quvo_db();
     dining_expire_sessions($db);
     if ($method === "GET") {
+        if (isset($_GET['receipt'])) payment_send_image(payment_receipt_image($db,orders_id($_GET['receipt'])),'payment-receipt');
         if (isset($_GET["id"])) {
             quvo_json(["ok" => true, "order" => orders_get($db, orders_id($_GET["id"]))]);
         }
-        quvo_json(["ok" => true] + orders_list($db, null, $_GET["status"] ?? "open", $_GET["offset"] ?? "0"));
+        quvo_json(["ok" => true] + orders_list($db, null, $_GET["status"] ?? "open", $_GET["offset"] ?? "0", $_GET['receipt_date'] ?? null));
     }
     quvo_require_post();
     $input = orders_input();

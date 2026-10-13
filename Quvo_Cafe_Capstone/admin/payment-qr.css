@@ -1,0 +1,59 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #f6f1e8; color: #191714; font: 14px/1.6 Arial, sans-serif; }
+.payment-qr-admin { max-width: 1000px; margin: 30px auto 48px; padding: 0 24px; }
+.qr-back-link { color: #856221; text-decoration: none; font-size: 13px; display: inline-block; padding: 6px 0; }
+.qr-back-link:hover { text-decoration: underline; }
+.qr-page-heading { margin: 20px 0; }
+.eyebrow { color: #a67a2d; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; font-size: 11px; margin: 0 0 8px; }
+.qr-page-heading h1 { margin: 0; font-size: 30px; letter-spacing: -.03em; line-height: 1.3; }
+.qr-page-heading p:last-child { margin: 8px 0 0; color: #82786d; }
+.qr-admin-help { display: flex; align-items: flex-start; gap: 20px; padding: 14px 18px; border: 1px solid #e6d7bd; background: #f1e8d8; border-radius: 14px; color: #776349; font-size: 13px; }
+.qr-admin-help strong { color: #806020; white-space: nowrap; }
+.payment-qr-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; margin-top: 22px; align-items: stretch; }
+.payment-qr-card { min-width: 0; padding: 22px; border: 1px solid #e7d8c6; border-radius: 20px; background: #fffdf9; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 18px #5b432a05; }
+.qr-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.qr-card-heading h2 { margin: 0; font-size: 18px; }
+.qr-state { padding: 4px 10px; border-radius: 20px; background: #f0ece5; color: #8c8071; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.payment-qr-card[data-available="true"] .qr-state { background: #eaf3e9; color: #4d7651; }
+.qr-image-frame { display: grid; place-items: center; height: 264px; border: 1px dashed #ded1ba; border-radius: 14px; background: #faf7f0; padding: 12px; overflow: hidden; }
+.qr-preview { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; border-radius: 8px; }
+.qr-empty { display: grid; justify-items: center; text-align: center; gap: 8px; color: #ac9c83; }
+.qr-empty strong { color: #82735c; font-size: 14px; margin-top: 6px; }
+.qr-empty span { font-size: 12px; }
+.qr-upload-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qr-upload-heading strong { font-size: 13px; }
+.qr-upload-heading span { font-size: 11px; color: #8c8071; }
+.qr-file-control { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px; border: 1px solid #e4d6c2; border-radius: 12px; cursor: pointer; }
+.qr-file-button { background: #f1e6d0; border-radius: 8px; padding: 8px 12px; color: #806020; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.qr-file-name { color: #8c8071; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qr-file-control input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.qr-file-control:focus-within { outline: 2px solid #b88a37; outline-offset: 3px; }
+.payment-qr-card button { min-height: 46px; padding: 10px 16px; border: 0; border-radius: 12px; background: #191714; color: #fff; font: inherit; font-weight: 700; cursor: pointer; margin-top: auto; }
+.payment-qr-card button:hover { background: #393127; }
+.payment-qr-card button:disabled { opacity: .5; cursor: wait; }
+[hidden] { display: none !important; }
+#paymentQrAdminNotice:empty { display: none; }
+#paymentQrAdminNotice { margin-top: 16px; padding: 12px 16px; border: 1px solid #d3e4d3; background: #edf5eb; color: #456b47; border-radius: 12px; font-size: 13px; }
+#paymentQrAdminNotice[data-state="error"] { border-color: #ecd0c4; background: #fff1ea; color: #a14c36; }
+#paymentQrAdminNotice[data-state="saving"] { border-color: #e6d7bd; background: #f5edde; color: #806020; }
+@media(max-width: 640px) { .payment-qr-admin { margin-top: 18px; padding: 0 16px; } .payment-qr-grid { grid-template-columns: 1fr; gap: 16px; } .qr-page-heading h1 { font-size: 26px; } .qr-admin-help { flex-direction: column; gap: 4px; } .payment-qr-card { padding: 18px; } }
+.qr-method-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 20px; }
+.qr-method-toolbar p { font-size: 12px; color: #82786d; margin: 0; max-width: 530px; }
+.qr-method-toolbar button, .qr-add-modal button[type="submit"] { border: 0; border-radius: 10px; padding: 12px 16px; background: #191714; color: #fff; font: inherit; cursor: pointer; white-space: nowrap; }
+.qr-remove-actions { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #eee4d5; padding-top: 12px; }
+.payment-qr-card .qr-secondary-button, .payment-qr-card .qr-danger-button, .payment-qr-card .qr-clear-file { background: transparent; padding: 4px 0; min-height: 32px; font-size: 12px; font-weight: 400; margin-top: 0; }
+.payment-qr-card .qr-secondary-button, .payment-qr-card .qr-clear-file { color: #856221; }
+.payment-qr-card .qr-danger-button { color: #b2503d; margin-left: auto; }
+.payment-qr-card .qr-clear-file { align-self: flex-start; min-height: 20px; margin-top: -10px; }
+.qr-remove-actions button:hover, .payment-qr-card .qr-clear-file:hover { text-decoration: underline; background: transparent; }
+.qr-add-modal { width: 440px; max-width: calc(100vw - 32px); border: 1px solid #e7d8c6; border-radius: 20px; padding: 28px; background: #fffdf9; color: #191714; }
+.qr-add-modal::backdrop { background: #19171466; }
+.qr-add-modal h2 { margin: 4px 0 12px; }
+.qr-add-modal p { color: #82786d; font-size: 13px; }
+.qr-add-modal label { display: block; font-size: 13px; font-weight: 700; margin: 18px 0 8px; }
+.qr-add-modal input { width: 100%; padding: 12px; border: 1px solid #e7d8c6; border-radius: 10px; font: inherit; }
+.qr-add-modal button[type="submit"] { width: 100%; }
+.qr-add-modal .qr-modal-close { position: absolute; top: 10px; right: 16px; border: 0; background: none; font-size: 24px; cursor: pointer; }
+.qr-add-modal #addPaymentMethodError { color: #b2503d; }
+.qr-method-empty { grid-column: 1 / -1; padding: 36px; text-align: center; color: #82786d; border: 1px dashed #ded1ba; border-radius: 16px; }
+@media(max-width: 640px) { .qr-method-toolbar { align-items: stretch; flex-direction: column; gap: 12px; } }

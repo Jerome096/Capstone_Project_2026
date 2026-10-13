@@ -1,4 +1,10 @@
 function renderOrders() {
+  const badge = document.getElementById("sidebarOrderCount");
+  if (badge) {
+    const pending = state.orders.filter(order => order.stage === "received").length;
+    badge.textContent = pending;
+    badge.setAttribute("aria-label", `${pending} orders awaiting payment collection or approval`);
+  }
   const board = document.getElementById("kanbanBoard");
 
   board.innerHTML = ["received", "preparing", "ready"]
@@ -50,12 +56,14 @@ function renderOrderCard(order, stage) {
       ${renderOrderContext(order)}
 
       ${renderOrderPayment(order)}
+      ${preparationApprovalMarkup(order)}
 
       <div class="item-list">
         ${renderOrderItems(order, stage)}
       </div>
 
       ${renderOrderActions(order)}
+      ${preparationReprintMarkup(order)}
     </article>
   `;
 }
@@ -393,6 +401,7 @@ function startPreparing(id) {
   }
 
   order.stage = "preparing";
+  if (!order.approvedAt) recordPreparationApproval(order);
   order.expanded = false;
   if (getBeverageItems(order).length && !order.baristaStatus) {
     order.baristaStatus = "queued";
@@ -407,6 +416,7 @@ function startPreparing(id) {
   });
 
   renderAll();
+  openPreparationTickets(order);
 }
 
 function markReady(id) {
@@ -444,6 +454,7 @@ function markServed(id) {
     source: getOrderSourceLabel(order.source),
     customerName: order.customerName || "Guest",
     status: "served",
+    date: order.approvedDate || receiptDay(),
     paymentMethod: order.paymentMethod || "Cash",
     total: order.total,
     amountReceived: order.amountReceived || order.total,

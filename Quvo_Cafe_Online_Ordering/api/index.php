@@ -9,8 +9,11 @@ try {
     $db=quvo_db();$account=online_current($db);
     if($method==='GET') {
         $view=$_GET['view']??'session';
+        if ($view==='payment-qr') payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null),'quvo-payment-qr',isset($_GET['download']));
         if($view==='session') quvo_json(['ok'=>true,'csrf'=>$csrf,'account'=>$account?online_public_account($db,$account):null]);
         if(!$account) throw new OrderError('Please sign in first.',401);
+        if ($view==='payments') quvo_json(['ok'=>true,'methods'=>payment_qr_methods($db)]);
+        if ($view==='receipt') payment_send_image(payment_receipt_image($db,orders_id($_GET['id']??null),(int)$account['customer_account_id']),'payment-receipt');
         if($view==='menu') quvo_json(['ok'=>true,'csrf'=>$csrf,'items'=>online_menu($db)]);
         if($view==='orders') {
             $result=isset($_GET['id'])?['order'=>online_order($db,(int)$account['customer_account_id'],orders_id($_GET['id']))]:online_orders($db,(int)$account['customer_account_id'],$_GET['offset']??0);
@@ -18,7 +21,7 @@ try {
         }
         throw new OrderError('Unknown view.',404);
     }
-    $input=orders_input();$action=$input['action']??null;
+    $input=orders_input(3000000);$action=$input['action']??null;
     if($action==='logout') {
         $_SESSION=[];session_regenerate_id(true);$csrf=online_start_session();
         quvo_json(['ok'=>true,'csrf'=>$csrf]);

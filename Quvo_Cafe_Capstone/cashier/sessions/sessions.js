@@ -62,6 +62,11 @@ async function loadSessions() {
 }
 function renderSessions() {
   const counts = diningSessionState.counts;
+  const badge = document.getElementById("sidebarSessionCount");
+  if (badge) {
+    badge.textContent = counts.pending || 0;
+    badge.setAttribute("aria-label", `${counts.pending || 0} sessions awaiting approval`);
+  }
   document.getElementById("pendingCount").textContent = counts.pending || 0;
   document.getElementById("activeCount").textContent = counts.active || 0;
   const total = Object.values(counts).reduce((a, b) => a + b, 0);

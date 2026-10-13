@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/orders.php';
 require_once __DIR__.'/auth.php';
+require_once __DIR__.'/payment-images.php';
 
 function online_start_session(): string
 {
@@ -161,19 +162,29 @@ function online_submit(PDO $db,int $customerId,array $input): array
     $lines=orders_lines($input['items']??null);$expected=orders_cents($input['expected_total']??null);
     $fulfillment=$input['fulfillment']??null;$method=$input['payment_method']??null;
     if(!in_array($fulfillment,['pickup','delivery'],true)) throw new OrderError('Choose pickup or delivery request.');
-    if(!in_array($method,['Cash','GCash','PayMaya'],true)) throw new OrderError('Choose a payment method.');
+    if(!is_string($method)||$method===''||strlen($method)>10) throw new OrderError('Choose a payment method.');
     $address=$fulfillment==='delivery'?orders_text($input['address']??null,500,true):null;
     $contact=$fulfillment==='delivery'?orders_text($input['contact']??null,30,true):$account['contact_number'];
     if(!preg_match('/\A[+0-9() .-]{5,30}\z/',$contact)) throw new OrderError('Enter a valid contact number.');
     // Include only submitted values in the retry hash; profile edits must not create duplicate orders.
-    $hash=hash('sha256',json_encode([$lines,$expected,$fulfillment,$method,$address,$fulfillment==='delivery'?$contact:null],JSON_THROW_ON_ERROR));
+    $receipt = isset($input['receipt_image']) ? payment_receipt_input($input['receipt_image']) : null;
+    $version = $input['payment_qr_version'] ?? null;
+    $hashParts = [$lines,$expected,$fulfillment,$method,$address,$fulfillment==='delivery'?$contact:null];
+    if ($receipt !== null || $version !== null) $hashParts[] = [$version,$receipt['hash'] ?? null];
+    $hash=hash('sha256',json_encode($hashParts,JSON_THROW_ON_ERROR));
     $q=$db->prepare('SELECT order_id,CONVERT(varchar(64),submission_hash,2) request_hash FROM dbo.orders WHERE customer_account_id=? AND submission_key=?');$q->execute([$customerId,$key]);$old=$q->fetch();
     if($old) {
         if(!hash_equals(strtolower($old['request_hash']),$hash)) throw new OrderError('Submission key already used for a different order.',409);
         return ['order'=>online_order($db,$customerId,(int)$old['order_id']),'replayed'=>true];
     }
     // Existing submissions can still be recovered with their original payment choice.
-    if($method==='Cash') throw new OrderError('Choose GCash or PayMaya for online ordering.');
+    if($method==='Cash') throw new OrderError('Choose an available online payment method.');
+    $paymentMethod=payment_active_method($db,$method);
+    $q=$db->prepare('SELECT CONVERT(varchar(36),qr_version) FROM dbo.payment_qr_codes WITH (HOLDLOCK) WHERE payment_method=?');
+    $q->execute([$method]);$currentVersion=$q->fetchColumn();$q->closeCursor();
+    if (!$currentVersion) throw new OrderError($paymentMethod['display_name'].' payment is unavailable. Its QR code has not been configured.',422,'payment_unavailable');
+    if (!is_string($version) || strcasecmp($version,$currentVersion)!==0) throw new OrderError('The payment QR code changed. Review the current QR and payment details before ordering.',409,'payment_qr_changed');
+    if (!$receipt) throw new OrderError('Upload your payment receipt before placing the order.');
     [$catalog,$total]=orders_catalog($db,$lines,$expected);
     $q=$db->prepare("INSERT dbo.orders(customer_account_id,order_source,customer_name,submission_key,submission_hash,total_amount,preferred_payment_method)
         OUTPUT INSERTED.order_id VALUES(?,'online',?,?,CONVERT(binary(32),?,2),?,?)");
@@ -185,5 +196,7 @@ function online_submit(PDO $db,int $customerId,array $input): array
     }
     $db->prepare('INSERT dbo.order_fulfillments(order_id,fulfillment_type,recipient_name,contact_snapshot,address_snapshot) VALUES(?,?,?,?,?)')->execute([$id,$fulfillment,$account['full_name'],$contact,$address]);
     $db->prepare("INSERT dbo.order_status_history(order_id,to_status) VALUES(?,'received')")->execute([$id]);
+    $db->prepare('INSERT dbo.online_payment_receipts(order_id,payment_method,qr_version,image_mime,image_bytes,image_hash) VALUES(?,?,?,?,CONVERT(varbinary(max),?,2),CONVERT(binary(32),?,2))')
+        ->execute([$id,$method,$version,$receipt['mime'],bin2hex($receipt['bytes']),$receipt['hash']]);
     return ['order'=>online_order($db,$customerId,$id),'replayed'=>false];
 }

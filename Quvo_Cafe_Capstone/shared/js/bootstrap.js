@@ -28,6 +28,8 @@
   // Start the SQL approval queue after the workspace fragments and render functions are ready.
   bindDiningSessions();
   bindSqlOrders();
+  bindPreparationTickets();
+  bindPosSql();
   bindAssistanceAlerts();
   lucide.createIcons();
 })();

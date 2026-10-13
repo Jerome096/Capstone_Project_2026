@@ -322,3 +322,30 @@
 .receipt-brand-sub {
   color: var(--q-brand-600);
 }
+.receipt-date-picker { margin: 14px 0; }
+.receipt-date-picker label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 7px; color: #82735c; }
+.receipt-date-picker > div { display: flex; gap: 8px; }
+.receipt-date-picker input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #e7d8c6; border-radius: 10px; background: #fffdf9; color: #191714; font: inherit; }
+.receipt-date-picker button { flex-shrink: 0; }
+.receipt-list-date { margin-top: 8px; font-size: 10px; color: #a1917c; }
+
+#posSqlError:empty { display: none; }
+#paymentReviewModal .modal-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+}
+#paymentReviewCancel { grid-column: 1; grid-row: 1; }
+#paymentReviewConfirm { grid-column: 2; grid-row: 1; }
+#paymentReviewModal .modal-actions .btn {
+  min-height: 48px;
+  height: auto;
+  padding: 12px 16px;
+  line-height: 1.35;
+  min-width: 0;
+  width: 100%;
+}
+
+.receipt-print-actions { width: 100%; max-width: 440px; margin: 0 auto 14px; }
+.receipt-print-actions .btn { min-height: 44px; }

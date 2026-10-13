@@ -49,6 +49,7 @@ function showScreen(screenId) {
   if (screenId === "screenAccount") {
     renderAccount();
   }
+  if (screenId === "screenCart") refreshOnlinePayment();
 }
 
 function updateNavState(screenId) {

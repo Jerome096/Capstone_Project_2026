@@ -1,0 +1,45 @@
+<section class="view-section hidden" id="ordersSection">
+        <div class="board-toolbar">
+          <div>
+            <p class="eyebrow">Food Board</p>
+            <h2>Food Preparation Tickets</h2>
+            <p class="toolbar-note">Only food items are routed here. Drink items remain with the barista or cashier-side preparation flow.</p>
+          </div>
+          <div class="toolbar-controls">
+            <input type="search" id="searchInput" placeholder="Search table, food item, or ticket number" />
+            <select id="categoryFilter" aria-label="Filter by category">
+              <option value="all">All food categories</option>
+              <option value="sandwich">Sandwich</option>
+              <option value="meal">Meal</option>
+              <option value="snack">Snack</option>
+              <option value="pastry">Pastry</option>
+              <option value="pasta">Pasta</option>
+              <option value="dessert">Dessert</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="order-board">
+          <article class="order-column">
+            <div class="column-header">
+              <div>
+                <p class="eyebrow">Food to Prepare</p>
+                <h3>Preparing</h3>
+              </div>
+              <span class="count-pill" id="preparingCount">0</span>
+            </div>
+            <div class="order-list" id="preparingList"></div>
+          </article>
+
+          <article class="order-column ready-column">
+            <div class="column-header">
+              <div>
+                <p class="eyebrow">Completed</p>
+                <h3>Ready for Serving</h3>
+              </div>
+              <span class="count-pill" id="readyCount">0</span>
+            </div>
+            <div class="order-list" id="readyList"></div>
+          </article>
+        </div>
+      </section>

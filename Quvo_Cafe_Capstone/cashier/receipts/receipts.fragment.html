@@ -18,6 +18,11 @@
           />
         </div>
       </div>
+      <div class="receipt-date-picker">
+        <label for="receiptDate">Operation date</label>
+        <div><input id="receiptDate" type="date" /><button type="button" class="btn light" id="receiptToday">Today</button></div>
+        <p id="receiptDateNotice" class="helper-text" role="status"></p>
+      </div>
       <div class="receipt-filters">
         <button
           class="receipt-filter active"
@@ -48,7 +53,7 @@
         class="receipt-list"
         id="receiptList"
       ></div>
-      <button type="button" class="btn light" id="sqlOlderReceipts" hidden>Load older records</button>
+      <button type="button" class="btn light" id="sqlOlderReceipts" hidden>Load more for this date</button>
     </section>
     <aside
       class="receipt-preview"

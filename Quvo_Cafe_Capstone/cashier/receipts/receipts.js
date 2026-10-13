@@ -1,6 +1,21 @@
 function isDrinkItem(item) {
   return item.category === "coffee" || item.category === "non-coffee";
 }
+function receiptDay(value=new Date()) {
+  if(!(value instanceof Date))value=new Date(value);
+  if(Number.isNaN(value.getTime()))return null;
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(value);
+  const get=type=>parts.find(part=>part.type===type).value;
+  return get('year')+'-'+get('month')+'-'+get('day');
+}
+function receiptSelectedDate() {
+  const input=document.getElementById('receiptDate');
+  if(input && !input.value)input.value=receiptDay();
+  return input?.value||receiptDay();
+}
+function receiptDateLabel(value) {
+  return value?new Date(value+'T00:00:00+08:00').toLocaleDateString('en-PH',{timeZone:'Asia/Manila',year:'numeric',month:'short',day:'numeric'}):'';
+}
 
 function resetChoiceGroup(group, selectedValue) {
   document.querySelectorAll(`.choice[data-group="${group}"]`).forEach((button) => {
@@ -13,6 +28,15 @@ function formatDrinkOptions(options) {
 }
 
 function bindReceipts() {
+  const dateInput=document.getElementById('receiptDate');
+  dateInput.value=receiptDay();
+  dateInput.addEventListener('change',()=>{
+    if(!dateInput.value)dateInput.value=receiptDay();
+    state.selectedReceiptId=null;renderReceipts();loadSqlReceiptDate();
+  });
+  document.getElementById('receiptToday').addEventListener('click',()=>{
+    dateInput.value=receiptDay();state.selectedReceiptId=null;renderReceipts();loadSqlReceiptDate();
+  });
   const search = document.getElementById("receiptSearch");
   if (search) {
     search.addEventListener("input", renderReceipts);
@@ -73,6 +97,7 @@ function openPaymentReviewModal() {
 }
 
 function closePaymentReviewModal() {
+  if(posSql.busy)return;
   document.getElementById("paymentReviewModal").classList.add("hidden");
   pendingPaymentReview = null;
 }
@@ -90,6 +115,7 @@ function confirmPaymentReview() {
     order.change = pendingPaymentReview.change;
     order.gcashReference = pendingPaymentReview.gcashReference;
     order.stage = "preparing";
+    recordPreparationApproval(order);
     order.expanded = false;
     if (getBeverageItems(order).length && !order.baristaStatus) {
       order.baristaStatus = "queued";
@@ -117,62 +143,11 @@ function confirmPaymentReview() {
         ? `Payment confirmed for ${order.number}. Inventory auto-deducted.`
         : `Payment confirmed for ${order.number}. Order sent to preparation.`,
     );
+    openPreparationTickets(order);
     return;
   }
 
-  if (pendingPaymentReview.type === "manual") {
-    const manualOrder = {
-      id: pendingPaymentReview.nextId,
-      number: pendingPaymentReview.orderNumber,
-      table: "Counter",
-      total: pendingPaymentReview.total,
-      time: "now",
-      stage: "preparing",
-      source: "manual",
-      customerName: pendingPaymentReview.customerName,
-      paid: true,
-      paymentMethod: pendingPaymentReview.paymentMethod,
-      paymentStatus: "confirmed",
-      amountReceived: pendingPaymentReview.amountReceived,
-      change: pendingPaymentReview.change,
-      gcashReference: pendingPaymentReview.gcashReference,
-      expanded: false,
-      baristaStatus: pendingPaymentReview.items.some(isBeverageOrderItem)
-        ? "queued"
-        : null,
-      items: pendingPaymentReview.items,
-    };
-    const stockMovements = deductInventoryForOrder(manualOrder, "Manual POS payment");
-    state.orders.unshift(manualOrder);
-
-    state.activities.unshift({
-      tag: "Paid",
-      type: "green",
-      text: `Manual order ${pendingPaymentReview.orderNumber} paid and sent to preparation`,
-      table: "Counter",
-      time: "now",
-    });
-
-    addSystemRecord(
-      "Manual POS payment",
-      `Manual order ${pendingPaymentReview.orderNumber} paid and sent to preparation`,
-      "Payment",
-    );
-
-    state.posCart = [];
-    document.getElementById("counterCustomerName").value = "";
-    document.getElementById("paidState").classList.remove("hidden");
-    document.getElementById("posReceiptActions").classList.remove("hidden");
-
-    const orderNumber = pendingPaymentReview.orderNumber;
-    closePaymentReviewModal();
-    renderAll();
-    showToast(
-      stockMovements.length
-        ? `Manual order ${orderNumber} sent to preparation. Inventory auto-deducted.`
-        : `Manual order ${orderNumber} sent to preparation.`,
-    );
-  }
+  if (pendingPaymentReview.type === "manual") return confirmSqlPosPayment();
 }
 
 function buildPaymentReviewPaper(review) {
@@ -185,7 +160,7 @@ function buildPaymentReviewPaper(review) {
         <div class="receipt-line"><span>Order</span><b>${review.orderNumber}</b></div>
         <div class="receipt-line"><span>Location</span><b>${review.location}</b></div>
         <div class="receipt-line"><span>Source</span><b>${review.source}</b></div>
-        <div class="receipt-line"><span>Customer</span><b>${review.customerName || "Guest"}</b></div>
+        <div class="receipt-line"><span>Customer</span><b>${escapeHtml(review.customerName || "Guest")}</b></div>
       </div>
 
       <div class="receipt-items">
@@ -194,7 +169,7 @@ function buildPaymentReviewPaper(review) {
             (item) => `
           <div>
             <div class="receipt-item-name">
-              <span>${item.qty}× ${item.name}</span>
+              <span>${item.qty}× ${escapeHtml(item.name)}</span>
               <b>₱${(item.qty * item.price).toLocaleString("en-PH")}</b>
             </div>
             ${item.note ? `<div class="receipt-item-note">${escapeHtml(item.note)}</div>` : ""}
@@ -214,7 +189,7 @@ function buildPaymentReviewPaper(review) {
           <div class="receipt-line"><span>Change to give</span><b>₱${review.change.toLocaleString("en-PH")}</b></div>
         `
             : `
-          <div class="receipt-line"><span>${getPaymentReferenceLabel(review.paymentMethod)}</span><b>${review.gcashReference || "Verified by cashier"}</b></div>
+          <div class="receipt-line"><span>${getPaymentReferenceLabel(review.paymentMethod)}</span><b>${escapeHtml(review.gcashReference || "Verified by cashier")}</b></div>
         `
         }
       </div>
@@ -266,6 +241,7 @@ function createReceiptRecord(data) {
   const receipt = {
     id: `R-${String(state.receipts.length + 1).padStart(3, "0")}`,
     ...data,
+    date:data.date||receiptDay(),
   };
 
   state.receipts.unshift(receipt);
@@ -282,12 +258,13 @@ function renderReceipts() {
     .toLowerCase()
     .trim();
   const filter = state.activeReceiptFilter || "all";
+  const selectedDate=receiptSelectedDate();
 
   const receipts = state.receipts.filter((receipt) => {
     const matchesFilter = filter === "all" || receipt.status === filter;
     const haystack =
       `${receipt.orderNumber} ${receipt.location} ${receipt.paymentMethod} ${receipt.customerName} ${receipt.status}`.toLowerCase();
-    return matchesFilter && haystack.includes(query);
+    return receipt.date === selectedDate && matchesFilter && haystack.includes(query);
   });
 
   list.innerHTML = receipts.length
@@ -303,18 +280,20 @@ function renderReceipts() {
           <span>${escapeHtml(receipt.location)}</span>
           <span>₱${receipt.total.toLocaleString("en-PH")} · ${escapeHtml(receipt.paymentMethod || "No payment")}</span>
         </div>
+        <div class="receipt-list-date">${escapeHtml(receiptDateLabel(receipt.date))}</div>
       </button>
     `,
         )
         .join("")
-    : `<div class="helper-text">No receipt records found.</div>`;
+    : `<div class="helper-text">No receipt records for ${escapeHtml(receiptDateLabel(selectedDate))}.</div>`;
 
   const selected =
-    state.receipts.find((receipt) => receipt.id === state.selectedReceiptId) ||
+    receipts.find((receipt) => receipt.id === state.selectedReceiptId) ||
     receipts[0];
+  state.selectedReceiptId=selected?.id||null;
 
   if (selected) {
-    preview.innerHTML = buildReceiptPaper(selected);
+    preview.innerHTML = '<div class="receipt-print-actions"><button type="button" class="btn dark" onclick="printSelectedReceipt()">Print 58 mm receipt</button><p class="helper-text">Select 58 mm paper and actual size (100%). Turn off headers and footers.</p></div>' + buildReceiptPaper(selected);
   } else {
     preview.innerHTML = `
       <div class="receipt-empty-preview">
@@ -329,6 +308,11 @@ function renderReceipts() {
 }
 
 function showReceipt(receiptId) {
+  const receipt=state.receipts.find(entry=>entry.id===receiptId);
+  if(receipt?.date && receipt.date!==receiptSelectedDate()) {
+    document.getElementById('receiptDate').value=receipt.date;
+    loadSqlReceiptDate();
+  }
   state.selectedReceiptId = receiptId;
   renderReceipts();
 }
@@ -350,6 +334,7 @@ function buildReceiptPaper(receipt) {
         <div class="receipt-line"><span>Location</span><b>${receipt.location}</b></div>
         <div class="receipt-line"><span>Customer</span><b>${receipt.customerName || "Guest"}</b></div>
         <div class="receipt-line"><span>Status</span><b>${capitalize(receipt.status)}</b></div>
+        <div class="receipt-line"><span>Date</span><b>${escapeHtml(receiptDateLabel(receipt.date))}</b></div>
         <div class="receipt-line"><span>Time</span><b>${receipt.time}</b></div>
       </div>
 
@@ -387,4 +372,24 @@ function buildReceiptPaper(receipt) {
       <div class="receipt-footer">This receipt preview is for cashier transaction review.</div>
     </div>
   `;
+}
+
+function buildThermalReceiptDocument(receipt) {
+  const e=escapeHtml,money=value=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(value||0));
+  const row=(label,value,extra='')=>'<div class="thermal-row '+extra+'"><span>'+e(label)+'</span><b>'+e(value??'—')+'</b></div>';
+  const paid=receipt.persisted?receipt.raw.payment_status==='paid':receipt.status!=='voided';
+  const source=receipt.raw?.order_source==='online'?'Online order':receipt.raw?.order_source==='walk_in'||receipt.source==='Walk-in / POS'?'Walk-in / POS':'Dine-in';
+  const markup='<section class="thermal-receipt"><header><h3>Quvo Café</h3><h4>Payment record</h4></header>'+
+    row('Order',receipt.orderNumber)+row('Customer',receipt.customerName||'Guest')+row('Source',source)+row('Location',receipt.location||receipt.table||'Counter')+
+    row('Status',receipt.status)+row('Date',receiptDateLabel(receipt.date))+row('Time',receipt.time)+
+    '<div class="thermal-items">'+receipt.items.map(item=>'<div class="thermal-item"><div class="thermal-item-line"><span>'+e(item.qty)+' × '+e(item.name)+'</span><b>'+e(money(item.qty*item.price))+'</b></div>'+(item.note?'<p>'+e(item.note)+'</p>':'')+'</div>').join('')+'</div>'+
+    '<div class="thermal-totals">'+row('Total',money(receipt.total),'thermal-grand-total')+
+    (paid?row('Payment',receipt.paymentMethod)+row('Received',money(receipt.amountReceived))+row('Change',money(receipt.change))+(receipt.gcashReference?row('Reference',receipt.gcashReference):''):row('Cancellation',receipt.raw?.cancellation_reason||'Voided'))+
+    '</div><footer>Thank you for visiting Quvo Café.</footer></section>';
+  return buildThermalPrintDocument(receipt.orderNumber+' receipt',markup);
+}
+function printSelectedReceipt() {
+  const receipt=state.receipts.find(entry=>entry.id===state.selectedReceiptId);
+  if(!receipt)return showToast('Select a receipt first.');
+  printThermalDocument(buildThermalReceiptDocument(receipt),'Printable payment receipt');
 }

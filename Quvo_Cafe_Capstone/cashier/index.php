@@ -9,7 +9,7 @@ $_SESSION["operations_portal"] = "cashier";
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quvo Café | Cashier Operations</title>
+  <title>Quvo CafÃ© | Cashier Operations</title>
   <link rel="icon" type="image/png" href="../shared/images/quvo-favicon.png" />
   <link rel="stylesheet" href="../shared/css/styles.css" />
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
@@ -18,8 +18,8 @@ $_SESSION["operations_portal"] = "cashier";
   <link rel="stylesheet" href="../cashier/dashboard/dashboard.css" />
   <link rel="stylesheet" href="../cashier/menu/menu.css" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css" />
-  <link rel="stylesheet" href="../cashier/orders/orders.css" />
-  <link rel="stylesheet" href="../cashier/receipts/receipts.css" />
+  <link rel="stylesheet" href="../cashier/orders/orders.css?v=food-ready-1" />
+  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
   <link rel="stylesheet" href="../barista/dashboard/barista.css" />
   <link rel="stylesheet" href="../admin/reports/reports.css" />
@@ -51,17 +51,17 @@ $_SESSION["operations_portal"] = "cashier";
 <body class="logged-in">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark brand-mark-image"><img alt="Quvo Café logo" class="sidebar-logo-img" src="../shared/images/quvo-logo.jpg" /></div>
-      <div class="brand-name">Quvo Café</div>
+      <div class="brand-mark brand-mark-image"><img alt="Quvo CafÃ© logo" class="sidebar-logo-img" src="../shared/images/quvo-logo.jpg" /></div>
+      <div class="brand-name">Quvo CafÃ©</div>
       <div class="brand-sub">Cashier Operations</div>
     </div>
     <nav class="nav">
-      
+
 <div class="nav-section-label nav-section-label-first">Operations</div>
 <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
 <button class="nav-item" data-screen="menu"><i data-lucide="utensils"></i><span>Menu</span></button>
-<button class="nav-item" data-screen="sessions"><i data-lucide="users"></i><span>Sessions</span></button>
-<button class="nav-item" data-screen="orders"><i data-lucide="clipboard-list"></i><span>Orders</span></button>
+<button class="nav-item" data-screen="sessions"><i data-lucide="users"></i><span>Sessions</span><span class="nav-badge" id="sidebarSessionCount" title="Sessions awaiting approval">0</span></button>
+<button class="nav-item" data-screen="orders"><i data-lucide="clipboard-list"></i><span>Orders</span><span class="nav-badge" id="sidebarOrderCount" title="Orders awaiting payment collection or approval">0</span></button>
 <button class="nav-item" data-screen="receipts"><i data-lucide="receipt-text"></i><span>Receipts</span></button>
 <button class="nav-item" data-screen="alerts"><i data-lucide="bell"></i><span>Alerts</span><span class="nav-badge" id="sidebarAlertCount">0</span></button>
 <div class="nav-divider"></div>
@@ -80,7 +80,7 @@ $_SESSION["operations_portal"] = "cashier";
   </aside>
   <main class="main">
     <header class="topbar">
-      <div><div class="eyebrow" id="screenEyebrow">Workspace</div><h1 id="screenTitle">Loading…</h1><p id="screenSub">Preparing workspace</p></div>
+      <div><div class="eyebrow" id="screenEyebrow">Workspace</div><h1 id="screenTitle">Loadingâ€¦</h1><p id="screenSub">Preparing workspace</p></div>
       <div class="topbar-right">
         <div class="clock"><i data-lucide="clock-3"></i><span id="liveClock">00:00:00</span></div>
         <div class="system-status"><span class="pulse"></span>Staff session active</div>
@@ -91,6 +91,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js"></script>
+  <script src="../shared/js/workspace-loader.js?v=food-ready-1"></script>
 </body>
 </html>

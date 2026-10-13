@@ -1,7 +1,7 @@
 const historyList=document.getElementById("historyList");
 const onlineStatusLabels={received:"Received",preparing:"Preparing",ready:"Ready",served:"Completed",cancelled:"Cancelled"};
 function onlineFulfillment(order){return order.fulfillment_type==="delivery"?"Delivery request":"Pickup";}
-function onlinePayment(order){return order.payment_status==="paid"?"Paid · "+order.payment_method:order.payment_status==="not_due"?"No payment due":"Awaiting cashier confirmation · "+order.preferred_payment_method;}
+function onlinePayment(order){return order.payment_status==="paid"?"Paid · "+(order.payment_method_label||order.payment_method):order.payment_status==="not_due"?"No payment due":"Awaiting cashier confirmation · "+(order.preferred_payment_label||order.preferred_payment_method);}
 function onlineDate(value){return value?new Date(value.replace(" ","T")+"Z").toLocaleString():"";}
 async function refreshOnlineOrders(more=false){
   if(!state.onlineCustomer||online.loading||online.busy)return;

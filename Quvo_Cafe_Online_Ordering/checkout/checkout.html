@@ -25,21 +25,42 @@
   </div>
 </section>
 <section class="payment-card" id="customerPaymentOptions">
-  <p class="eyebrow">Preferred payment method</p>
-  <div class="payment-options">
-    <label class="payment-option">
-      <input checked="" name="paymentMethod" type="radio" value="GCash" />
-      <span>GCash</span>
-    </label>
-    <label class="payment-option">
-      <input name="paymentMethod" type="radio" value="PayMaya" />
-      <span>PayMaya</span>
-    </label>
-  </div>
+  <p class="eyebrow">Payment method</p>
+  <div class="payment-options" id="onlinePaymentOptions" role="group" aria-label="Payment method"><p class="small-copy">Loading payment methods…</p></div>
   <p class="small-copy" id="paymentNote">
-    Your selected payment method will be confirmed by Quvo Café staff before your order moves to
-    preparation.
+    Select a payment method to see its QR code. The cashier will verify your payment before preparation.
   </p>
+  <div class="online-payment-qr" id="onlinePaymentPanel">
+    <div class="payment-amount"><span>Amount to pay</span><strong id="paymentQrAmount">₱0.00</strong></div>
+    <div class="payment-steps">
+      <section class="payment-step">
+        <div class="payment-step-heading"><span class="payment-step-number">1</span><h3>Scan &amp; pay</h3></div>
+        <div class="payment-qr-frame">
+          <div id="paymentQrPlaceholder" class="payment-qr-placeholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h2v2h-2zM19 15h2v6h-6v-2M12 3v3M3 12h3M12 12h3M12 18v3"/></svg>
+            <span>Payment QR</span>
+          </div>
+          <img id="paymentQrImage" alt="Selected payment QR code" hidden />
+        </div>
+        <p id="paymentQrStatus" class="small-copy payment-qr-status" role="status">Checking payment options…</p>
+        <a id="paymentQrDownload" class="secondary-btn" download hidden>Download QR code</a>
+        <p id="paymentQrInstructions" class="small-copy" hidden>Scan the QR in your payment app, or download and upload it there. Check the recipient and send the exact total above.</p>
+      </section>
+      <section class="payment-step payment-receipt-step">
+        <div class="payment-step-heading"><span class="payment-step-number">2</span><h3>Upload receipt <span class="payment-required">Required</span></h3></div>
+        <p class="small-copy">Use a clear screenshot or photo showing the amount, recipient, and reference number.</p>
+        <label class="payment-receipt-upload" for="onlinePaymentReceipt">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 15v5h16v-5"/></svg>
+          <strong id="paymentReceiptButtonText">Choose receipt image</strong>
+          <span>Image · Up to 2 MB</span>
+          <input id="onlinePaymentReceipt" type="file" accept="image/*,.heic,.heif" aria-describedby="paymentReceiptStatus" />
+        </label>
+        <p id="paymentReceiptStatus" class="small-copy payment-receipt-status" role="status">Upload your receipt to place the order.</p>
+        <img id="paymentReceiptPreview" alt="Your uploaded payment receipt" hidden />
+      </section>
+    </div>
+    <p class="small-copy payment-verification-note">The cashier verifies your payment before preparation. Already paid but unable to submit? Contact the café before paying again.</p>
+  </div>
 </section>
 <section class="summary-card">
   <div>

@@ -51,10 +51,10 @@ function orders_money(int $cents): string
     return intdiv($cents, 100) . "." . str_pad((string) ($cents % 100), 2, "0", STR_PAD_LEFT);
 }
 
-function orders_input(): array
+function orders_input(int $limit = 65536): array
 {
-    $raw = file_get_contents("php://input", false, null, 0, 65537);
-    if ($raw === false || strlen($raw) > 65536) {
+    $raw = file_get_contents("php://input", false, null, 0, $limit + 1);
+    if ($raw === false || strlen($raw) > $limit) {
         throw new OrderError("Order request is too large.", 413);
     }
     try {
@@ -108,15 +108,22 @@ function orders_header_sql(): string
 {
     return "SELECT o.order_id,o.order_number,o.session_id,o.customer_name,o.total_amount,
         o.order_status,o.created_at,o.updated_at,o.cancelled_at,o.cancellation_reason,
-        o.order_source,o.customer_account_id,o.preferred_payment_method,
-        COALESCE(t.table_name,CASE WHEN f.fulfillment_type='delivery' THEN 'Online delivery' ELSE 'Online pickup' END) AS table_name,
+        o.order_source,o.customer_account_id,o.preferred_payment_method,k.ready_at AS kitchen_ready_at,
+        COALESCE(pm.display_name,o.preferred_payment_method) AS preferred_payment_label,
+        COALESCE(am.display_name,p.payment_method) AS payment_method_label,
+        CASE WHEN EXISTS(SELECT 1 FROM dbo.online_payment_receipts pr WHERE pr.order_id=o.order_id) THEN 1 ELSE 0 END AS has_payment_receipt,
+        COALESCE(t.table_name,CASE WHEN o.order_source='walk_in' THEN 'Counter' WHEN f.fulfillment_type='delivery' THEN 'Online delivery' ELSE 'Online pickup' END) AS table_name,
         f.fulfillment_type,f.recipient_name,f.contact_snapshot,f.address_snapshot,p.payment_id,p.payment_method,p.amount_applied,p.amount_received,
-        p.change_amount,p.payment_reference,p.received_by_staff_id,p.paid_at
+        p.change_amount,p.payment_reference,p.received_by_staff_id,p.paid_at,approver.full_name AS approved_by_name
         FROM dbo.orders o
+        LEFT JOIN dbo.kitchen_ticket_readiness k ON k.order_id=o.order_id
         LEFT JOIN dbo.customer_sessions s ON s.session_id=o.session_id
         LEFT JOIN dbo.cafe_tables t ON t.table_id=s.table_id
         LEFT JOIN dbo.order_fulfillments f ON f.order_id=o.order_id
-        LEFT JOIN dbo.payments p ON p.order_id=o.order_id";
+        LEFT JOIN dbo.payments p ON p.order_id=o.order_id
+        LEFT JOIN dbo.online_payment_methods pm ON pm.payment_method=o.preferred_payment_method
+        LEFT JOIN dbo.online_payment_methods am ON am.payment_method=p.payment_method
+        LEFT JOIN dbo.staff_users approver ON approver.staff_id=p.received_by_staff_id";
 }
 
 function orders_public_header(array $row): array
@@ -133,6 +140,8 @@ function orders_public_header(array $row): array
     }
     $row["payment_status"] = $row["payment_id"] !== null
         ? "paid" : ($row["order_status"] === "cancelled" ? "not_due" : "unpaid");
+    $receiptTime=$row['order_status']==='cancelled'?($row['cancelled_at']??$row['updated_at']):$row['paid_at'];
+    $row['receipt_date']=$receiptTime?(new DateTimeImmutable($receiptTime,new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('Asia/Manila'))->format('Y-m-d'):null;
     return $row;
 }
 
@@ -164,7 +173,7 @@ function orders_get(PDO $db, int $id, ?int $sessionId = null): array
     return $order;
 }
 
-function orders_list(PDO $db, ?int $sessionId, mixed $status, mixed $offset): array
+function orders_list(PDO $db, ?int $sessionId, mixed $status, mixed $offset, mixed $receiptDate = null): array
 {
     if (!is_string($status) || !in_array($status, ["open", "all", "received", "preparing", "ready", "served", "cancelled"], true)) {
         throw new OrderError("Invalid order status.");
@@ -175,6 +184,16 @@ function orders_list(PDO $db, ?int $sessionId, mixed $status, mixed $offset): ar
     }
     $where = ["1=1"];
     $params = [];
+    if ($receiptDate !== null) {
+        if (!is_string($receiptDate) || !preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/',$receiptDate)) throw new OrderError('Choose a valid receipt date.');
+        $date=DateTimeImmutable::createFromFormat('!Y-m-d',$receiptDate,new DateTimeZone('Asia/Manila'));
+        if (!$date || $date->format('Y-m-d')!==$receiptDate) throw new OrderError('Choose a valid receipt date.');
+        $event="CASE WHEN o.order_status='cancelled' THEN COALESCE(o.cancelled_at,o.updated_at) ELSE p.paid_at END";
+        $where[]="(p.payment_id IS NOT NULL OR o.order_status='cancelled')";
+        $where[]="$event >= ? AND $event < ?";
+        $params[]=$date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+        $params[]=$date->modify('+1 day')->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+    }
     if ($sessionId !== null) {
         $where[] = "o.session_id=?";
         $params[] = $sessionId;
@@ -295,7 +314,7 @@ function orders_lock(PDO $db, int $id): array
         dining_table($db, (int) $tableId);
         dining_expire_table($db, (int) $tableId);
     }
-    $query = $db->prepare("SELECT order_id,order_status,total_amount,order_source FROM dbo.orders
+    $query = $db->prepare("SELECT order_id,order_status,total_amount,order_source,preferred_payment_method FROM dbo.orders
         WITH (UPDLOCK,HOLDLOCK) WHERE order_id=?");
     $query->execute([$id]);
     return $query->fetch() ?: throw new OrderError("Order not found.", 404);
@@ -305,8 +324,9 @@ function orders_pay(PDO $db, int $actorId, int $id, array $input): array
 {
     $order = orders_lock($db, $id);
     $method = $input["payment_method"] ?? null;
-    if (!in_array($method, ["Cash", "GCash", "PayMaya"], true)) {
-        throw new OrderError("Choose Cash, GCash or PayMaya.");
+    if (!is_string($method) || (!in_array($method, ["Cash", "GCash", "PayMaya"], true) &&
+        !($order['order_source']==='online' && $method===$order['preferred_payment_method']))) {
+        throw new OrderError("Choose a payment method valid for this order.");
     }
     $total = orders_cents($order["total_amount"]);
     $received = orders_cents($input["amount_received"] ?? null);

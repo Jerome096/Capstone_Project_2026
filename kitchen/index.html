@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quvo Café | Kitchen</title>
+<link rel="stylesheet" href="shared/css/base.css" />
+<link rel="stylesheet" href="login/login.css" />
+<link rel="stylesheet" href="dashboard/dashboard.css" />
+<link rel="stylesheet" href="orders/orders.css" />
+<link rel="stylesheet" href="alerts/alerts.css" />
+<link rel="stylesheet" href="shared/css/responsive.css" />
+</head>
+<body>
+<template data-fragment="login/login.fragment.html"></template>
+<main class="app-shell hidden" id="appShell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">QC</div>
+        <div>
+          <h2>Quvo</h2>
+          <p>Kitchen UI</p>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Kitchen navigation">
+        <button class="nav-item active" data-section="dashboardSection">Dashboard</button>
+        <button class="nav-item" data-section="ordersSection">Food Board</button>
+        <button class="nav-item" data-section="alertsSection">Alerts</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>Kitchen staff</p>
+        <strong id="kitchenStaffName"></strong>
+        <button class="ghost-btn" id="logoutBtn">Sign out</button>
+      </div>
+    </aside>
+
+    <section class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Kitchen Dashboard</p>
+          <h1>Food Preparation Queue</h1>
+        </div>
+        <div class="topbar-actions">
+          <div class="live-pill">
+            <span class="pulse"></span>
+            <span id="kitchenConnection" role="status">Connecting…</span>
+          </div>
+          <button class="secondary-btn" id="refreshViewBtn">Refresh view</button>
+        </div>
+      </header>
+
+      <template data-fragment="dashboard/dashboard.fragment.html"></template>
+
+      <template data-fragment="orders/orders.fragment.html"></template>
+
+      <template data-fragment="alerts/alerts.fragment.html"></template>
+    </section>
+  </main>
+<template data-fragment="orders/order-details.html"></template>
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+<script src="shared/loader.js?v=kitchen-sql-1"></script>
+</body></html>
