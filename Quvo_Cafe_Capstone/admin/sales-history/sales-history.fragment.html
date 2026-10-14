@@ -57,6 +57,7 @@
         <h2>EOD sales history</h2>
       </div>
       <div class="receipt-filters">
+        <button type="button" class="receipt-filter" id="salesHistoryRefresh">Refresh</button>
         <button
           class="receipt-filter active"
           data-sales-view="daily"
@@ -81,5 +82,7 @@
       class="sales-history-list"
       id="salesHistoryList"
     ></div>
+    <p id="salesHistoryStatus" class="helper-text" role="status"></p>
+    <button type="button" class="btn light" id="salesHistoryMore" hidden>Load older records</button>
   </section>
 </section>

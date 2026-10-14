@@ -1,509 +1,225 @@
+// SQL owns stock balances, recipes, availability and the movement log.
+const inventorySql = {loaded:false, loading:false, busy:false, pending:null, request:0, error:'', menus:[], impact:[], nextOffset:null, editVersion:null, editCurrent:null, recipeId:null};
+function inventoryAllowed() {return window.QUVO_CONFIG.allowedScreens.includes('inventory');}
+function inventoryPendingKey() {
+  const id=window.QUVO_SESSION?.staff_id;
+  if(!id)throw new Error('Please sign in again.');
+  return 'quvo_inventory_pending_v1_'+id;
+}
+function inventoryStorePending(value) {
+  if(value)sessionStorage.setItem(inventoryPendingKey(),JSON.stringify(value));
+  else sessionStorage.removeItem(inventoryPendingKey());
+  inventorySql.pending=value;
+}
+function inventoryKey() {
+  const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const h=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  return [h.slice(0,8),h.slice(8,12),h.slice(12,16),h.slice(16,20),h.slice(20)].join('-');
+}
 function bindInventory() {
-  const search = document.getElementById("inventorySearch");
-  if (search) {
-    search.addEventListener("input", renderInventoryRows);
-  }
-
-  document.querySelectorAll("[data-inventory-filter]").forEach((button) => {
-    button.addEventListener("click", () => {
-      document
-        .querySelectorAll("[data-inventory-filter]")
-        .forEach((entry) => entry.classList.remove("active"));
-      button.classList.add("active");
-      state.activeInventoryFilter = button.dataset.inventoryFilter;
-      renderInventoryRows();
-    });
+  if(!inventoryAllowed())return;
+  document.getElementById('inventorySearch').addEventListener('input',renderInventoryRows);
+  document.querySelectorAll('[data-inventory-filter]').forEach(button=>button.addEventListener('click',()=>{
+    document.querySelectorAll('[data-inventory-filter]').forEach(entry=>entry.classList.remove('active'));
+    button.classList.add('active');state.activeInventoryFilter=button.dataset.inventoryFilter;renderInventoryRows();updateInventoryControls();
+  }));
+  const bindings={addInventoryItemBtn:()=>openInventoryStockModal(),addStockMovementBtn:()=>addManualStockMovement(),
+    addInventoryRecipeBtn:()=>openInventoryRecipeModal(),inventoryStockClose:closeInventoryStockModal,
+    inventoryStockCancel:closeInventoryStockModal,inventoryStockSave:saveInventoryStockItem,
+    inventoryRecipeClose:closeInventoryRecipeModal,inventoryRecipeCancel:closeInventoryRecipeModal,inventoryRecipeSave:saveInventoryRecipe,
+    inventoryMovementClose:closeInventoryMovementModal,inventoryMovementCancel:closeInventoryMovementModal,inventoryMovementSave:saveInventoryMovement,
+    inventoryRefresh:()=>loadInventory(),inventoryMore:()=>loadInventory(true),inventoryRetry:()=>submitInventoryChange()};
+  for(const [id,fn] of Object.entries(bindings))document.getElementById(id).addEventListener('click',fn);
+  document.getElementById('inventoryRecipeMenu').addEventListener('change',event=>fillInventoryRecipeLines(event.target.value));
+  for(const kind of ['Stock','Recipe','Movement'])document.getElementById('inventory'+kind+'Modal').addEventListener('click',event=>{
+    if(event.target.id==='inventory'+kind+'Modal')({Stock:closeInventoryStockModal,Recipe:closeInventoryRecipeModal,Movement:closeInventoryMovementModal})[kind]();
   });
-
-  const addButton = document.getElementById("addInventoryItemBtn");
-  if (addButton) {
-    addButton.addEventListener("click", () => openInventoryStockModal());
-  }
-
-  const movementButton = document.getElementById("addStockMovementBtn");
-  if (movementButton) {
-    movementButton.addEventListener("click", addManualStockMovement);
-  }
-
-  const closeButton = document.getElementById("inventoryStockClose");
-  const cancelButton = document.getElementById("inventoryStockCancel");
-  const saveButton = document.getElementById("inventoryStockSave");
-
-  if (closeButton) closeButton.addEventListener("click", closeInventoryStockModal);
-  if (cancelButton) cancelButton.addEventListener("click", closeInventoryStockModal);
-  if (saveButton) saveButton.addEventListener("click", saveInventoryStockItem);
-
-  const modal = document.getElementById("inventoryStockModal");
-  if (modal) {
-    modal.addEventListener("click", (event) => {
-      if (event.target.id === "inventoryStockModal") closeInventoryStockModal();
-    });
-  }
-
-  const recipeButton = document.getElementById("addInventoryRecipeBtn");
-  if (recipeButton)
-    recipeButton.addEventListener("click", () => openInventoryRecipeModal());
-
-  const recipeModal = document.getElementById("inventoryRecipeModal");
-  const recipeClose = document.getElementById("inventoryRecipeClose");
-  const recipeCancel = document.getElementById("inventoryRecipeCancel");
-  const recipeSave = document.getElementById("inventoryRecipeSave");
-  const recipeMenu = document.getElementById("inventoryRecipeMenu");
-
-  if (recipeClose) recipeClose.addEventListener("click", closeInventoryRecipeModal);
-  if (recipeCancel) recipeCancel.addEventListener("click", closeInventoryRecipeModal);
-  if (recipeSave) recipeSave.addEventListener("click", saveInventoryRecipe);
-  if (recipeMenu)
-    recipeMenu.addEventListener("change", () =>
-      fillInventoryRecipeLines(recipeMenu.value),
-    );
-  if (recipeModal) {
-    recipeModal.addEventListener("click", (event) => {
-      if (event.target.id === "inventoryRecipeModal") closeInventoryRecipeModal();
-    });
-  }
+  try {const saved=JSON.parse(sessionStorage.getItem(inventoryPendingKey())||'null');if(saved?.payload?.submission_key)inventorySql.pending=saved;} catch {}
+  loadInventory();
+  setInterval(()=>{if(document.getElementById('inventory').classList.contains('active-screen')&&!inventorySql.pending&&!inventorySql.busy&&!inventorySql.loading)loadInventory();},10000);
 }
-
+function installInventorySnapshot(snapshot,append=false) {
+  state.inventoryItems=snapshot.items;state.inventoryRecipes=snapshot.recipes;
+  state.inventoryMovements=append?[...state.inventoryMovements,...snapshot.movements]:snapshot.movements;
+  inventorySql.menus=snapshot.menus;inventorySql.impact=snapshot.impact;inventorySql.nextOffset=snapshot.nextOffset;inventorySql.loaded=true;
+}
+async function loadInventory(append=false) {
+  if(!inventoryAllowed()||inventorySql.busy||inventorySql.loading)return;
+  if(append&&inventorySql.nextOffset===null)return;
+  const request=++inventorySql.request;inventorySql.loading=true;inventorySql.error='';renderInventory();
+  try {
+    const response=await fetch(quvoPath('api/inventory/index.php')+'?offset='+(append?inventorySql.nextOffset:0),{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
+    const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'Could not load inventory.');
+    if(request===inventorySql.request)installInventorySnapshot(result.snapshot,append);
+  } catch(error) {if(request===inventorySql.request)inventorySql.error=error.message;}
+  finally {if(request===inventorySql.request){inventorySql.loading=false;renderInventory();}}
+}
+function updateInventoryControls() {
+  const locked=inventorySql.busy||Boolean(inventorySql.pending),unready=!inventorySql.loaded;
+  document.getElementById('inventoryPendingBanner').hidden=!inventorySql.pending;
+  document.getElementById('inventoryRetry').disabled=inventorySql.busy;
+  document.getElementById('inventoryRefresh').disabled=inventorySql.busy||inventorySql.loading;
+  document.getElementById('inventoryMore').hidden=inventorySql.nextOffset===null;
+  document.getElementById('inventoryMore').disabled=inventorySql.loading||inventorySql.busy;
+  document.querySelectorAll('#addInventoryItemBtn,#addStockMovementBtn,#addInventoryRecipeBtn,#inventoryRows button,#inventoryRecipeList button').forEach(el=>el.disabled=locked||unready);
+  for(const kind of ['Stock','Recipe','Movement']) {
+    document.querySelectorAll('#inventory'+kind+'Modal input,#inventory'+kind+'Modal select,#inventory'+kind+'Modal textarea').forEach(el=>el.disabled=locked);
+    const canRetry=kind==='Stock'&&inventorySql.pending?.payload.action==='save_item';
+    document.getElementById('inventory'+kind+'Save').disabled=inventorySql.busy||unready||(Boolean(inventorySql.pending)&&!canRetry);
+    document.getElementById('inventory'+kind+'Close').disabled=inventorySql.busy;
+    document.getElementById('inventory'+kind+'Cancel').disabled=inventorySql.busy;
+  }
+  document.getElementById('inventoryLinkedMenu').disabled=true;
+  document.getElementById('inventoryUnit').disabled=locked||Boolean(state.editingInventoryItemId);
+  document.getElementById('inventoryStockSave').textContent=inventorySql.busy?'Saving…':inventorySql.pending?.payload.action==='save_item'?'Retry saved change':'Save stock';
+}
 function renderInventory() {
-  if (!document.getElementById("inventoryRows")) return;
-
-  updateInventoryLinkedMenus();
-  renderInventoryStats();
-  renderInventoryRows();
-  renderInventoryImpact();
-  renderInventoryMovements();
-  renderInventoryRecipes();
+  if(!document.getElementById('inventoryRows'))return;
+  document.getElementById('inventorySqlStatus').textContent=inventorySql.error||(inventorySql.busy?'Saving inventory change…':inventorySql.loading?'Loading stock records…':inventorySql.loaded?'Stock records are up to date. Ingredients are deducted when the cashier approves payment.':'Inventory has not loaded.');
+  renderInventoryStats();renderInventoryRows();renderInventoryImpact();renderInventoryMovements();renderInventoryRecipes();updateInventoryControls();
 }
-
-function getInventoryStatus(item) {
-  if (Number(item.current) <= 0) return "out";
-  if (Number(item.current) <= Number(item.reorder)) return "low";
-  return "normal";
-}
-
-function getInventoryStatusLabel(status) {
-  return {
-    normal: "Normal",
-    low: "Low",
-    out: "Out",
-  }[status];
-}
-
+function getInventoryStatus(item) {return Number(item.current)<=0?'out':Number(item.current)<=Number(item.reorder)?'low':'normal';}
+function getInventoryStatusLabel(status) {return {normal:'Normal',low:'Low',out:'Out'}[status];}
+function inventoryQty(value) {return new Intl.NumberFormat('en-PH',{maximumFractionDigits:3}).format(Number(value));}
 function renderInventoryStats() {
-  const tracked = state.inventoryItems.length;
-  const low = state.inventoryItems.filter(
-    (item) => getInventoryStatus(item) === "low",
-  ).length;
-  const out = state.inventoryItems.filter(
-    (item) => getInventoryStatus(item) === "out",
-  ).length;
-  const affected = state.inventoryItems.filter(
-    (item) => getInventoryStatus(item) !== "normal" && item.linkedMenu,
-  ).length;
-
-  document.getElementById("inventoryTrackedStat").textContent = tracked;
-  document.getElementById("inventoryLowStat").textContent = low;
-  document.getElementById("inventoryOutStat").textContent = out;
-  document.getElementById("inventoryAffectedStat").textContent = affected;
+  const items=state.inventoryItems;
+  for(const [id,value] of [['Tracked',items.length],['Low',items.filter(i=>getInventoryStatus(i)==='low').length],['Out',items.filter(i=>getInventoryStatus(i)==='out').length],['Affected',inventorySql.impact.length]])document.getElementById('inventory'+id+'Stat').textContent=inventorySql.loaded?value:'—';
 }
-
+function inventoryEmpty() {return inventorySql.loaded?'No inventory items found.':'Stock records are not loaded. Use Refresh stock to retry.';}
 function renderInventoryRows() {
-  const container = document.getElementById("inventoryRows");
-  if (!container) return;
-
-  const query = (document.getElementById("inventorySearch")?.value || "")
-    .toLowerCase()
-    .trim();
-
-  const items = state.inventoryItems.filter((item) => {
-    const status = getInventoryStatus(item);
-    const matchesFilter =
-      state.activeInventoryFilter === "all" || status === state.activeInventoryFilter;
-    const haystack = `${item.name} ${item.category} ${item.linkedMenu}`.toLowerCase();
-    return matchesFilter && haystack.includes(query);
-  });
-
-  container.innerHTML = items.length
-    ? items
-        .map((item) => {
-          const status = getInventoryStatus(item);
-
-          return `
-      <div class="inventory-row">
-        <div>
-          <div class="inventory-item-name">${item.name}</div>
-          <div class="inventory-subtext">Bill of Materials-based deduction enabled when linked</div>
-        </div>
-        <span>${item.category}</span>
-        <span><b>${item.current}</b> ${item.unit}</span>
-        <span>${item.reorder} ${item.unit}</span>
-        <span><span class="inventory-status ${status}">${getInventoryStatusLabel(status)}</span></span>
-        <span>${item.linkedMenu || "Not linked"}</span>
-        <span class="inventory-row-actions">
-          <button class="btn light" onclick="openInventoryStockModal(${item.id})">Edit</button>
-          <button class="btn dark" onclick="quickInventoryRestock(${item.id})">Restock</button>
-        </span>
-      </div>
-    `;
-        })
-        .join("")
-    : `<div class="inventory-row"><span>No inventory items found.</span></div>`;
-
-  lucide.createIcons();
+  const query=document.getElementById('inventorySearch').value.toLowerCase().trim(),e=escapeHtml;
+  const items=state.inventoryItems.filter(item=>(state.activeInventoryFilter==='all'||state.activeInventoryFilter===getInventoryStatus(item))&&`${item.name} ${item.category} ${item.linkedMenu}`.toLowerCase().includes(query));
+  document.getElementById('inventoryRows').innerHTML=items.length?items.map(item=>{
+    const status=getInventoryStatus(item);
+    return `<div class="inventory-row"><div class="inventory-item-name">${e(item.name)}</div><span>${e(item.category)}</span><span><b>${inventoryQty(item.current)}</b> ${e(item.unit)}</span><span>${inventoryQty(item.reorder)} ${e(item.unit)}</span><span><span class="inventory-status ${status}">${getInventoryStatusLabel(status)}</span></span><span>${e(item.linkedMenu||'Not linked')}</span><span class="inventory-row-actions"><button class="btn light" onclick="openInventoryStockModal('${item.id}')">Edit</button><button class="btn dark" onclick="quickInventoryRestock('${item.id}')">Restock</button></span></div>`;
+  }).join(''):`<div class="inventory-row"><span>${inventoryEmpty()}</span></div>`;
 }
-
 function renderInventoryImpact() {
-  const impact = document.getElementById("inventoryImpactList");
-  if (!impact) return;
-
-  const affected = state.inventoryItems.filter(
-    (item) => getInventoryStatus(item) !== "normal",
-  );
-
-  if (!state.inventoryItems.length) {
-    impact.innerHTML = `<article class="inventory-impact-card"><b>No inventory data loaded.</b><p>Inventory records will be populated from the database.</p></article>`;
-    return;
-  }
-
-  impact.innerHTML = affected.length
-    ? affected
-        .map((item) => {
-          const status = getInventoryStatus(item);
-          const links = String(item.linkedMenu || "")
-            .split(",")
-            .map((entry) => entry.trim())
-            .filter(Boolean);
-
-          return `
-      <article class="inventory-impact-card">
-        <div class="inventory-card-top">
-          <div>
-            <b>${item.name}</b>
-            <p>${item.current} ${item.unit} left · reorder at ${item.reorder} ${item.unit}</p>
-          </div>
-          <span class="inventory-status ${status}">${getInventoryStatusLabel(status)}</span>
-        </div>
-        <div class="inventory-chip-row">
-          ${links.map((link) => `<span class="inventory-chip">${link}</span>`).join("") || `<span class="inventory-chip">No menu link</span>`}
-        </div>
-        <p class="${status === "out" ? "inventory-danger" : "inventory-warning"}" style="margin-top:10px;">
-          ${status === "out" ? "Recommended action: mark affected menu items unavailable until restocked." : "Recommended action: prepare restock before the item runs out."}
-        </p>
-      </article>
-    `;
-        })
-        .join("")
-    : `<article class="inventory-impact-card"><b>No menu impact detected.</b><p>All linked stock items are above reorder level.</p></article>`;
+  const e=escapeHtml;
+  document.getElementById('inventoryImpactList').innerHTML=inventorySql.impact.length?inventorySql.impact.map(menu=>`<article class="inventory-impact-card"><b>${e(menu.name)}</b><p class="inventory-danger">Unavailable: insufficient ingredients for one serving. Restock the linked stock items.</p></article>`).join(''):`<article class="inventory-impact-card"><b>${inventorySql.loaded?'No menu items blocked by stock.':'Inventory not loaded.'}</b><p>Menu availability follows the quantities in each active Bill of Materials.</p></article>`;
 }
-
 function renderInventoryMovements() {
-  const log = document.getElementById("inventoryMovementLog");
-  if (!log) return;
-
-  log.innerHTML = state.inventoryMovements.length
-    ? state.inventoryMovements
-        .map(
-          (entry) => `
-    <article class="inventory-movement-card">
-      <div class="inventory-card-top">
-        <b>${entry.type}</b>
-        <span>${entry.time}</span>
-      </div>
-      <p>${entry.item} · ${entry.qty}</p>
-      <p>${entry.note}</p>
-    </article>
-  `,
-        )
-        .join("")
-    : `<article class="inventory-movement-card"><b>No stock records yet.</b><p>Restock, adjustments, and automatic order deductions will appear here.</p></article>`;
+  const e=escapeHtml,labels={restock:'Restock',waste:'Waste',adjustment:'Adjustment',consumption:'Order deduction'};
+  document.getElementById('inventoryMovementLog').innerHTML=state.inventoryMovements.length?state.inventoryMovements.map(entry=>{
+    const timestamp=new Date(entry.time.replace(' ','T')+'Z');
+    const time=Number.isNaN(timestamp.getTime())?entry.time:timestamp.toLocaleString('en-PH',{timeZone:'Asia/Manila'});
+    return `<article class="inventory-movement-card"><div class="inventory-card-top"><b>${labels[entry.type]||e(entry.type)}</b><span>${e(time)}</span></div><p>${e(entry.item)} · ${Number(entry.quantity)>0?'+':''}${inventoryQty(entry.quantity)} ${e(entry.unit)}</p><p>${e(entry.note||'')}</p><p class="inventory-subtext">${e(entry.recordedBy||'')} ${e(entry.orderNumber||'')}</p></article>`;
+  }).join(''):`<article class="inventory-movement-card"><b>${inventorySql.loaded?'No stock movements yet.':'Stock movements not loaded.'}</b><p>Restock, waste, adjustments and approved order deductions will appear here.</p></article>`;
 }
-
 function renderInventoryRecipes() {
-  const list = document.getElementById("inventoryRecipeList");
-  if (!list) return;
-
-  updateInventoryLinkedMenus();
-
-  if (!state.inventoryRecipes.length) {
-    list.innerHTML = `<article class="inventory-recipe-card"><b>No Bill of Materials records loaded.</b><p>Recipe and ingredient links will be populated from the database.</p></article>`;
-    return;
+  const e=escapeHtml;
+  document.getElementById('inventoryRecipeList').innerHTML=state.inventoryRecipes.length?state.inventoryRecipes.map(recipe=>`<article class="inventory-recipe-card"><div class="inventory-card-top"><b>${e(recipe.menu)}</b><span class="inventory-chip">Version ${recipe.version}</span></div><div class="inventory-chip-row">${recipe.ingredients.map(line=>`<span class="inventory-chip">${e(line.item)}: ${inventoryQty(line.qty)} ${e(line.unit)}</span>`).join('')}</div><div class="inventory-recipe-actions"><button class="btn light" onclick="openInventoryRecipeModal('${recipe.menuId}')">Edit Bill of Materials</button></div></article>`).join(''):`<article class="inventory-recipe-card"><b>${inventorySql.loaded?'No Bill of Materials saved.':'Recipes not loaded.'}</b><p>Add stock items, then link the ingredients used for one serving of each menu item.</p></article>`;
+}
+function inventoryCanEdit() {return inventoryAllowed()&&inventorySql.loaded&&!inventorySql.busy&&!inventorySql.pending;}
+function openInventoryStockModal(itemId=null) {
+  if(!inventoryCanEdit())return;
+  const item=itemId?state.inventoryItems.find(i=>i.id===String(itemId)):null;if(itemId&&!item)return;
+  state.editingInventoryItemId=item?.id||null;inventorySql.editVersion=item?.version||null;inventorySql.editCurrent=item?.current??null;
+  document.getElementById('inventoryStockTitle').textContent=item?'Update stock item':'New inventory item';
+  const values={inventoryItemName:item?.name||'',inventoryCategory:item?.category||'Other',inventoryCurrent:item?.current??'0',inventoryUnit:item?.unit||'',inventoryReorder:item?.reorder??'0',inventoryLinkedMenu:item?.linkedMenu||'',inventoryNote:''};
+  for(const [id,value] of Object.entries(values))document.getElementById(id).value=value;
+  document.getElementById('inventoryStockError').textContent='';document.getElementById('inventoryStockModal').classList.remove('hidden');updateInventoryControls();
+}
+function closeInventoryStockModal() {if(inventorySql.busy)return;document.getElementById('inventoryStockModal').classList.add('hidden');state.editingInventoryItemId=null;}
+function inventoryFeedback(errorId,message,fieldId=null) {
+  const error=document.getElementById(errorId);if(error)error.textContent=message;
+  showToast(message);
+  if(fieldId){const field=document.getElementById(fieldId);field?.setAttribute('aria-invalid','true');field?.focus();}
+  error?.scrollIntoView?.({block:'nearest'});
+}
+function validateInventoryStock(payload) {
+  if(!payload.name||payload.name.length>100)return ['inventoryItemName','Enter a stock item name, up to 100 characters.'];
+  if(!payload.category)return ['inventoryCategory','Choose a category.'];
+  if(!/^[a-z][a-z0-9 ._-]{0,19}$/i.test(payload.unit))return ['inventoryUnit','Enter one unit, such as kg, g, L, ml or pcs.'];
+  for(const [key,id,label] of [['current','inventoryCurrent','Current stock'],['reorder','inventoryReorder','Reorder level']]) {
+    if(!/^(?:[0-9]{1,9}(?:\.[0-9]{1,3})?|\.[0-9]{1,3})$/.test(payload[key]))return [id,label+' must be zero or a positive number with at most three decimal places.'];
   }
-
-  list.innerHTML = state.inventoryRecipes
-    .map((recipe) => {
-      const ingredients = getRecipeIngredients(recipe);
-      return `
-      <article class="inventory-recipe-card">
-        <div class="inventory-card-top">
-          <div>
-            <b>${recipe.menu}</b>
-            <p>${ingredients.length} linked ingredient${ingredients.length === 1 ? "" : "s"}</p>
-          </div>
-          <span class="inventory-chip">Bill of Materials</span>
-        </div>
-        <div class="inventory-chip-row">
-          ${
-            ingredients
-              .map((ingredient) => {
-                const stockItem = findInventoryItemByName(ingredient.item);
-                const unit = stockItem?.unit || "units";
-                return `<span class="inventory-chip">${ingredient.item}: ${formatStockQty(ingredient.qty)} ${unit}</span>`;
-              })
-              .join("") || `<span class="inventory-chip">No ingredient links</span>`
-          }
-        </div>
-        <div class="inventory-recipe-actions">
-          <button class="btn light" onclick="openInventoryRecipeModal('${escapeAttribute(recipe.menu)}')">Edit Bill of Materials</button>
-        </div>
-      </article>
-    `;
-    })
-    .join("");
-
-  lucide.createIcons();
+  if(payload.note.length>500)return ['inventoryNote','Keep the reason within 500 characters.'];
+  if(payload.id&&Number(payload.current)<Number(inventorySql.editCurrent)&&!payload.note)return ['inventoryNote','Enter a reason for reducing the stock count.'];
+  return null;
 }
-
-function openInventoryStockModal(itemId = null) {
-  const item = itemId ? state.inventoryItems.find((entry) => entry.id === itemId) : null;
-  state.editingInventoryItemId = itemId;
-
-  document.getElementById("inventoryStockEyebrow").textContent = item
-    ? "Edit stock"
-    : "Add stock item";
-  document.getElementById("inventoryStockTitle").textContent = item
-    ? "Update stock item"
-    : "New inventory item";
-  document.getElementById("inventoryItemName").value = item?.name || "";
-  document.getElementById("inventoryCategory").value = item?.category || "Coffee";
-  document.getElementById("inventoryCurrent").value = item?.current ?? "";
-  document.getElementById("inventoryUnit").value = item?.unit || "";
-  document.getElementById("inventoryReorder").value = item?.reorder ?? "";
-  document.getElementById("inventoryLinkedMenu").value = item?.linkedMenu || "";
-  document.getElementById("inventoryNote").value = "";
-
-  document.getElementById("inventoryStockModal").classList.remove("hidden");
-  lucide.createIcons();
-}
-
-function closeInventoryStockModal() {
-  document.getElementById("inventoryStockModal").classList.add("hidden");
-  state.editingInventoryItemId = null;
-}
-
 function saveInventoryStockItem() {
-  const name = document.getElementById("inventoryItemName").value.trim();
-  const category = document.getElementById("inventoryCategory").value;
-  const current = Number(document.getElementById("inventoryCurrent").value);
-  const unit = document.getElementById("inventoryUnit").value.trim() || "units";
-  const reorder = Number(document.getElementById("inventoryReorder").value);
-  const linkedMenu = document.getElementById("inventoryLinkedMenu").value.trim();
-  const note =
-    document.getElementById("inventoryNote").value.trim() || "Manual inventory update";
-
-  if (!name || Number.isNaN(current) || Number.isNaN(reorder)) {
-    showToast("Please complete item name, current stock, and reorder level.");
-    return;
-  }
-
-  if (state.editingInventoryItemId) {
-    const item = state.inventoryItems.find(
-      (entry) => entry.id === state.editingInventoryItemId,
-    );
-    if (!item) return;
-
-    const difference = current - Number(item.current);
-    item.name = name;
-    item.category = category;
-    item.current = current;
-    item.unit = unit;
-    item.reorder = reorder;
-    item.linkedMenu = linkedMenu;
-
-    state.inventoryMovements.unshift({
-      time: "now",
-      type: difference >= 0 ? "Restock" : "Adjustment",
-      item: name,
-      qty: `${difference >= 0 ? "+" : ""}${difference.toFixed(2)} ${unit}`,
-      note,
-    });
-
-    addSystemRecord(
-      "Inventory updated",
-      `${name} stock changed by ${difference.toFixed(2)} ${unit}`,
-      "Inventory",
-    );
-  } else {
-    const nextId = Math.max(...state.inventoryItems.map((entry) => entry.id), 0) + 1;
-    state.inventoryItems.unshift({
-      id: nextId,
-      name,
-      category,
-      current,
-      unit,
-      reorder,
-      linkedMenu,
-    });
-
-    state.inventoryMovements.unshift({
-      time: "now",
-      type: "New item",
-      item: name,
-      qty: `${current} ${unit}`,
-      note,
-    });
-
-    addSystemRecord(
-      "Inventory item added",
-      `${name} added to inventory monitoring`,
-      "Inventory",
-    );
-  }
-
-  updateMenuAvailabilityFromInventory();
-  closeInventoryStockModal();
-  renderInventory();
-  renderMenuAdmin();
-  renderRecords();
-  showToast("Inventory record updated.");
+  if(inventorySql.pending?.payload.action==='save_item')return submitInventoryChange();
+  if(!inventoryCanEdit())return;
+  const value=id=>document.getElementById(id).value.trim();
+  const payload={action:'save_item',name:value('inventoryItemName'),category:value('inventoryCategory'),current:value('inventoryCurrent'),unit:value('inventoryUnit'),reorder:value('inventoryReorder')||'0',note:value('inventoryNote')};
+  if(state.editingInventoryItemId){payload.id=state.editingInventoryItemId;payload.version=inventorySql.editVersion;}
+  document.querySelectorAll('#inventoryStockModal [aria-invalid]').forEach(field=>field.removeAttribute('aria-invalid'));
+  const invalid=validateInventoryStock(payload);if(invalid){inventoryFeedback('inventoryStockError',invalid[1],invalid[0]);return;}
+  document.getElementById('inventoryStockError').textContent='';
+  return submitInventoryChange(payload,'inventoryStockError');
 }
-
-function quickInventoryRestock(itemId) {
-  const item = state.inventoryItems.find((entry) => entry.id === itemId);
-  if (!item) return;
-
-  const addQty = Math.max(Number(item.reorder), 1);
-  item.current = Number((Number(item.current) + addQty).toFixed(2));
-
-  state.inventoryMovements.unshift({
-    time: "now",
-    type: "Restock",
-    item: item.name,
-    qty: `+${addQty} ${item.unit}`,
-    note: "Quick restock from inventory dashboard",
+function quickInventoryRestock(itemId) {addManualStockMovement(itemId);}
+function addManualStockMovement(itemId=null) {
+  if(!inventoryCanEdit())return;if(!state.inventoryItems.length){showToast('Add a stock item first.');return;}
+  const select=document.getElementById('inventoryMovementItem');
+  select.innerHTML=state.inventoryItems.map(i=>`<option value="${i.id}">${escapeHtml(i.name)} (${inventoryQty(i.current)} ${escapeHtml(i.unit)})</option>`).join('');
+  if(itemId)select.value=String(itemId);
+  document.getElementById('inventoryMovementType').value='restock';document.getElementById('inventoryMovementQty').value='';document.getElementById('inventoryMovementNote').value='';document.getElementById('inventoryMovementError').textContent='';
+  document.getElementById('inventoryMovementModal').classList.remove('hidden');updateInventoryControls();
+}
+function closeInventoryMovementModal() {if(!inventorySql.busy)document.getElementById('inventoryMovementModal').classList.add('hidden');}
+function saveInventoryMovement() {
+  if(!inventoryCanEdit())return;
+  const type=document.getElementById('inventoryMovementType').value;let quantity=document.getElementById('inventoryMovementQty').value.trim();
+  if(type==='waste') {if(!/^[0-9]+(?:\.[0-9]{1,3})?$/.test(quantity)||Number(quantity)<=0){document.getElementById('inventoryMovementError').textContent='Enter a positive waste quantity.';return;}quantity='-'+quantity;}
+  return submitInventoryChange({action:'movement',id:document.getElementById('inventoryMovementItem').value,type,quantity,note:document.getElementById('inventoryMovementNote').value.trim()},'inventoryMovementError');
+}
+function openInventoryRecipeModal(menuId=null) {
+  if(!inventoryCanEdit())return;if(!state.inventoryItems.length||!inventorySql.menus.length){showToast('Add stock items and menu items first.');return;}
+  const select=document.getElementById('inventoryRecipeMenu');select.innerHTML=inventorySql.menus.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+  if(menuId)select.value=String(menuId);fillInventoryRecipeLines(select.value);
+  document.getElementById('inventoryRecipeError').textContent='';document.getElementById('inventoryRecipeModal').classList.remove('hidden');updateInventoryControls();
+}
+function fillInventoryRecipeLines(menuId) {
+  const recipe=state.inventoryRecipes.find(r=>String(r.menuId)===String(menuId));inventorySql.recipeId=recipe?.id||null;
+  document.getElementById('inventoryRecipeLines').value=recipe?recipe.ingredients.map(i=>i.item+' | '+Number(i.qty).toFixed(3)).join('\n'):'';
+}
+function closeInventoryRecipeModal() {if(!inventorySql.busy)document.getElementById('inventoryRecipeModal').classList.add('hidden');}
+function parseInventoryRecipeLines(text) {
+  const lines=text.split(/\r?\n/).map(line=>line.trim()).filter(Boolean),seen=new Set();
+  if(!lines.length||lines.length>50)throw new Error('Use between 1 and 50 ingredient lines.');
+  return lines.map((line,index)=>{
+    const parts=line.split('|').map(v=>v.trim());const item=state.inventoryItems.find(i=>i.name.toLowerCase()===parts[0].toLowerCase());
+    if(parts.length!==2||!item||!/^[0-9]{1,9}(?:\.[0-9]{1,3})?$/.test(parts[1])||Number(parts[1])<=0)throw new Error('Line '+(index+1)+': use an existing stock item name | positive quantity, with at most three decimal places.');
+    if(seen.has(item.id))throw new Error('Each stock item must appear only once.');seen.add(item.id);return {item_id:item.id,quantity:parts[1]};
   });
-
-  addSystemRecord(
-    "Inventory restocked",
-    `${item.name} quick restocked by ${addQty} ${item.unit}`,
-    "Inventory",
-  );
-  updateMenuAvailabilityFromInventory();
-  renderInventory();
-  renderMenuAdmin();
-  renderRecords();
-  showToast(`${item.name} restocked.`);
 }
-
-function addManualStockMovement() {
-  const item = state.inventoryItems[0];
-  if (!item) {
-    showToast("No inventory item is loaded yet.");
-    return;
-  }
-
-  const movementQty = Math.min(Number(item.current), 0.25);
-  item.current = Math.max(0, Number((Number(item.current) - movementQty).toFixed(2)));
-
-  state.inventoryMovements.unshift({
-    time: "now",
-    type: "Manual stock-out",
-    item: item.name,
-    qty: `-${movementQty} ${item.unit}`,
-    note: "Manual stock adjustment record",
-  });
-
-  addSystemRecord(
-    "Inventory movement added",
-    `Manual stock-out recorded for ${item.name}`,
-    "Inventory",
-  );
-  updateMenuAvailabilityFromInventory();
-  renderInventory();
-  renderRecords();
-  showToast("Manual stock movement added.");
-}
-
-function openInventoryRecipeModal(menuName = "") {
-  const modal = document.getElementById("inventoryRecipeModal");
-  if (!modal) return;
-
-  const select = document.getElementById("inventoryRecipeMenu");
-  select.innerHTML = state.menu
-    .map(
-      (item) =>
-        `<option value="${escapeAttribute(item.name)}">${escapeHtml(item.name)}</option>`,
-    )
-    .join("");
-
-  const recipe = menuName ? findInventoryRecipe(menuName) : state.inventoryRecipes[0];
-  const selectedMenu = recipe?.menu || state.menu[0]?.name || "";
-  state.editingInventoryRecipeMenu = selectedMenu;
-  select.value = selectedMenu;
-  fillInventoryRecipeLines(selectedMenu);
-
-  modal.classList.remove("hidden");
-  lucide.createIcons();
-}
-
-function fillInventoryRecipeLines(menuName) {
-  const recipe = findInventoryRecipe(menuName);
-  const ingredients = getRecipeIngredients(recipe);
-  const lines = ingredients
-    .map((ingredient) => `${ingredient.item} | ${formatStockQty(ingredient.qty)}`)
-    .join("\n");
-  document.getElementById("inventoryRecipeLines").value = lines;
-}
-
-function closeInventoryRecipeModal() {
-  const modal = document.getElementById("inventoryRecipeModal");
-  if (modal) modal.classList.add("hidden");
-  state.editingInventoryRecipeMenu = null;
-}
-
-function parseInventoryRecipeLines(rawValue) {
-  return String(rawValue || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const parts = line.includes("|") ? line.split("|") : line.split(":");
-      const item = (parts[0] || "").trim();
-      const qty = Number((parts[1] || "").trim());
-      return { item, qty };
-    })
-    .filter((entry) => entry.item && !Number.isNaN(entry.qty) && entry.qty > 0);
-}
-
 function saveInventoryRecipe() {
-  const menu = document.getElementById("inventoryRecipeMenu").value;
-  const ingredients = parseInventoryRecipeLines(
-    document.getElementById("inventoryRecipeLines").value,
-  );
-
-  if (!menu || !ingredients.length) {
-    showToast("Add at least one ingredient and deduction quantity.");
-    return;
+  if(!inventoryCanEdit())return;
+  try {return submitInventoryChange({action:'save_recipe',menu_id:document.getElementById('inventoryRecipeMenu').value,recipe_id:inventorySql.recipeId,ingredients:parseInventoryRecipeLines(document.getElementById('inventoryRecipeLines').value)},'inventoryRecipeError');}
+  catch(error){document.getElementById('inventoryRecipeError').textContent=error.message;}
+}
+async function submitInventoryChange(payload=null,errorId=null) {
+  if(inventorySql.busy||!inventoryAllowed())return;
+  if(!inventorySql.pending) {
+    if(!payload)return;
+    try {inventoryStorePending({payload:{...payload,submission_key:inventoryKey()},errorId});}
+    catch(error){inventoryFeedback(errorId,'Could not save retry information. No change was sent. '+error.message);return;}
   }
-
-  let recipe = findInventoryRecipe(menu);
-  if (recipe) {
-    recipe.ingredients = ingredients;
-    delete recipe.uses;
-  } else {
-    recipe = { menu, ingredients };
-    state.inventoryRecipes.push(recipe);
+  const pending=inventorySql.pending;errorId=pending.errorId;
+  let failure=null;
+  inventorySql.busy=true;inventorySql.request++;inventorySql.loading=false;inventorySql.error='';renderInventory();
+  try {
+    const response=await fetch(quvoPath('api/inventory/index.php'),{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':window.QUVO_CSRF||''},signal:AbortSignal.timeout(15000),body:JSON.stringify(pending.payload)});
+    const result=await response.json();if(!response.ok||!result.ok){const error=new Error(result.error||'Could not save inventory.');error.status=response.status;error.code=result.code;throw error;}
+    try {inventoryStorePending(null);} catch {inventorySql.pending=null;}
+    installInventorySnapshot(result.snapshot);inventorySql.busy=false;
+    closeInventoryStockModal();closeInventoryMovementModal();closeInventoryRecipeModal();showToast(result.message);loadMenuItems();
+  } catch(error) {
+    failure=error;
+    inventorySql.error=error.message;if(errorId)document.getElementById(errorId).textContent=error.message;
+    if([400,404,413,422].includes(error.status)||['stock_changed','recipe_changed'].includes(error.code)) {
+      try {inventoryStorePending(null);} catch {inventorySql.pending=null;}
+      if(['stock_changed','recipe_changed'].includes(error.code)) {
+        inventorySql.busy=false;closeInventoryStockModal();closeInventoryRecipeModal();await loadInventory();showToast(error.message+' Open the form again to review the latest values.');
+      }
+    } else inventorySql.error+=' Use Retry saved change to confirm the result.';
+  } finally {
+    inventorySql.busy=false;renderInventory();
+    if(failure&&errorId&&!['stock_changed','recipe_changed'].includes(failure.code)) {
+      const fields={stock_name:'inventoryItemName',stock_category:'inventoryCategory',stock_unit:'inventoryUnit',stock_current:'inventoryCurrent',stock_reorder:'inventoryReorder',stock_note:'inventoryNote'};
+      inventoryFeedback(errorId,inventorySql.error,fields[failure.code]||null);
+    }
   }
-
-  updateInventoryLinkedMenus();
-  updateMenuAvailabilityFromInventory();
-  addSystemRecord(
-    "Bill of Materials updated",
-    `${menu} ingredient deduction setup updated`,
-    "Inventory",
-  );
-  closeInventoryRecipeModal();
-  renderInventory();
-  renderMenuAdmin();
-  renderRecords();
-  showToast(`Bill of Materials setup updated for ${menu}.`);
 }

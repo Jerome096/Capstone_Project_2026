@@ -9,6 +9,9 @@
       authorized admin access.</span
     >
   </div>
+  <p id="inventorySqlStatus" class="helper-text" role="status"></p>
+  <div id="inventoryPendingBanner" hidden><span>A stock change needs confirmation.</span> <button class="btn light" type="button" id="inventoryRetry">Retry saved change</button></div>
+  <button class="btn light" type="button" id="inventoryRefresh">Refresh stock</button>
   <div class="stats-grid report-stats">
     <article class="stat-card">
       <div class="stat-label">Tracked items</div>
@@ -149,6 +152,7 @@
         class="inventory-movement-list"
         id="inventoryMovementLog"
       ></div>
+      <button class="btn light" type="button" id="inventoryMore" hidden>Load older movements</button>
     </section>
     <section class="inventory-main-card">
       <div class="admin-toolbar">

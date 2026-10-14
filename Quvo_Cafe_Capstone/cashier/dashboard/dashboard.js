@@ -1,14 +1,16 @@
 const dashboardCompletion = { count: 0, loading: false, closing: false, revision: 0 };
 
-async function dashboardApi(input) {
-  const response = await fetch(quvoPath("api/dashboard/index.php"), {
+async function dashboardApi(input, query = "") {
+  const response = await fetch(quvoPath("api/dashboard/index.php") + query, {
     method: input ? "POST" : "GET", credentials: "same-origin", cache: "no-store",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": window.QUVO_CSRF || "" },
     signal: AbortSignal.timeout(15000),
     ...(input ? { body: JSON.stringify(input) } : {}),
   });
   const data = await response.json();
-  if (!response.ok || !data.ok) throw new Error(data.error || "Could not update the dashboard.");
+  if (!response.ok || !data.ok) {
+    const error=new Error(data.error || "Could not update the dashboard.");error.status=response.status;throw error;
+  }
   return data;
 }
 
@@ -170,131 +172,59 @@ function bindEodModal() {
 }
 
 function openEodModal() {
-  renderEodSummary();
-  document.getElementById("eodNote").value = "";
-  document.getElementById("eodModal").classList.remove("hidden");
-  lucide.createIcons();
+  document.getElementById('eodNote').value=eodSql.pending?.note||'';
+  document.getElementById('eodError').textContent='';
+  document.getElementById('eodModal').classList.remove('hidden');lucide.createIcons();loadEodPreview();
 }
 
 function closeEodModal() {
+  if(dashboardCompletion.closing)return;
   document.getElementById("eodModal").classList.add("hidden");
 }
 
-function calculateEodTotals() {
-  const receiptTransactions = state.receipts
-    .filter((receipt) => receipt.status !== "voided")
-    .map((receipt) => ({
-      total: receipt.total,
-      paymentMethod: receipt.paymentMethod,
-      status: receipt.status,
-    }));
-
-  const activePaidOrders = state.orders
-    .filter((order) => order.paymentStatus === "confirmed" || order.paid)
-    .map((order) => ({
-      total: order.total,
-      paymentMethod: order.paymentMethod || "Cash",
-      status: order.stage,
-    }));
-
-  const transactions = [...receiptTransactions, ...activePaidOrders];
-  const totalSales = transactions.reduce((sum, entry) => sum + Number(entry.total || 0), 0);
-  const cashSales = transactions
-    .filter((entry) => entry.paymentMethod === "Cash")
-    .reduce((sum, entry) => sum + Number(entry.total || 0), 0);
-  const gcashSales = transactions
-    .filter((entry) => entry.paymentMethod === "GCash")
-    .reduce((sum, entry) => sum + Number(entry.total || 0), 0);
-  const paymayaSales = transactions
-    .filter((entry) => entry.paymentMethod === "PayMaya")
-    .reduce((sum, entry) => sum + Number(entry.total || 0), 0);
-  const servedOrders = state.receipts.filter((receipt) => receipt.status === "served").length;
-  const voidedOrders = state.receipts.filter((receipt) => receipt.status === "voided").length;
-  const totalOrders = transactions.length;
-  const averageOrderValue = totalOrders ? Math.round(totalSales / totalOrders) : 0;
-
-  return {
-    totalSales,
-    cashSales,
-    gcashSales,
-    paymayaSales,
-    totalOrders,
-    servedOrders,
-    voidedOrders,
-    averageOrderValue,
-  };
+const eodSql={totals:null,pending:null,loading:false};
+function eodPendingKey(){return 'quvo_eod_pending_v1_'+(window.QUVO_SESSION?.staff_id||'anonymous');}
+function saveEodPending(value){if(value)sessionStorage.setItem(eodPendingKey(),JSON.stringify(value));else sessionStorage.removeItem(eodPendingKey());eodSql.pending=value;}
+function eodSubmissionKey(){const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;const key=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');return [key.slice(0,8),key.slice(8,12),key.slice(12,16),key.slice(16,20),key.slice(20)].join('-');}
+function updateEodControls(){
+  document.getElementById('eodConfirm').disabled=dashboardCompletion.closing||(!eodSql.pending&&(eodSql.loading||!eodSql.totals));
+  document.getElementById('eodConfirm').textContent=dashboardCompletion.closing?'Saving…':eodSql.pending?'Retry EOD confirmation':'Confirm EOD';
+  document.getElementById('eodNote').disabled=dashboardCompletion.closing||Boolean(eodSql.pending);
+  document.getElementById('eodClose').disabled=dashboardCompletion.closing;document.getElementById('eodCancel').disabled=dashboardCompletion.closing;
 }
-
-function renderEodSummary() {
-  const totals = calculateEodTotals();
-  const grid = document.getElementById("eodSummary");
-
-  grid.innerHTML = `
-    <div class="eod-metric"><span>Total sales</span><b>₱${totals.totalSales.toLocaleString("en-PH")}</b></div>
-    <div class="eod-metric"><span>Cash</span><b>₱${totals.cashSales.toLocaleString("en-PH")}</b></div>
-    <div class="eod-metric"><span>GCash</span><b>₱${totals.gcashSales.toLocaleString("en-PH")}</b></div>
-    <div class="eod-metric"><span>PayMaya</span><b>₱${totals.paymayaSales.toLocaleString("en-PH")}</b></div>
-    <div class="eod-metric"><span>Total orders</span><b>${totals.totalOrders}</b></div>
-    <div class="eod-metric"><span>Served orders</span><b>${totals.servedOrders}</b></div>
-    <div class="eod-metric"><span>Voided orders</span><b>${totals.voidedOrders}</b></div>
-    <div class="eod-metric"><span>Average order</span><b>₱${totals.averageOrderValue.toLocaleString("en-PH")}</b></div>
-    <div class="eod-metric"><span>Active orders</span><b>${state.orders.length}</b></div>
-    <div class="eod-metric"><span>Receipts</span><b>${state.receipts.length}</b></div>
-  `;
+function renderEodSummary(){
+  const grid=document.getElementById('eodSummary');
+  if(!eodSql.totals){grid.innerHTML='<p class="helper-text">'+(eodSql.loading?'Loading closing figures from SQL…':'Closing figures are unavailable. Reopen this popup to retry.')+'</p>';return;}
+  document.getElementById('eodOperationDate').textContent='Operation date: '+eodSql.totals.businessDate+' (Philippine time)';
+  const t=eodSql.totals,money=value=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(value));
+  grid.innerHTML=[['Total sales',money(t.totalSales)],['Cash',money(t.cashSales)],['GCash',money(t.gcashSales)],['PayMaya',money(t.paymayaSales)],['Other digital',money(t.otherSales)],['Paid orders',t.totalOrders],['Today’s paid orders served',t.servedOrders],['Voided orders',t.voidedOrders],['Average order',money(t.averageOrderValue)],['Active orders (all dates)',t.activeOrders]].map(([label,value])=>'<div class="eod-metric"><span>'+label+'</span><b>'+value+'</b></div>').join('');
 }
-
-async function confirmEod() {
-  if (dashboardCompletion.closing) return;
-  dashboardCompletion.closing = true;
-  dashboardCompletion.revision++;
-  const button = document.getElementById("eodConfirm");
-  button.disabled = true;
-  try {
-    const totals = calculateEodTotals();
-    const note = document.getElementById("eodNote").value.trim();
-    const saved = await dashboardApi({ action: "eod", note });
-    dashboardCompletion.revision++;
-    dashboardCompletion.count = Number(saved.completed_today);
-    state.receipts.forEach(receipt => {
-      if (!receipt.persisted && ["served", "completed"].includes(receipt.status)) receipt.closedByEod = true;
-    });
-    const record = {
-      id: `EOD-${saved.closure_id}`,
-      date: new Date().toLocaleDateString("en-PH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      period: "daily",
-      ...totals,
-      note,
-    };
-
-    state.eodRecords.unshift(record);
-    persistEodRecords();
-    addSystemRecord(
-      "End of day completed",
-      `${record.date} closed with ₱${record.totalSales.toLocaleString("en-PH")} total sales`,
-      "EOD",
-    );
-    renderSalesHistory();
-    renderStats();
-    closeEodModal();
-    showToast("End of day saved. Returning to login.");
-    setTimeout(logoutToLogin, 650);
-  } catch (error) {
-    showToast(error.message || "EOD could not be saved. Please try again.");
-  } finally {
-    dashboardCompletion.closing = false;
-    button.disabled = false;
+async function loadEodPreview(){
+  eodSql.loading=true;eodSql.totals=null;updateEodControls();renderEodSummary();
+  try{const data=await dashboardApi(null,'?action=eod-preview');eodSql.totals=data.totals;document.getElementById('eodError').textContent=eodSql.pending?'A previous confirmation needs checking. Retry uses the same EOD key.':'';}
+  catch(error){document.getElementById('eodError').textContent=error.message;}
+  finally{eodSql.loading=false;renderEodSummary();updateEodControls();}
+}
+async function confirmEod(){
+  if(dashboardCompletion.closing)return;
+  try{if(!eodSql.pending)saveEodPending({submission_key:eodSubmissionKey(),note:document.getElementById('eodNote').value.trim(),business_date:eodSql.totals?.businessDate||null});}
+  catch(error){document.getElementById('eodError').textContent='Could not save retry information. No EOD was sent.';return;}
+  dashboardCompletion.closing=true;dashboardCompletion.revision++;updateEodControls();document.getElementById('eodError').textContent='';
+  try{
+    const saved=await dashboardApi({action:'eod',...eodSql.pending});dashboardCompletion.revision++;dashboardCompletion.count=Number(saved.completed_today);
+    try{saveEodPending(null);}catch{eodSql.pending=null;}
+    state.receipts.forEach(receipt=>{if(!receipt.persisted&&['served','completed'].includes(receipt.status))receipt.closedByEod=true;});
+    const record=saved.record;
+    addSystemRecord('End of day completed','EOD-'+saved.closure_id+' saved with ₱'+Number(record.totalSales).toLocaleString('en-PH')+' total sales','EOD');
+    renderStats();document.getElementById('eodModal').classList.add('hidden');
+    showToast(saved.replayed?'Previously saved EOD restored. Returning to login.':'End of day saved in SQL. Returning to login.');setTimeout(logoutToLogin,650);
+  }catch(error){
+    if([413,422].includes(error.status)){try{saveEodPending(null);}catch{eodSql.pending=null;}}
+    document.getElementById('eodError').textContent=error.message+(eodSql.pending?' Retry this confirmation to check the saved result.':' Correct the closing note and try again.');showToast(error.message||'EOD could not be saved.');
   }
+  finally{dashboardCompletion.closing=false;updateEodControls();}
 }
-
-function loadPersistedEodRecords() {
-  // Completion boundaries are shared through SQL; report totals still use the existing local view.
+function loadPersistedEodRecords(){
+  try{const pending=JSON.parse(sessionStorage.getItem(eodPendingKey())||'null');if(pending?.submission_key&&typeof pending.note==='string')eodSql.pending=pending;}catch{}
   refreshDashboardCompletion();
-}
-
-function persistEodRecords() {
-  // The existing sales-history summary stays local; completion closures are saved by dashboardApi.
 }

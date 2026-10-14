@@ -22,13 +22,16 @@
       Inventory
     </div>
     <h2 id="inventoryStockTitle">Update stock item</h2>
-    <p class="modal-sub">Record an inventory adjustment for admin monitoring.</p>
+    <p class="modal-sub">Set the stock item details and physical count. Quantity changes are saved in the movement log.</p>
+    <p id="inventoryStockError" class="inventory-form-error" role="alert" aria-live="polite"></p>
     <div class="inventory-form-grid">
       <label>
-        Stock item
+        Stock item (required)
         <input
           id="inventoryItemName"
           type="text"
+          maxlength="100"
+          required
         />
       </label>
       <label>
@@ -40,47 +43,58 @@
           <option value="Food ingredients">Food ingredients</option>
           <option value="Pastry">Pastry</option>
           <option value="Packaging">Packaging</option>
+          <option value="Other">Other</option>
         </select>
       </label>
       <label>
-        Current stock
+        Current stock (required)
         <input
           id="inventoryCurrent"
           min="0"
-          step="0.01"
+          step="0.001"
           type="number"
+          max="999999999.999"
+          required
         />
       </label>
       <label>
-        Unit
+        Unit (required)
         <input
           id="inventoryUnit"
-          placeholder="kg, L, pcs, bottles"
+          placeholder="Example: kg"
           type="text"
+          maxlength="20"
+          required
         />
+        <span class="inventory-field-hint">Use one unit: kg, g, L, ml or pcs.</span>
       </label>
       <label>
         Reorder level
         <input
           id="inventoryReorder"
           min="0"
-          step="0.01"
+          step="0.001"
           type="number"
+          placeholder="0"
+          max="999999999.999"
         />
+        <span class="inventory-field-hint">Optional. Leave blank for zero.</span>
       </label>
       <label>
         Linked menu
         <input
           id="inventoryLinkedMenu"
-          placeholder="Linked menu items"
+          placeholder="Set links through Bill of Materials"
+          disabled
           type="text"
         />
       </label>
       <label class="full">
-        Note / receipt reference
+        Reason / receipt reference
         <input
           id="inventoryNote"
-          placeholder="Example: Restocked based on supplier receipt"
+          placeholder="Required when reducing the stock count"
+          maxlength="500"
           type="text"
         />
       </label>
@@ -89,12 +103,14 @@
       <button
         class="btn light"
         id="inventoryStockCancel"
+        type="button"
       >
         Cancel
       </button>
       <button
         class="btn dark"
         id="inventoryStockSave"
+        type="button"
       >
         Save stock
       </button>

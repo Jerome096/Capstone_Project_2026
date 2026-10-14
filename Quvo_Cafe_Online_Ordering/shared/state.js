@@ -7,6 +7,7 @@ const state = {
   selectedCategory: "All",
   searchTerm: "",
   selectedItem: null,
+  editingCartId: null,
   modalQuantity: 1,
   cart: [],
   order: null,

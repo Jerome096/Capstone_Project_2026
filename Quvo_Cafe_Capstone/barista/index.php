@@ -27,7 +27,7 @@ $_SESSION["operations_portal"] = "barista";
   <link rel="stylesheet" href="../admin/records/records.css" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
-  <link rel="stylesheet" href="../admin/inventory/inventory.css" />
+  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-save-2" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
 <script src="../shared/js/auth.js"></script>
@@ -56,7 +56,7 @@ $_SESSION["operations_portal"] = "barista";
       <div class="brand-sub">Barista Workspace</div>
     </div>
     <nav class="nav">
-      
+
 <div class="nav-section-label nav-section-label-first">Barista workspace</div>
 <button class="nav-item active" data-screen="barista"><i data-lucide="coffee"></i><span>Order data</span></button>
 <div class="nav-divider"></div>
@@ -71,7 +71,7 @@ $_SESSION["operations_portal"] = "barista";
       <div class="staff-session-copy"><strong id="staffSessionName">Staff</strong><span id="staffSessionRole">Staff</span></div>
       <button aria-label="Log out" class="staff-logout-button" id="logoutBtn" type="button"><i data-lucide="log-out"></i></button>
     </div>
-    
+
   </aside>
   <main class="main">
     <header class="topbar">
@@ -86,6 +86,6 @@ $_SESSION["operations_portal"] = "barista";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js"></script>
+  <script src="../shared/js/workspace-loader.js?v=inventory-save-2"></script>
 </body>
 </html>

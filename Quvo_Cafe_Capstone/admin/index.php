@@ -32,12 +32,12 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
   <link rel="stylesheet" href="../barista/dashboard/barista.css" />
-  <link rel="stylesheet" href="../admin/reports/reports.css" />
+  <link rel="stylesheet" href="../admin/reports/reports.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/menu-management/menu-management.css" />
   <link rel="stylesheet" href="../admin/records/records.css" />
-  <link rel="stylesheet" href="../admin/sales-history/sales-history.css" />
+  <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
-  <link rel="stylesheet" href="../admin/inventory/inventory.css" />
+  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-save-2" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
 <script src="../shared/js/auth.js"></script>
@@ -103,6 +103,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=food-ready-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=inventory-save-2"></script>
 </body>
 </html>

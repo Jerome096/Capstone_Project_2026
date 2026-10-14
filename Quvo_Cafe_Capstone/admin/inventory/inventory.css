@@ -308,3 +308,18 @@
 .inventory-copy {
   line-height: 1.45;
 }
+
+#inventoryRefresh { margin-bottom: 16px; }
+#inventoryPendingBanner { padding: 12px; border: 1px solid var(--q-border); border-radius: 12px; margin-bottom: 12px; }
+#inventoryPendingBanner[hidden] { display: none; }
+.inventory-row > * { min-width: 0; overflow-wrap: anywhere; }
+.inventory-row-actions { flex-wrap: wrap; }
+.inventory-row-actions .btn { min-height: 42px; }
+.inventory-modal-card { max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.inventory-card-top > * { min-width: 0; overflow-wrap: anywhere; }
+.inventory-card-top span { font-size: var(--q-text-xs); }
+#inventoryMore { margin-top: 12px; }
+.inventory-form-error { color: #9c2f20; background: #fff0ec; border: 1px solid #efbdb2; border-radius: 10px; padding: 10px 12px; margin-top: 12px; line-height: 1.5; }
+.inventory-form-error:empty { display: none; }
+.inventory-form-grid .inventory-field-hint { font-size: 11px; color: var(--q-ink-500); text-transform: none; letter-spacing: 0; line-height: 1.5; }
+.inventory-form-grid [aria-invalid="true"] { border-color: #b64230; }

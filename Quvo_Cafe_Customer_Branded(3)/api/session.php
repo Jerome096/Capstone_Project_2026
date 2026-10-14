@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/guest.php";
+require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/orders.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {
@@ -67,7 +68,7 @@ try {
         }
         $items = $db
             ->query(
-                "SELECT menu_item_id AS id,item_name AS name,category,price FROM dbo.menu_items WHERE is_available=1 ORDER BY item_name",
+                "SELECT m.menu_item_id AS id,m.item_name AS name,m.category,m.price FROM dbo.menu_items m WHERE ".inventory_menu_condition()." ORDER BY m.item_name",
             )
             ->fetchAll();
         foreach ($items as &$item) {

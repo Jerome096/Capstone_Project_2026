@@ -64,7 +64,10 @@ function renderCart() {
                 <strong>${item.quantity}</strong>
                 <button type="button" data-cart-plus="${escapeCustomerHtml(item.cartId)}">+</button>
               </div>
-              <button class="remove-btn" type="button" data-cart-remove="${escapeCustomerHtml(item.cartId)}">Remove</button>
+              <div class="cart-item-controls">
+                <button class="edit-cart-btn" type="button" data-cart-edit="${escapeCustomerHtml(item.cartId)}" ${onlineCartLocked() ? "disabled" : ""}>Edit</button>
+                <button class="remove-btn" type="button" data-cart-remove="${escapeCustomerHtml(item.cartId)}">Remove</button>
+              </div>
             </div>
           </div>
         </article>
@@ -77,6 +80,9 @@ function renderCart() {
 }
 
 function bindCartButtons() {
+  document.querySelectorAll("[data-cart-edit]").forEach(button=>{
+    button.addEventListener("click",()=>openCartItemEditor(button.dataset.cartEdit));
+  });
   document.querySelectorAll("[data-cart-minus]").forEach((button) => {
     button.addEventListener("click", () => updateCartQuantity(button.dataset.cartMinus, -1));
   });

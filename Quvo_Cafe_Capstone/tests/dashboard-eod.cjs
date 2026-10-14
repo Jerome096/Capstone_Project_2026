@@ -8,7 +8,9 @@ let count = 4, failEod = false, saved = 0, toast = '', delayedRead;
 const receipts = [{persisted:true,status:'served',total:10,paymentMethod:'Cash'},
   {persisted:false,status:'completed',total:20,paymentMethod:'Cash'}];
 const context = vm.createContext({console,Date,Number,AbortSignal,
-  document:{getElementById:el},window:{QUVO_CSRF:'test'},quvoPath:p=>p,
+  document:{getElementById:el},window:{QUVO_CSRF:'test',QUVO_SESSION:{staff_id:17}},quvoPath:p=>p,
+  crypto:require('node:crypto').webcrypto,Uint8Array,
+  sessionStorage:{store:new Map(),setItem(k,v){this.store.set(k,v)},getItem(k){return this.store.get(k)||null},removeItem(k){this.store.delete(k)}},
   state:{insideTables:[],outsideTables:[],orders:[],receipts,eodRecords:[]},diningSessionState:{counts:{}},
   addSystemRecord(){},renderSalesHistory(){},showToast:message=>toast=message,
   setTimeout(){},logoutToLogin(){},
@@ -16,7 +18,7 @@ const context = vm.createContext({console,Date,Number,AbortSignal,
     if(options.method==='POST') {
       if(failEod) throw new Error('EOD unavailable');
       saved++; count=0;
-      return {ok:true,json:async()=>({ok:true,closure_id:String(saved),completed_today:0})};
+      return {ok:true,json:async()=>({ok:true,closure_id:String(saved),completed_today:0,record:{totalSales:'10.00'}})};
     }
     if(delayedRead) return delayedRead;
     return {ok:true,json:async()=>({ok:true,completed_today:count})};

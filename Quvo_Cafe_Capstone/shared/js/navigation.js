@@ -54,8 +54,11 @@ function showScreen(screen) {
   }
 
   if (screen === "salesHistory") {
-    renderSalesHistory();
+    loadSalesHistory();
   }
+  if (screen === "reports") loadReports();
+  if (screen === "inventory") loadInventory();
+  if (screen === "menu" || screen === "menuAdmin") loadMenuItems();
 
   if (screen === "barista") {
     renderBaristaTickets();

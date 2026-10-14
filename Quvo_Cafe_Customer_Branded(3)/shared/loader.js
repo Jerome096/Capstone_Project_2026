@@ -33,7 +33,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src;
+        script.src = src + "?v=cart-edit-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

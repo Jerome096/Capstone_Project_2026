@@ -30,6 +30,7 @@ function openItemModal(itemId) {
   }
 
   state.selectedItem = item;
+  state.editingCartId = null;
   state.modalQuantity = 1;
 
   customizeForm.reset();
@@ -50,6 +51,22 @@ function openItemModal(itemId) {
 function closeItemModal() {
   itemModal.classList.remove("open");
   itemModal.setAttribute("aria-hidden", "true");
+  state.editingCartId = null;
+}
+
+function openCartItemEditor(cartId) {
+  if (dineCartLocked()) return showToast("Retry the pending order before changing your cart.");
+  const cartItem=state.cart.find(item=>item.cartId===cartId);
+  if(!cartItem)return;
+  if(!CUSTOMER_DATA.menuItems.some(item=>item.id===cartItem.itemId))return showToast("This item is no longer available in the menu.");
+  openItemModal(cartItem.itemId);
+  state.editingCartId=cartId;
+  state.selectedItem={...state.selectedItem,price:cartItem.unitPrice};
+  state.modalQuantity=cartItem.quantity;
+  document.getElementById("sugarLevel").value=cartItem.customization.sugarLevel;
+  document.getElementById("iceLevel").value=cartItem.customization.iceLevel;
+  document.getElementById("itemNotes").value=cartItem.customization.notes||"";
+  updateModalPrice();
 }
 
 function getCustomizationSummary() {
@@ -83,19 +100,25 @@ function updateModalPrice() {
   }
 
   const total = calculateModalUnitPrice() * state.modalQuantity;
-  addToCartBtn.textContent = `Add to cart · ${formatCurrency(total)}`;
+  addToCartBtn.textContent = `${state.editingCartId ? "Save changes" : "Add to cart"} · ${formatCurrency(total)}`;
 }
 
 function handleAddToCart(event) {
   event.preventDefault();
   if (dineCartLocked()) return showToast("Retry the pending order before changing your cart.");
-  if (state.cart.length >= 50) return showToast("An order can contain up to 50 item lines.");
+  if (!state.editingCartId && state.cart.length >= 50) return showToast("An order can contain up to 50 item lines.");
 
   if (!state.selectedItem) {
     return;
   }
 
   const customization = getCustomizationSummary();
+  if(state.editingCartId){
+    const existing=state.cart.find(item=>item.cartId===state.editingCartId);
+    if(!existing){closeItemModal();return showToast("This item was removed from your cart.");}
+    existing.quantity=state.modalQuantity;existing.customization=customization;
+    closeItemModal();renderCart();showToast("Cart item updated.");return;
+  }
   const unitPrice = calculateModalUnitPrice();
   const cartItem = {
     cartId: `${state.selectedItem.id}-${Date.now()}`,

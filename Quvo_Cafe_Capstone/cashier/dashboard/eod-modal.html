@@ -21,6 +21,8 @@
       Review the closing figures before ending the day. Confirming EOD saves the record
       and returns to the login screen.
     </p>
+    <p id="eodOperationDate" class="helper-text"></p>
+    <p class="helper-text">Sales and voids include only today’s transactions not yet saved in an EOD. Cash change is excluded. Active orders stay open. SQL recalculates the final totals when you confirm.</p>
     <div
       class="eod-grid"
       id="eodSummary"
@@ -29,9 +31,11 @@
       Closing note
       <textarea
         id="eodNote"
+        maxlength="1000"
         placeholder="Optional note for this closing record"
       ></textarea>
     </label>
+    <p id="eodError" class="helper-text" role="alert"></p>
     <div class="modal-actions">
       <button
         class="btn light"

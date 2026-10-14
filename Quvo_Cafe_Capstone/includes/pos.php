@@ -5,6 +5,7 @@ require_once __DIR__.'/orders.php';
 // The caller commits the order, immutable catalog snapshots, and payment together.
 function pos_submit(PDO $db,array $actor,array $input): array
 {
+    inventory_lock($db);
     if(!in_array($actor['role'],['admin','staff'],true))throw new OrderError('Cashier access is required.',403);
     $q=$db->prepare("SELECT s.staff_id FROM dbo.staff_users s WITH (UPDLOCK,HOLDLOCK) JOIN dbo.roles r ON r.role_id=s.role_id WHERE s.staff_id=? AND s.is_active=1 AND LOWER(r.role_name) IN ('staff','admin')");
     $q->execute([$actor['staff_id']]);if(!$q->fetchColumn())throw new OrderError('Please sign in again.',401);$q->closeCursor();

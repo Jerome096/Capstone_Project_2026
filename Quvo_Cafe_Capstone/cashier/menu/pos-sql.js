@@ -47,15 +47,15 @@ async function confirmSqlPosPayment(){
     // Invalidate polling that started while the payment request was in flight.
     sqlOrders.revision++;
     approved=sqlMapOrder(result.order);installSqlOrder(result.order);
-    if(!result.replayed)deductInventoryForOrder(approved,'POS payment confirmation');
+    loadMenuItems();
     state.posCart=[];document.getElementById('counterCustomerName').value='';
     document.getElementById('paidState').classList.remove('hidden');document.getElementById('posReceiptActions').classList.remove('hidden');
     showToast(result.replayed?'Previously saved POS order restored.':'POS order '+result.order.order_number+' saved and sent to preparation.');
   }catch(error){
-    document.getElementById('posSqlError').textContent=error.message+' '+(error.status===422||['price_changed','item_unavailable'].includes(error.code)?'Cancel this review and correct the cart.':'Retry this same confirmation or check Orders before creating another order.');
-    if([400,413,422].includes(error.status)||['price_changed','item_unavailable'].includes(error.code)){
+    document.getElementById('posSqlError').textContent=error.message+' '+(error.status===422||['price_changed','item_unavailable','stock_unavailable'].includes(error.code)?'Cancel this review and correct the cart.':'Retry this same confirmation or check Orders before creating another order.');
+    if([400,413,422].includes(error.status)||['price_changed','item_unavailable','stock_unavailable'].includes(error.code)){
       try{savePosPending(null);}catch{posSql.pending=null;}
-      if(['price_changed','item_unavailable'].includes(error.code))loadMenuItems();
+      if(['price_changed','item_unavailable','stock_unavailable'].includes(error.code))loadMenuItems();
     }
   }finally{
     posSql.busy=false;updatePosPendingUi();renderCart();

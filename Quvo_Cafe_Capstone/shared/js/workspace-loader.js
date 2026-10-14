@@ -29,6 +29,7 @@ const QUVO_MODAL_FRAGMENTS = [
   "cashier/orders/edit-order-modal.html",
   "admin/inventory/inventory-stock-modal.html",
   "admin/inventory/inventory-recipe-modal.html",
+  "admin/inventory/inventory-movement-modal.html",
 ];
 
 const QUVO_WORKSPACE_SCRIPTS = [
@@ -64,7 +65,7 @@ function quvoPath(path) {
 async function appendQuvoFragments(paths, targetId) {
   const target = document.getElementById(targetId);
   for (const path of paths) {
-    const response = await fetch(quvoPath(path));
+    const response = await fetch(quvoPath(path), {cache:"no-store"});
     if (!response.ok) throw new Error(`Could not load ${path}`);
     target.insertAdjacentHTML("beforeend", await response.text());
   }
@@ -73,8 +74,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    const printModule = ["cashier/orders/sql-orders.js", "shared/js/thermal-print.js", "cashier/orders/preparation-tickets.js", "cashier/receipts/receipts.js"].includes(path);
-    script.src = quvoPath(path) + (printModule ? "?v=food-ready-1" : "");
+    script.src = quvoPath(path) + "?v=inventory-save-2";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

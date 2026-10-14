@@ -59,3 +59,7 @@
 .cart-actions {
   margin-top: 12px;
 }
+.cart-item-controls { display: flex; gap: 8px; align-items: center; }
+.edit-cart-btn { border: 1px solid #e5d5ba; border-radius: 999px; padding: 10px 16px; min-height: 44px; background: var(--panel-soft); color: var(--coffee-dark); font: inherit; font-weight: 800; cursor: pointer; }
+.edit-cart-btn:disabled { opacity: .5; cursor: not-allowed; }
+.cart-actions { flex-wrap: wrap; gap: 10px; }

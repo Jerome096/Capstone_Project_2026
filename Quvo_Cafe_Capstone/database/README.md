@@ -26,6 +26,16 @@ For another database name, change QuvoCafeDB consistently in all three scripts b
 
 The export-manifest.json file records which tables and row counts were exported.
 
+## Ten dine-in tables
+
+Apply `17_dining_tables.sql` to add Tables 2–10 to the existing `cafe_tables`
+configuration. Table 1 and customer sessions are preserved. The script inserts
+only missing table codes, so repeating it does not create duplicates. All nine
+new tables are active and use the same indoor area as Table 1. Their customer
+links are `/customer/?table=2` through `/customer/?table=10`; each has its own
+cashier approval and uses the existing session inactivity rules. See
+`docs/DINE_IN_TABLES.md` for all ten links and phone/tablet URL instructions.
+
 ## Dine-in ordering migration
 
 After the base schema and public data have been imported, run
@@ -78,9 +88,9 @@ order IDs in SQL, preserving orders, payments and receipts. A completed order ca
 belong to only one closure. The counter stays reset through refreshes, receipt
 pagination and staff logins; newly served orders start counting again.
 
-This stores the dashboard completion boundary. Other report totals still use the
-existing frontend EOD summary. Walk-in POS receipts are stored in SQL after migration 12;
-Only legacy browser receipts use the old in-memory closure behavior.
+This stores the dashboard completion boundary. Sales history and SQL closing totals
+are added by migration 14 below. Walk-in POS receipts are stored in SQL after
+migration 12. Only legacy browser receipts use the old in-memory closure behavior.
 
 Verify with `C:\php85\php.exe tests/dashboard-eod.php` (all test changes roll back)
 and `node tests/dashboard-eod.cjs`.
@@ -153,8 +163,8 @@ SQL order management, dated receipts and completed-order EOD counts.
 
 Interrupted requests retain the same payload and submission key in the cashier's
 tab for safe retry after refresh. Accepted retries never create another payment.
-Previous browser-only POS orders are not imported. Inventory remains the existing
-prototype behavior. Kitchen SQL readiness is added by migration 13 below.
+Previous browser-only POS orders are not imported. Inventory deductions use SQL
+after migration 16 and recipe setup. Kitchen SQL readiness is added by migration 13 below.
 
 Verify with `C:\php85\php.exe tests/pos-sql.php` (all fixture rows roll back) and
 `node tests/pos-orders.cjs`.
@@ -173,3 +183,120 @@ cashier/barista workflow. The kitchen cannot collect payments, cancel or serve
 orders. Repeated Ready submissions are idempotent. All API actions require a
 server-checked staff session, and writes require CSRF. Verify with
 `C:\php85\php.exe tests/kitchen.php`; all test fixtures roll back.
+
+## Sales history and End of day
+
+Apply `14_sales_history.sql` once. It adds retry keys to eod_closures and links each
+payment or unpaid cancellation to one EOD using eod_sales_orders. Previous EOD
+records are reconstructed only from verifiable completed-order/payment links;
+old browser-only totals cannot be recovered. Existing receipts/orders are retained.
+
+The cashier EOD popup reads its preview from SQL. After migration 15, confirmation
+recalculates and saves today's approved payments and voids not included in an
+earlier EOD, across all order sources and payment methods. Sales
+use amount_applied, excluding change. Paid active orders are counted as sales but
+continue preparing/serving normally. A later EOD does not count their money again.
+The existing completion counter is reset in the same transaction. Multiple EODs
+on one date are supported. Same-key retries restore the saved record without
+closing new payments. No drawer counts or opening float are fabricated; the
+proposed business_days/eod_reports tables remain reserved for that later workflow.
+
+Sales history is restricted to confirmed Admin sessions. Its top cards show
+approved payment totals by Philippine payment date, including not-yet-closed
+payments. The daily/monthly/yearly table aggregates saved EOD snapshots by the
+Philippine operation date. It includes an Other digital column for custom methods
+and pagination for older periods. EOD writes require staff/admin and CSRF.
+
+Tests: `C:\php85\php.exe tests/sales-history.php`,
+`C:\php85\php.exe tests/dashboard-eod.php`, `node tests/sales-history.cjs`,
+`node tests/eod-retry.cjs`, and `node tests/dashboard-eod.cjs`.
+SQL tests roll back fixtures and closures, preserving the real operating day.
+
+Apply `15_eod_business_date.sql` after migration 14. It stores the operation date
+explicitly on each closure, backfilling existing dates without altering amounts.
+The popup displays this date. Payments use their Philippine approval date; voids
+use their Philippine cancellation date. Older unclosed transactions remain in
+SQL and are excluded from today's closing. The active-order metric covers all
+dates and is labelled accordingly. EOD resets today's completions only. An
+uncommitted confirmation from a previous date must be reviewed again; a committed
+retry still restores its original record. Date-boundary tests cover midnight and
+the exclusion of previous/next-day transactions.
+
+## Admin Reports
+
+Reports reads existing SQL orders, payments and immutable item snapshots through
+`api/reports/index.php`; no additional migration or sample data is needed. Access
+requires a confirmed Admin session. The endpoint is read-only and uses one
+serializable transaction so its sections agree during concurrent order activity.
+
+Choose a Philippine calendar date in Reports. Revenue and paid orders use the
+payment approval date and amount_applied, excluding change. Orders placed use
+creation date, completed orders use serving date, and voids use cancellation
+date. Average order value uses the paid-order count. Unpaid counts describe the
+current status of orders created on the selected date. All order sources are
+included. Reports retains full-day values after EOD.
+
+Choose **Overall · All dates** to aggregate all SQL history; Today or a date
+selection switches back to a daily report. Overall hourly values combine dates
+by Philippine hour of day. The screen shows only hours with paid orders and
+displays an empty-state message when there are none. Hourly data reconciles with
+paid-order revenue/counts. Top five items rank quantities sold in paid orders, using saved
+item names rather than current menu labels. Payment breakdown includes custom
+methods in Other digital; unpaid cancellations appear under No payment.
+
+Verify with `C:\php85\php.exe tests/reports.php` (all fixtures and EOD markers
+roll back) and `node tests/reports.cjs`.
+
+## Inventory and Bill of Materials
+
+Apply `16_inventory_connection.sql` once after the previous migrations. The
+inventory tables created by migration 07 now power the admin Inventory screen.
+Migration 16 adds stock categories, row versions, unique active stock names and
+staff-scoped retry records. It does not create sample ingredients, recipes or
+movements, or deduct stock for historical paid orders.
+
+`api/inventory/index.php` requires confirmed Admin access. Writes require CSRF.
+Add real stock items with their unit, opening quantity and reorder level, then
+link each menu item to its ingredients through Add/Edit Bill of Materials.
+Recipe lines describe **one serving** in the stock item's own unit. There is no
+automatic unit conversion. A stock item's unit cannot change after creation;
+recipe revisions preserve previous versions and movement references.
+
+Stock balances are the sum of SQL movements, using integer thousandths and
+decimal strings with up to three decimal places. Restock adds an explicit
+quantity, waste removes one, and adjustments support signed changes. Reasons
+are required for movements and stock-count reductions. Editing a physical count
+checks the version captured when the form opened, so another cashier's deduction
+or admin's restock cannot be overwritten by a stale form. The movement log records
+staff, time, reason and originating order, with older records available by pagination.
+
+Cashier payment approval consumes the active recipe for each order line across
+dine-in, online and walk-in/POS orders. Consumption, payment and the Preparing
+status commit together. Submission checks available stock but does not reserve
+or deduct it. Approval rechecks the combined ingredient quantities across all
+lines, rejecting shortages without a payment or partial deduction. Accepted
+payment/submission retries never deduct again, including after recipe changes.
+The stock lock is acquired before order/table/account locks to serialize stock
+updates and approvals. Browser inventory deductions are disabled.
+
+Insufficient stock for one serving automatically hides a linked menu item from
+customer menus and makes it unavailable in the POS. Restocking restores effective
+availability while preserving the admin's manual menu availability setting.
+Low-stock and out-of-stock totals are separate from the count of affected menus.
+Menus without a configured recipe continue to work without stock deductions.
+Recipes currently use fixed quantities per menu item; sugar, size and other drink
+choices do not alter ingredient quantities. Inventory refreshes every ten seconds
+while its screen is open and can also be refreshed manually.
+
+Interrupted inventory writes retain their exact payload and retry key in the
+admin's tab. Retry saved change confirms the original transaction after reload;
+it cannot create another movement. Input errors unlock the form for correction,
+and version conflicts require reviewing the current values in a fresh form.
+Save stock marks missing or invalid fields with a visible message and focuses
+the field to correct. Stock item name, current quantity and one unit are required;
+a blank reorder level defaults to zero. An interrupted stock save can also be
+retried using the Save button inside the popup, with the original payload and key.
+
+Verify with `C:\php85\php.exe tests/inventory.php` and `node tests/inventory.cjs`.
+SQL fixtures always roll back. Existing POS, dine-in and online SQL checks also
+cover their unchanged order workflows.

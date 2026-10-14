@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . "/../../includes/auth.php";
+require_once __DIR__ . "/../../includes/orders.php";
 
 function formatMenuItem(array $row): array
 {
@@ -10,7 +11,9 @@ function formatMenuItem(array $row): array
         "name" => $row["item_name"],
         "category" => $row["category"],
         "price" => (float) $row["price"],
-        "available" => (bool) $row["is_available"],
+        "manualAvailable" => (bool) $row["is_available"],
+        "inventoryBlocked" => !(bool)($row["stock_available"]??1),
+        "available" => (bool)($row["effective_available"]??$row["is_available"]),
     ];
 }
 
@@ -32,9 +35,7 @@ try {
     // Load menu items.
     if ($method === "GET") {
         $query = quvo_db()->query(
-            'SELECT menu_item_id, item_name, category, price, is_available
-             FROM dbo.menu_items
-             ORDER BY menu_item_id DESC',
+            'SELECT m.menu_item_id,m.item_name,m.category,m.price,m.is_available,CASE WHEN '.inventory_menu_condition().' THEN 1 ELSE 0 END effective_available,CASE WHEN '.inventory_stock_condition().' THEN 1 ELSE 0 END stock_available FROM dbo.menu_items m ORDER BY m.menu_item_id DESC',
         );
 
         quvo_json([
@@ -171,6 +172,10 @@ try {
             404,
         );
     }
+
+    $query->closeCursor();
+    $query=quvo_db()->prepare('SELECT m.menu_item_id,m.item_name,m.category,m.price,m.is_available,CASE WHEN '.inventory_menu_condition().' THEN 1 ELSE 0 END effective_available,CASE WHEN '.inventory_stock_condition().' THEN 1 ELSE 0 END stock_available FROM dbo.menu_items m WHERE m.menu_item_id=?');
+    $query->execute([$item['menu_item_id']]);$item=$query->fetch();$query->closeCursor();
 
     quvo_json(
         [

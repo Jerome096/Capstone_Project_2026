@@ -79,12 +79,14 @@ function renderAdminEditPanel(itemId) {
       <label>
         Availability
         <div class="availability-toggle">
-          <button type="button" class="${item.available ? "active" : ""}" onclick="setAdminAvailability(true)">Available</button>
-          <button type="button" class="${!item.available ? "active" : ""}" onclick="setAdminAvailability(false)">Unavailable</button>
+          <button type="button" class="${(item.manualAvailable ?? item.available) ? "active" : ""}" onclick="setAdminAvailability(true)">Available</button>
+          <button type="button" class="${!(item.manualAvailable ?? item.available) ? "active" : ""}" onclick="setAdminAvailability(false)">Unavailable</button>
         </div>
       </label>
 
-      <input id="adminItemAvailable" type="hidden" value="${item.available ? "true" : "false"}" />
+      <input id="adminItemAvailable" type="hidden" value="${(item.manualAvailable ?? item.available) ? "true" : "false"}" />
+
+      ${item.inventoryBlocked ? '<p class="helper-text">Stock is insufficient for this item’s recipe. Restock its ingredients in Inventory to make it available.</p>' : ''}
 
       <button class="btn dark" type="submit">Save changes</button>
       <button class="btn light" type="button" onclick="removeAdminMenuItem(${item.id}, this)">

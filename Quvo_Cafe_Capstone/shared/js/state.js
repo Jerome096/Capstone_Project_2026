@@ -116,70 +116,9 @@ function updateInventoryLinkedMenus() {
   });
 }
 
-function updateMenuAvailabilityFromInventory() {
-  state.menu.forEach((menuItem) => {
-    const recipe = findInventoryRecipe(menuItem.name);
-    const ingredients = getRecipeIngredients(recipe);
-    if (!ingredients.length) return;
-
-    const hasOutOfStockIngredient = ingredients.some((ingredient) => {
-      const stockItem = findInventoryItemByName(ingredient.item);
-      return stockItem && Number(stockItem.current) <= 0;
-    });
-
-    if (hasOutOfStockIngredient) {
-      menuItem.available = false;
-      menuItem.inventoryBlocked = true;
-    } else if (menuItem.inventoryBlocked) {
-      menuItem.available = true;
-      menuItem.inventoryBlocked = false;
-    }
-  });
-}
-
-function deductInventoryForOrder(order, triggerLabel = "Transaction confirmed") {
-  if (!order || order.inventoryDeducted) return [];
-
-  const movements = [];
-  order.items.forEach((orderItem) => {
-    const recipe = findInventoryRecipe(orderItem.name);
-    const ingredients = getRecipeIngredients(recipe);
-
-    ingredients.forEach((ingredient) => {
-      const stockItem = findInventoryItemByName(ingredient.item);
-      const quantity = Number(ingredient.qty) * Number(orderItem.qty || 1);
-      if (!stockItem || Number.isNaN(quantity) || quantity <= 0) return;
-
-      const previous = Number(stockItem.current);
-      const next = Math.max(0, Number((previous - quantity).toFixed(3)));
-      stockItem.current = next;
-
-      const movement = {
-        time: "now",
-        type: "Auto deduction",
-        item: stockItem.name,
-        qty: `-${formatStockQty(quantity)} ${stockItem.unit}`,
-        note: `${triggerLabel}: ${order.number} · ${orderItem.name} ×${orderItem.qty || 1}`,
-      };
-      state.inventoryMovements.unshift(movement);
-      movements.push(movement);
-    });
-  });
-
-  order.inventoryDeducted = true;
-
-  if (movements.length) {
-    updateMenuAvailabilityFromInventory();
-    addSystemRecord(
-      "Inventory auto-deducted",
-      `${movements.length} stock movement(s) generated for ${order.number}`,
-      "Inventory",
-    );
-  }
-
-  return movements;
-}
-
+// Availability and deductions are computed by SQL, including payment retries.
+function updateMenuAvailabilityFromInventory() {}
+function deductInventoryForOrder() { return []; }
 const screenText = {
   dashboard: {
     eyebrow: "Live overview",

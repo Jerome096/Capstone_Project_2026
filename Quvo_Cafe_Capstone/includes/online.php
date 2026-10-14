@@ -129,7 +129,7 @@ function online_change_password(PDO $db,int $id,array $input): array
 
 function online_menu(PDO $db): array
 {
-    $rows=$db->query('SELECT menu_item_id AS id,item_name AS name,category,price FROM dbo.menu_items WHERE is_available=1 ORDER BY item_name')->fetchAll();
+    $rows=$db->query('SELECT m.menu_item_id AS id,m.item_name AS name,m.category,m.price FROM dbo.menu_items m WHERE '.inventory_menu_condition().' ORDER BY m.item_name')->fetchAll();
     foreach($rows as &$row) {$row['id']=(string)$row['id'];$row['price']=(float)$row['price'];$row['description']='';$row['icon']='☕';}
     return $rows;
 }
@@ -156,6 +156,7 @@ function online_orders(PDO $db,int $customerId,mixed $offset=0): array
 // Account lock serializes retries. The caller owns the transaction.
 function online_submit(PDO $db,int $customerId,array $input): array
 {
+    inventory_lock($db);
     $account=online_account($db,$customerId,true);
     $key=$input['submission_key']??null;
     if(!is_string($key)||!preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i',$key)) throw new OrderError('A valid submission key is required.');

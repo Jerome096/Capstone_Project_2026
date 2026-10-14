@@ -1,117 +1,48 @@
-function renderReports() {
-  const reportSummaryRows = document.getElementById("reportSummaryRows");
-  const hourlyOrderRows = document.getElementById("hourlyOrderRows");
-  const topItemRows = document.getElementById("topItemRows");
-  const paymentSummaryRows = document.getElementById("paymentSummaryRows");
-
-  const activeTransactions = [
-    ...state.receipts.filter((receipt) => receipt.status !== "voided"),
-    ...state.orders.filter((order) => order.paymentStatus === "confirmed" || order.paid),
-  ];
-
-  const totalRevenue = activeTransactions.reduce(
-    (sum, entry) => sum + Number(entry.total || 0),
-    0,
-  );
-  const totalOrders = activeTransactions.length;
-  const averageOrder = totalOrders ? Math.round(totalRevenue / totalOrders) : 0;
-  const served = state.receipts.filter((receipt) => receipt.status === "served").length;
-
-  const summaryData = [
-    {
-      metric: "Total revenue",
-      value: `₱${totalRevenue.toLocaleString("en-PH")}`,
-      note: "Will be sourced from database transactions",
-    },
-    {
-      metric: "Orders today",
-      value: String(totalOrders),
-      note: "Will be sourced from order records",
-    },
-    {
-      metric: "Average order value",
-      value: `₱${averageOrder.toLocaleString("en-PH")}`,
-      note: "Calculated from recorded orders",
-    },
-    {
-      metric: "Completed orders",
-      value: String(served),
-      note: "Will be sourced from completed transactions",
-    },
-  ];
-
-  if (reportSummaryRows) {
-    reportSummaryRows.innerHTML = summaryData
-      .map(
-        (row) => `
-      <tr><td>${row.metric}</td><td class="numeric-cell">${row.value}</td><td>${row.note}</td></tr>
-    `,
-      )
-      .join("");
+const reportsSql={data:null,date:null,loading:false,request:0,error:'',overall:false};
+function bindReports(){
+  const date=document.getElementById('reportDate');date.value=receiptDay();
+  date.addEventListener('change',()=>{reportsSql.overall=false;if(!date.value)date.value=receiptDay();loadReports();});
+  document.getElementById('reportsToday').addEventListener('click',()=>{reportsSql.overall=false;date.value=receiptDay();loadReports();});
+  document.getElementById('reportsOverall').addEventListener('click',()=>{reportsSql.overall=true;loadReports();});
+  document.getElementById('reportsRefresh').addEventListener('click',()=>loadReports());
+  if(window.QUVO_CONFIG.allowedScreens.includes('reports'))loadReports();
+}
+async function loadReports(){
+  if(!window.QUVO_CONFIG.allowedScreens.includes('reports'))return;
+  const date=reportsSql.overall?'all':document.getElementById('reportDate').value||receiptDay();
+  if(reportsSql.loading&&reportsSql.date===date)return;
+  const request=++reportsSql.request;reportsSql.date=date;reportsSql.loading=true;reportsSql.error='';reportsSql.data=null;renderReports();
+  try{
+    const response=await fetch(quvoPath('api/reports/index.php')+'?date='+encodeURIComponent(date),{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
+    const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'Could not load reports.');
+    if(request!==reportsSql.request)return;reportsSql.data=result.report;
+  }catch(error){if(request===reportsSql.request)reportsSql.error=error.message;}
+  finally{if(request===reportsSql.request){reportsSql.loading=false;renderReports();}}
+}
+function renderReports(){
+  const summary=document.getElementById('reportSummaryRows');if(!summary)return;
+  const r=reportsSql,data=r.data,e=escapeHtml,money=value=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(value||0));
+  const period=date=>date==='all'?'All dates':receiptDateLabel(date);
+  document.getElementById('reportsOverall').setAttribute('aria-pressed',String(r.overall));
+  document.getElementById('reportPeriodHeading').textContent=r.overall?'Overall summary':'Daily summary';
+  document.getElementById('reportValueHeading').textContent=r.overall?'All dates':'Selected date';
+  document.getElementById('reportsStatus').textContent=r.error||(r.loading?'Loading SQL transactions…':data?'Report period: '+period(data.date)+' · Philippine time · Includes transactions already closed by EOD.':'Choose a date to load reports.');
+  document.getElementById('reportsRefresh').disabled=r.loading;
+  if(document.getElementById('reports').classList.contains('active-screen')&&r.date)document.getElementById('screenSub').textContent=period(r.date)+' · Transaction report';
+  if(!data){
+    const text=r.loading?'Loading from SQL…':r.error?'Reports could not load. Use Refresh to retry.':'No report loaded.';
+    for(const [id,columns] of [['reportSummaryRows',3],['hourlyOrderRows',3],['topItemRows',3],['paymentSummaryRows',7]])document.getElementById(id).innerHTML='<tr><td colspan="'+columns+'">'+e(text)+'</td></tr>';
+    return;
   }
-
-  if (hourlyOrderRows) {
-    hourlyOrderRows.innerHTML = `<tr><td colspan="3">No hourly order data loaded. Database integration will populate this report.</td></tr>`;
-  }
-
-  const itemCounts = new Map();
-  [...state.orders, ...state.receipts].forEach((record) => {
-    (record.items || []).forEach((item) => {
-      itemCounts.set(item.name, (itemCounts.get(item.name) || 0) + Number(item.qty || 0));
-    });
-  });
-  const items = [...itemCounts.entries()]
-    .map(([name, orders]) => ({ name, orders }))
-    .sort((a, b) => b.orders - a.orders)
-    .slice(0, 5);
-
-  if (topItemRows) {
-    topItemRows.innerHTML = items.length
-      ? items
-          .map(
-            (item, index) =>
-              `<tr><td class="numeric-cell">${index + 1}</td><td>${item.name}</td><td class="numeric-cell">${item.orders}</td></tr>`,
-          )
-          .join("")
-      : `<tr><td colspan="3">No menu transaction data loaded.</td></tr>`;
-  }
-
-  const methods = ["Cash", "GCash", "PayMaya"];
-  const confirmed = Object.fromEntries(
-    methods.map((method) => [
-      method,
-      activeTransactions.filter((entry) => entry.paymentMethod === method).length,
-    ]),
-  );
-  const voided = Object.fromEntries(
-    methods.map((method) => [
-      method,
-      state.receipts.filter(
-        (entry) => entry.status === "voided" && entry.paymentMethod === method,
-      ).length,
-    ]),
-  );
-  const paymentData = [
-    {
-      category: "Confirmed payments",
-      cash: confirmed.Cash,
-      gcash: confirmed.GCash,
-      paymaya: confirmed.PayMaya,
-    },
-    {
-      category: "Voided transactions",
-      cash: voided.Cash,
-      gcash: voided.GCash,
-      paymaya: voided.PayMaya,
-    },
-  ];
-
-  if (paymentSummaryRows) {
-    paymentSummaryRows.innerHTML = paymentData
-      .map((row) => {
-        const total = row.cash + row.gcash + row.paymaya;
-        return `<tr><td>${row.category}</td><td class="numeric-cell">${row.cash}</td><td class="numeric-cell">${row.gcash}</td><td class="numeric-cell">${row.paymaya}</td><td class="numeric-cell strong-cell">${total}</td></tr>`;
-      })
-      .join("");
-  }
+  const s=data.summary;
+  const scope=data.date==='all'?'across all dates':'on this date';
+  const metrics=[['Total revenue',money(s.totalRevenue),'Approved payments '+scope+'; excludes cash change.'],['Orders placed',s.ordersPlaced,'Orders created '+scope+', including unpaid and cancelled orders.'],['Paid orders',s.paidOrders,'Payments approved '+scope+', across all order sources.'],['Average paid order',money(s.averageOrderValue),'Revenue divided by paid orders.'],['Completed orders',s.completedOrders,'Paid orders marked served '+scope+'; retained after EOD.'],['Voided orders',s.voidedOrders,'Orders cancelled '+scope+'; not revenue.'],['Unpaid orders',s.unpaidOrders,'Orders created '+scope+' that are currently unpaid.']];
+  summary.innerHTML=metrics.map(([label,value,note])=>'<tr><td>'+e(label)+'</td><td class="numeric-cell">'+e(value)+'</td><td>'+e(note)+'</td></tr>').join('');
+  const activeHours=data.hourly.filter(row=>Number(row.orders)>0);
+  document.getElementById('hourlyOrderRows').innerHTML=activeHours.length?activeHours.map(row=>{
+    const label=String(row.hour).padStart(2,'0')+':00–'+String(row.hour).padStart(2,'0')+':59';
+    return '<tr><td>'+label+'</td><td class="numeric-cell">'+row.orders+'</td><td class="numeric-cell">'+money(row.revenue)+'</td></tr>';
+  }).join(''):'<tr><td colspan="3">No paid orders for this period.</td></tr>';
+  document.getElementById('topItemRows').innerHTML=data.topItems.length?data.topItems.map((item,index)=>'<tr><td class="numeric-cell">'+(index+1)+'</td><td>'+e(item.name)+'</td><td class="numeric-cell">'+item.units+'</td></tr>').join(''):'<tr><td colspan="3">No paid item sales for this period.</td></tr>';
+  document.getElementById('paymentSummaryRows').innerHTML=data.breakdown.map(row=>'<tr><td>'+e(row.label)+'</td>'+['Cash','GCash','PayMaya','Other','None'].map(method=>'<td class="numeric-cell">'+(row.type==='money'?money(row.values[method]):Number(row.values[method]))+'</td>').join('')+'<td class="numeric-cell strong-cell">'+(row.type==='money'?money(row.total):Number(row.total))+'</td></tr>').join('');
 }

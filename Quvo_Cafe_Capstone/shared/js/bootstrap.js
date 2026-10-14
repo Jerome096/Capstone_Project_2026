@@ -17,6 +17,7 @@
   bindAdminMenu();
   bindEodModal();
   bindSalesHistory();
+  bindReports();
   bindAccounts();
   bindInventory();
   renderAll();

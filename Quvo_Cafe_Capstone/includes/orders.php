@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . "/dining.php";
+require_once __DIR__ . "/inventory.php";
 
 // Business errors are safe to show without exposing database or guest-token details.
 final class OrderError extends RuntimeException
@@ -220,6 +221,7 @@ function orders_list(PDO $db, ?int $sessionId, mixed $status, mixed $offset, mix
 // The caller owns the transaction; table-first locking also coordinates with session closure.
 function orders_submit(PDO $db, int $tableId, ?string $token, array $input): array
 {
+    inventory_lock($db);
     $key = $input["submission_key"] ?? null;
     if (!is_string($key) || !preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i', $key)) {
         throw new OrderError("A valid submission key is required.");
@@ -269,8 +271,8 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
 function orders_catalog(PDO $db, array $lines, int $expectedTotal): array
 {
     // Hold menu read locks until commit so all saved names and prices form one transaction.
-    $menuQuery = $db->prepare("SELECT menu_item_id,item_name,category,price,is_available
-        FROM dbo.menu_items WITH (HOLDLOCK) WHERE menu_item_id=?");
+    $menuQuery = $db->prepare("SELECT m.menu_item_id,m.item_name,m.category,m.price,CASE WHEN ".inventory_menu_condition()." THEN 1 ELSE 0 END is_available
+        FROM dbo.menu_items m WITH (HOLDLOCK) WHERE m.menu_item_id=?");
     $catalog = [];
     $ids = array_unique(array_column($lines, "menu_item_id"));
     sort($ids, SORT_NUMERIC);
@@ -298,6 +300,7 @@ function orders_catalog(PDO $db, array $lines, int $expectedTotal): array
     if ($total !== $expectedTotal) {
         throw new OrderError("Menu prices have changed. Refresh the menu and review your total.", 409, "price_changed");
     }
+    inventory_requirements($db,$lines);
     return [$catalog, $total];
 }
 
@@ -322,6 +325,7 @@ function orders_lock(PDO $db, int $id): array
 
 function orders_pay(PDO $db, int $actorId, int $id, array $input): array
 {
+    inventory_lock($db);
     $order = orders_lock($db, $id);
     $method = $input["payment_method"] ?? null;
     if (!is_string($method) || (!in_array($method, ["Cash", "GCash", "PayMaya"], true) &&
@@ -349,6 +353,7 @@ function orders_pay(PDO $db, int $actorId, int $id, array $input): array
     if ($order["order_status"] !== "received") {
         throw new OrderError("Only a received, unpaid order can be paid.", 409);
     }
+    inventory_consume_order($db,$id,$actorId);
     $query = $db->prepare("INSERT INTO dbo.payments
         (order_id,payment_method,amount_applied,amount_received,change_amount,payment_reference,received_by_staff_id)
         VALUES(?,?,?,?,?,?,?)");

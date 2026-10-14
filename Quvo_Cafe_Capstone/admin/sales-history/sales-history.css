@@ -38,3 +38,9 @@
   font-size: var(--q-text-xs);
   letter-spacing: 0.05em;
 }
+.sales-table-scroll { max-width: 100%; overflow-x: auto; }
+.sales-history-table { width: 100%; min-width: 850px; border-collapse: collapse; font-size: 12px; }
+.sales-history-table th, .sales-history-table td { padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+.sales-history-table th:first-child { text-align: left; }
+.sales-history-table thead th { background: var(--surface); color: #82735c; font-size: 11px; }
+#salesHistoryMore { margin-top: 12px; }
