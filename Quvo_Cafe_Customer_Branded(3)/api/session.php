@@ -2,10 +2,12 @@
 declare(strict_types=1);
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/guest.php";
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/orders.php";
+require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/menu.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {
     $method = $_SERVER["REQUEST_METHOD"];
+    if($method==="GET"&&($_GET["view"]??"")==="menu-image")menu_image_send(quvo_db(),$_GET["id"]??null,$_GET["version"]??null);
     if (!in_array($method, ["GET", "POST"], true)) {
         quvo_json(["ok" => false, "error" => "Unsupported request."], 405);
     }
@@ -68,12 +70,14 @@ try {
         }
         $items = $db
             ->query(
-                "SELECT m.menu_item_id AS id,m.item_name AS name,m.category,m.price FROM dbo.menu_items m WHERE ".inventory_menu_condition()." ORDER BY m.item_name",
+                "SELECT m.menu_item_id AS id,m.item_name AS name,m.category,m.price,m.option_groups_json,CONVERT(varchar(36),mi.image_version) image_version FROM dbo.menu_items m LEFT JOIN dbo.menu_item_images mi ON mi.menu_item_id=m.menu_item_id WHERE ".inventory_menu_condition()." ORDER BY m.item_name",
             )
             ->fetchAll();
         foreach ($items as &$item) {
             $item["id"] = (string) $item["id"];
             $item["price"] = (float) $item["price"];
+            $item += menu_metadata($item,"api/session.php?view=menu-image&");
+            unset($item["option_groups_json"],$item["image_version"]);
             $item["description"] = "";
             $item["icon"] = "☕";
         }
@@ -94,6 +98,7 @@ try {
     if ($db && $db->inTransaction()) {
         $db->rollBack();
     }
+    if ($error instanceof OrderError) orders_error($db,$error);
     if ($error instanceof DiningError) {
         quvo_json(["ok" => false, "error" => $error->getMessage()], 422);
     }

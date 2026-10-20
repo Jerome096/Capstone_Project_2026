@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . "/dining.php";
 require_once __DIR__ . "/inventory.php";
+require_once __DIR__."/menu-options.php";
 
 // Business errors are safe to show without exposing database or guest-token details.
 final class OrderError extends RuntimeException
@@ -98,7 +99,7 @@ function orders_lines(mixed $items): array
         $lines[] = [
             "menu_item_id" => orders_id($item["itemId"] ?? null),
             "quantity" => $item["quantity"],
-            "customization" => ["sugarLevel" => $sugar, "iceLevel" => $ice],
+            "customization" => ["sugarLevel" => $sugar, "iceLevel" => $ice] + (array_key_exists("options",$custom)?["options"=>menu_selection_input($custom["options"]),"optionsVersion"=>orders_text($custom["optionsVersion"]??"",64)]:[]),
             "notes" => orders_text($custom["notes"] ?? "", 1000),
         ];
     }
@@ -263,15 +264,15 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
         $menu = $catalog[$line["menu_item_id"]];
         $itemQuery->execute([$id, $index + 1, $line["menu_item_id"], $menu["item_name"],
             $menu["category"], $menu["price"], $line["quantity"],
-            json_encode($line["customization"], JSON_THROW_ON_ERROR), $line["notes"]]);
+            menu_custom_json($line["customization"]), $line["notes"]]);
     }
     return ["order" => orders_get($db, $id, $sessionId), "replayed" => false];
 }
 
-function orders_catalog(PDO $db, array $lines, int $expectedTotal): array
+function orders_catalog(PDO $db, array &$lines, int $expectedTotal): array
 {
     // Hold menu read locks until commit so all saved names and prices form one transaction.
-    $menuQuery = $db->prepare("SELECT m.menu_item_id,m.item_name,m.category,m.price,CASE WHEN ".inventory_menu_condition()." THEN 1 ELSE 0 END is_available
+    $menuQuery = $db->prepare("SELECT m.menu_item_id,m.item_name,m.category,m.price,m.option_groups_json,CASE WHEN ".inventory_menu_condition()." THEN 1 ELSE 0 END is_available
         FROM dbo.menu_items m WITH (HOLDLOCK) WHERE m.menu_item_id=?");
     $catalog = [];
     $ids = array_unique(array_column($lines, "menu_item_id"));
@@ -285,18 +286,21 @@ function orders_catalog(PDO $db, array $lines, int $expectedTotal): array
         $catalog[$menuId] = $menu;
     }
     $total = 0;
-    foreach ($lines as $line) {
+    foreach ($lines as &$line) {
         $menu = $catalog[$line["menu_item_id"]];
         if (!in_array($menu["category"], ["coffee", "non-coffee"], true)
             && ($line["customization"]["sugarLevel"] !== "Not applicable"
                 || $line["customization"]["iceLevel"] !== "Not applicable")) {
             throw new OrderError("Sugar and ice options apply only to drinks.");
         }
+        $line["customization"] = menu_selected_customization($menu,$line["customization"]);
+        menu_custom_json($line["customization"]);
         $total += orders_cents($menu["price"]) * $line["quantity"];
         if ($total > 999999999999) {
             throw new OrderError("Order total exceeds the supported amount.");
         }
     }
+    unset($line);
     if ($total !== $expectedTotal) {
         throw new OrderError("Menu prices have changed. Refresh the menu and review your total.", 409, "price_changed");
     }

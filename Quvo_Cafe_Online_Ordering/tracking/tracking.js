@@ -22,7 +22,7 @@ function renderTracking(){
   const row=(label,value)=>'<div class="ticket-row"><span>'+e(label)+'</span><strong>'+e(value)+'</strong></div>';
   trackingDetails.innerHTML=row("Customer",order.customer_name)+row("Fulfillment",onlineFulfillment(order))+row("Contact",order.contact_snapshot||"")+
     (order.address_snapshot?row("Delivery address",order.address_snapshot):"")+row("Submitted",onlineDate(order.created_at))+
-    order.items.map(item=>row(item.quantity+" × "+item.item_name,formatCurrency(item.line_total))+'<p class="small-copy">'+e([item.customization.sugarLevel,item.customization.iceLevel,item.notes].filter(x=>x&&x!=="Not applicable").join(" · "))+'</p>').join("")+
+    order.items.map(item=>row(item.quantity+" × "+item.item_name,formatCurrency(item.line_total))+'<p class="small-copy">'+e([...QuvoMenuOptions.summary(item.customization),item.notes].filter(x=>x&&x!=="Not applicable").join(" · "))+'</p>').join("")+
     row("Total",formatCurrency(order.total_amount))+(order.payment_status==="paid"?row("Amount received",formatCurrency(order.amount_received))+row("Change",formatCurrency(order.change_amount)):"");
 }
 function startOrderStatusWatch(){

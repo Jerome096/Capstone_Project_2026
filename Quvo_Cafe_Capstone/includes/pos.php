@@ -23,7 +23,7 @@ function pos_submit(PDO $db,array $actor,array $input): array
         if(!in_array($size,['Not applicable','Regular','Large'],true)||!in_array($sugar,['Not applicable','0% sugar','25% sugar','50% sugar','75% sugar','100% sugar'],true)||!in_array($ice,['Not applicable','No ice','Less ice','Regular ice','Extra ice'],true))throw new OrderError('Invalid drink selection.');
         if($options!==null && in_array('Not applicable',[$size,$sugar,$ice],true))throw new OrderError('Complete the drink selections.');
         $lines[]=['menu_item_id'=>orders_id($item['menu_id']??null),'quantity'=>$item['quantity'],
-            'customization'=>['size'=>$size,'sugarLevel'=>str_replace(' sugar','',$sugar),'iceLevel'=>$ice],
+            'customization'=>['size'=>$size,'sugarLevel'=>str_replace(' sugar','',$sugar),'iceLevel'=>$ice]+(array_key_exists('custom_options',$item)?['options'=>menu_selection_input($item['custom_options']),'optionsVersion'=>orders_text($item['custom_options_version']??'',64)]:[]),
             'notes'=>orders_text($item['notes']??'',1000)];
     }
     $expected=orders_cents($input['expected_total']??null);$received=orders_cents($input['amount_received']??null);
@@ -44,7 +44,7 @@ function pos_submit(PDO $db,array $actor,array $input): array
     $q=$db->prepare('INSERT dbo.order_items(order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes) VALUES(?,?,?,?,?,?,?,?,?)');
     foreach($lines as $index=>$line) {
         $menu=$catalog[$line['menu_item_id']];
-        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$menu['price'],$line['quantity'],json_encode($line['customization'],JSON_THROW_ON_ERROR),$line['notes']]);
+        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$menu['price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
     }
     $paid=orders_pay($db,(int)$actor['staff_id'],$id,['payment_method'=>$method,'amount_received'=>orders_money($received),'payment_reference'=>$reference]);
     return ['order'=>$paid['order'],'replayed'=>false];

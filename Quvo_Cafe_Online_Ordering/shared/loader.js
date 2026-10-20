@@ -1,6 +1,7 @@
 // Assemble fragments before binding controls. Paths are relative to index.html.
 (async function loadCustomerApp() {
   const scripts = [
+    "shared/menu-options.js",
     "menu/menu-data.js",
     "shared/state.js",
     "shared/helpers.js",
@@ -37,7 +38,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=cart-edit-1";
+        script.src = src + "?v=menu-photos-options-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

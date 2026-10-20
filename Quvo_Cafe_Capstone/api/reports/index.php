@@ -6,5 +6,5 @@ try{
     reports_access(quvo_current_user(),!empty($_SESSION['admin_confirmed']));
     if($_SERVER['REQUEST_METHOD']!=='GET')throw new OrderError('Use GET for reports.',405);
     $db=quvo_db();$db->exec('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');$db->beginTransaction();
-    $report=reports_daily($db,$_GET['date']??null);$db->commit();quvo_json(['ok'=>true,'report'=>$report]);
+    $report=reports_period($db,$_GET['period']??'daily',$_GET['date']??null);$db->commit();quvo_json(['ok'=>true,'report'=>$report]);
 }catch(Throwable $error){orders_error($db,$error);}

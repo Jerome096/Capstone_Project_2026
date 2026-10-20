@@ -28,7 +28,7 @@ try {
     $token = $_SESSION["tables"][$tableId] ?? null;
     dining_expire_sessions($db, $tableId);
     if ($method === "POST") {
-        $input = orders_input();
+        $input = orders_input(1048576);
         if (($input["action"] ?? "") !== "submit") {
             throw new OrderError("Unknown order action.");
         }

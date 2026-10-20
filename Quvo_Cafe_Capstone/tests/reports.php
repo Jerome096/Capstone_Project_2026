@@ -6,7 +6,6 @@ $checks=0;function check(bool $ok,string $label):void{global $checks;if(!$ok)thr
 function rejected(callable $fn,int $status,string $label):void{try{$fn();}catch(OrderError $error){check($error->status===$status,$label);return;}throw new RuntimeException('FAIL: accepted '.$label);}
 $db=quvo_db();try{
 $db->beginTransaction();$tag=bin2hex(random_bytes(5));$staff=(int)$db->query("SELECT TOP 1 s.staff_id FROM dbo.staff_users s JOIN dbo.roles r ON r.role_id=s.role_id WHERE s.is_active=1 AND LOWER(r.role_name) IN ('admin','staff')")->fetchColumn();$actor=['staff_id'=>$staff,'role'=>'staff'];
-$baselineOverall=reports_daily($db,'all')['summary'];
 rejected(fn()=>reports_access(null,false),401,'anonymous report access denied');rejected(fn()=>reports_access($actor,true),403,'cashier report access denied');rejected(fn()=>reports_access([...$actor,'role'=>'admin'],false),403,'admin confirmation required');reports_access([...$actor,'role'=>'admin'],true);check(true,'confirmed admin permitted');
 $q=$db->prepare('INSERT dbo.menu_items(item_name,category,price,is_available) OUTPUT INSERTED.menu_item_id VALUES(?,?,?,1)');$q->execute(['Report <food> '.$tag,'food','10.00']);$food=(int)$q->fetchColumn();$q->closeCursor();$q->execute(['Report drink '.$tag,'coffee','3.50']);$drink=(int)$q->fetchColumn();$q->closeCursor();$seq=1;
 $make=function(string $method='GCash')use($db,$actor,$food,$drink,&$seq){return pos_submit($db,$actor,['submission_key'=>sprintf('%08x-9999-4999-8999-999999999999',$seq++),'customer_name'=>'Reports test','expected_total'=>'30.50','payment_method'=>$method,'amount_received'=>$method==='Cash'?'40.00':'30.50','items'=>[['menu_id'=>$food,'quantity'=>2],['menu_id'=>$drink,'quantity'=>3]]])['order'];};
@@ -22,5 +21,24 @@ check(count($report['hourly'])===24,'all 24 hourly buckets returned');check($rep
 check($report['topItems'][0]['units']===12&&$report['topItems'][1]['units']===8,'top items count quantity, without order/receipt duplication');check($report['topItems'][0]['orders']===4,'distinct paid orders per item preserved');check(str_contains($report['topItems'][1]['name'],'<food>'),'saved item names preserved for safe UI escaping');check($report['breakdown'][0]['values']['Other']===1&&$report['breakdown'][1]['values']['Other']==='30.50','custom method counts and money included');check($report['breakdown'][2]['values']['None']===1,'unpaid void has no collected payment');
 $q=$db->prepare("INSERT dbo.eod_closures(closed_by_staff_id,note,business_date) OUTPUT INSERTED.closure_id VALUES(?,'Reports test',?)");$q->execute([$staff,$date]);$closure=(int)$q->fetchColumn();$q->closeCursor();$db->prepare("INSERT dbo.eod_sales_orders(order_id,closure_id,amount,payment_method,order_status,entry_type) SELECT order_id,?,amount_applied,payment_method,'served','payment' FROM dbo.payments WHERE order_id=?")->execute([$closure,$paid[0]]);$db->prepare('INSERT dbo.eod_completed_orders(order_id,closure_id) VALUES(?,?)')->execute([$paid[0],$closure]);check(reports_daily($db,$date)['summary']===$s,'EOD does not erase or recount report totals');
 $empty=reports_daily($db,'2088-02-01');check($empty['summary']['totalRevenue']==='0.00'&&$empty['topItems']===[],'empty day returns true zero totals');rejected(fn()=>reports_daily($db,'2099-02-30'),422,'invalid calendar date rejected');rejected(fn()=>reports_daily($db,"2099-05-02'"),422,'malformed date rejected');echo "$checks report SQL checks passed.\n";
-$overall=reports_daily($db,'all');check($overall['date']==='all'&&$overall['summary']['paidOrders']===$baselineOverall['paidOrders']+6,'Overall includes payments across all dates');check(orders_cents($overall['summary']['totalRevenue'])===orders_cents($baselineOverall['totalRevenue'])+18300,'Overall revenue includes all dated fixtures once');check(array_sum(array_column($overall['hourly'],'orders'))===$overall['summary']['paidOrders'],'Overall hourly counts reconcile');echo "$checks report SQL checks passed including Overall.\n";
+foreach(['2099-04-30T16:00:00','2099-05-31T15:59:59','2099-04-30T15:59:59','2099-05-31T16:00:00','2098-12-31T16:00:00','2099-12-31T15:59:59','2098-12-31T15:59:59','2099-12-31T16:00:00'] as $time){
+    $row=$make();$id=$row['order_id'];
+    $db->prepare('UPDATE dbo.payments SET paid_at=? WHERE order_id=?')->execute([$time,$id]);
+    $db->prepare('UPDATE dbo.orders SET created_at=?,updated_at=? WHERE order_id=?')->execute([$time,$time,$id]);
+}
+$month=reports_period($db,'monthly','2099-05');
+check($month['period']==='monthly'&&$month['date']==='2099-05','monthly selection returned');
+check($month['summary']['paidOrders']===8&&$month['summary']['totalRevenue']==='244.00','monthly totals include both boundaries and exclude adjacent months');
+check(count($month['activity'])===31&&$month['activity'][0]['orders']===2&&$month['activity'][30]['orders']===1,'monthly rows group Philippine calendar days');
+check(array_sum(array_column($month['activity'],'orders'))===8&&array_sum(array_map('orders_cents',array_column($month['activity'],'revenue')))===24400,'monthly activity reconciles to totals');
+check($month['breakdown'][1]['total']==='244.00','monthly payment breakdown matches revenue');
+$year=reports_period($db,'yearly','2099');
+check($year['summary']['paidOrders']===12&&$year['summary']['totalRevenue']==='366.00','yearly totals include both boundaries and exclude adjacent years');
+check(count($year['activity'])===12&&$year['activity'][0]['orders']===1&&$year['activity'][4]['orders']===8&&$year['activity'][11]['orders']===1,'yearly rows group Philippine calendar months');
+check(array_sum(array_column($year['activity'],'orders'))===12&&array_sum(array_map('orders_cents',array_column($year['activity'],'revenue')))===36600,'yearly activity reconciles to totals');
+check($year['breakdown'][1]['total']==='366.00','yearly payment breakdown matches revenue');
+check(reports_daily($db,$date)['summary']===$s,'month and year reports leave the daily report unchanged');
+$leap=reports_period($db,'monthly','2088-02');check(count($leap['activity'])===29&&$leap['summary']['totalRevenue']==='0.00','empty leap month has all days and zero revenue');
+rejected(fn()=>reports_daily($db,'all'),422,'removed All dates selection rejected');
+echo "$checks report SQL checks passed including Daily, Monthly and Yearly.\n";
 }finally{if($db->inTransaction())$db->rollBack();echo "Report fixtures and EOD markers rolled back.\n";}

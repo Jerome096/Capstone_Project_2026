@@ -33,6 +33,10 @@ const QUVO_MODAL_FRAGMENTS = [
 ];
 
 const QUVO_WORKSPACE_SCRIPTS = [
+  "shared/js/menu-options.js",
+  "admin/menu-management/menu-photo.js",
+  "admin/menu-management/menu-editor.js",
+  "shared/js/workspace-layout.js",
   "shared/js/state.js",
   "shared/js/navigation.js",
   "cashier/dashboard/dashboard.js",
@@ -74,7 +78,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=inventory-save-2";
+    script.src = quvoPath(path) + "?v=menu-photos-options-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);
@@ -91,10 +95,17 @@ function loadQuvoScript(path) {
     }
   } catch (error) {
     console.error(error);
+    document.getElementById("screenTitle").textContent = "Workspace unavailable";
+    document.getElementById("screenSub").textContent = "Refresh the page to try again.";
     const notice = document.createElement("div");
+    notice.setAttribute("role", "alert");
     notice.style.cssText =
       "position:fixed;inset:auto 16px 16px 16px;padding:14px 16px;background:#7f1d1d;color:white;border-radius:10px;z-index:99999";
-    notice.textContent = `Could not load the workspace. Open this project through the PHP server and refresh. ${error.message}`;
+    notice.textContent = "The workspace could not be loaded. Check your connection, then refresh the page.";
     document.body.appendChild(notice);
+  } finally {
+    document.getElementById("screen-fragment-root").setAttribute("aria-busy", "false");
+    document.getElementById("workspaceLoading")?.remove();
+    document.body.classList.remove("workspace-loading");
   }
 })();

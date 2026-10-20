@@ -41,7 +41,8 @@ function renderMenu() {
     <button class="menu-card ${item.available ? "available" : "unavailable"}" ${item.available ? `onclick="openItemModal(${item.id})"` : `onclick="showToast('This item is unavailable.')"`}>
       <span class="category-tag">${item.category}</span>
       <span class="dot menu-dot ${item.available ? "active-dot" : "inactive-dot"}"></span>
-      <div class="menu-title">${item.name}</div>
+      ${item.imageUrl?'<div class="menu-card-photo">'+QuvoMenuOptions.photoHTML(item)+'</div>':''}
+      <div class="menu-title">${escapeHtml(item.name)}</div>
       <div class="menu-bottom">
         <span class="price">₱${item.price}</span>
         <span class="menu-status ${item.available ? "" : "off"}">${item.available ? "Available" : "Unavailable"}</span>
@@ -76,7 +77,11 @@ function openItemModal(itemId) {
   resetChoiceGroup("ice", selectedDrinkOptions.ice);
 
   const isDrink = isDrinkItem(item);
-  document.getElementById("drinkOptions").classList.toggle("hidden", !isDrink);
+  const configured=item.customOptionsConfigured===true;
+  document.getElementById("drinkOptions").classList.toggle("hidden", !isDrink||configured);
+  const customRoot=document.getElementById("itemCustomOptions");
+  customRoot.hidden=!configured||!QuvoMenuOptions.groups(item).length;
+  if(configured)QuvoMenuOptions.render(customRoot,item);else customRoot.replaceChildren();
 
   document.getElementById("itemModal").classList.remove("hidden");
   lucide.createIcons();
@@ -114,8 +119,12 @@ function bindItemModal() {
     if(posCartLocked())return;
     if (!selectedMenuItem) return;
 
+    const configured=selectedMenuItem.customOptionsConfigured===true;
+    const customRoot=document.getElementById("itemCustomOptions");
+    if(configured&&!QuvoMenuOptions.valid(customRoot))return;
+    const custom=configured?QuvoMenuOptions.read(customRoot,selectedMenuItem):null;
     const note = document.getElementById("itemNotes").value.trim();
-    const drinkCustomizations = isDrinkItem(selectedMenuItem)
+    const drinkCustomizations = configured ? custom.optionLabels.map(option=>option.label+": "+option.value) : isDrinkItem(selectedMenuItem)
       ? [selectedDrinkOptions.size, selectedDrinkOptions.sugar, selectedDrinkOptions.ice]
       : [];
 
@@ -135,7 +144,8 @@ function bindItemModal() {
       qty: selectedItemQty,
       note,
       customizations: [...drinkCustomizations, ...noteCustomizations],
-      drinkOptions: isDrinkItem(selectedMenuItem) ? { ...selectedDrinkOptions } : null,
+      drinkOptions: !configured&&isDrinkItem(selectedMenuItem) ? { ...selectedDrinkOptions } : null,
+      ...(configured?{optionSelections:custom.options,optionVersion:custom.optionsVersion,optionLabels:custom.optionLabels}:{}),
     });
 
     const addedItemName = selectedMenuItem.name;
@@ -179,6 +189,7 @@ function renderCart() {
           <span>₱${(item.qty * item.price).toLocaleString("en-PH")}</span>
         </div>
         ${item.drinkOptions ? `<div class="cart-item-note">${escapeHtml(formatDrinkOptions(item.drinkOptions))}</div>` : ""}
+        ${item.optionLabels?.length?`<div class="cart-item-note">${escapeHtml(item.optionLabels.map(option=>option.label+": "+option.value).join(" · "))}</div>`:""}
         ${item.note ? `<div class="cart-item-note">${escapeHtml(item.note)}</div>` : ""}
         <div class="cart-item-actions">
           <span>₱${item.price} each</span>

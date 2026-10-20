@@ -52,10 +52,7 @@ function renderCart() {
             <h3>${escapeCustomerHtml(item.name)}</h3>
             <strong class="price">${formatCurrency(item.unitPrice * item.quantity)}</strong>
             <div class="cart-meta">
-              <span>Size: ${escapeCustomerHtml(item.customization.size)}</span>
-              <span>Sugar: ${escapeCustomerHtml(item.customization.sugarLevel)}</span>
-              <span>Ice: ${escapeCustomerHtml(item.customization.iceLevel)}</span>
-              <span>Add-ons: ${escapeCustomerHtml(addons)}</span>
+              ${QuvoMenuOptions.summary(item.customization).map(value=>`<span>${escapeCustomerHtml(value)}</span>`).join("")}
               <span>Notes: ${escapeCustomerHtml(notes)}</span>
             </div>
             <div class="cart-actions">

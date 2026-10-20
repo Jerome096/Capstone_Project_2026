@@ -32,7 +32,7 @@ function sqlMapOrder(row) {
     baristaStatus: row.order_status === "ready" ? "ready" : row.order_status === "preparing" ? "preparing" : null,
     items: (row.items || []).map(item => ({
       name: item.item_name, category: item.category, qty: Number(item.quantity), price: Number(item.unit_price),
-      note: [item.customization.size, item.customization.sugarLevel, item.customization.iceLevel, item.notes]
+      note: [item.customization.size, item.customization.sugarLevel, item.customization.iceLevel, ...(item.customization.options||[]).map(option=>option.label+": "+option.value), item.notes]
         .filter(x => x && x !== "Not applicable").join(" · "),
     })), raw: row,
   };

@@ -77,7 +77,7 @@ function renderMenu() {
     .map((item) => {
       return `
         <article class="menu-card clickable-card" role="button" tabindex="0" data-card-item-id="${escapeCustomerHtml(item.id)}" aria-label="Customize ${escapeCustomerHtml(item.name)}">
-          <div class="item-icon">${escapeCustomerHtml(item.icon)}</div>
+          <div class="item-icon">${QuvoMenuOptions.photoHTML(item)}</div>
           <div>
             <p class="eyebrow">${escapeCustomerHtml(item.category)}</p>
             <h3>${escapeCustomerHtml(item.name)}</h3>
@@ -92,6 +92,7 @@ function renderMenu() {
     })
     .join("");
 
+  QuvoMenuOptions.bindPhotos(menuList);
   document.querySelectorAll("[data-card-item-id]").forEach((card) => {
     card.addEventListener("click", () => openItemModal(card.dataset.cardItemId));
 

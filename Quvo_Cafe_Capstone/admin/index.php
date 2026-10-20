@@ -19,7 +19,7 @@ if (empty($_SESSION["admin_confirmed"])) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quvo CafÃ© | Admin Workspace</title>
+  <title>Quvo Caf&eacute; | Admin Workspace</title>
   <link rel="icon" type="image/png" href="../shared/images/quvo-favicon.png" />
   <link rel="stylesheet" href="../shared/css/styles.css" />
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
@@ -32,12 +32,15 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
   <link rel="stylesheet" href="../barista/dashboard/barista.css" />
-  <link rel="stylesheet" href="../admin/reports/reports.css?v=inventory-save-2" />
-  <link rel="stylesheet" href="../admin/menu-management/menu-management.css" />
+  <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
+  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=menu-photos-options-1" />
   <link rel="stylesheet" href="../admin/records/records.css" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
   <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-save-2" />
+  <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
+  <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
+  <link rel="stylesheet" href="../shared/css/menu-options.css?v=menu-photos-options-1" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
 <script src="../shared/js/auth.js"></script>
@@ -58,11 +61,15 @@ if (empty($_SESSION["admin_confirmed"])) {
     });
   </script>
 </head>
-<body class="logged-in">
+<body class="logged-in workspace-loading">
+  <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-label="Loading workspace">
+    <span class="workspace-spinner" aria-hidden="true"></span>
+    <p>Preparing workspace</p>
+  </div>
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark brand-mark-image"><img alt="Quvo CafÃ© logo" class="sidebar-logo-img" src="../shared/images/quvo-logo.jpg" /></div>
-      <div class="brand-name">Quvo CafÃ©</div>
+      <div class="brand-mark brand-mark-image"><img alt="Quvo Caf&eacute; logo" class="sidebar-logo-img" src="../shared/images/quvo-logo.jpg" /></div>
+      <div class="brand-name">Quvo Caf&eacute;</div>
       <div class="brand-sub">Admin Workspace</div>
     </div>
     <nav class="nav">
@@ -92,17 +99,17 @@ if (empty($_SESSION["admin_confirmed"])) {
   </aside>
   <main class="main">
     <header class="topbar">
-      <div><div class="eyebrow" id="screenEyebrow">Workspace</div><h1 id="screenTitle">Loadingâ€¦</h1><p id="screenSub">Preparing workspace</p></div>
+      <div><div class="eyebrow" id="screenEyebrow">Workspace</div><h1 id="screenTitle"></h1><p id="screenSub"></p></div>
       <div class="topbar-right">
         <div class="clock"><i data-lucide="clock-3"></i><span id="liveClock">00:00:00</span></div>
         <div class="system-status"><span class="pulse"></span>Staff session active</div>
         <div class="topbar-user"><span class="topbar-user-avatar" id="topbarUserAvatar">FP</span><span class="topbar-user-copy"><b id="topbarUserName">Staff</b><small id="topbarUserRole">Administrator</small></span></div>
       </div>
     </header>
-    <div id="screen-fragment-root"></div>
+    <div id="screen-fragment-root" aria-busy="true"></div>
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=inventory-save-2"></script>
+  <script src="../shared/js/workspace-loader.js?v=menu-photos-options-1"></script>
 </body>
 </html>

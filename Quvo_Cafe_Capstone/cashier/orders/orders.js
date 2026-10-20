@@ -1,7 +1,8 @@
 function renderOrders() {
+  const pending = state.orders.filter(order => order.stage === "received").length;
+  globalThis.QUVO_WORKSPACE?.setNotificationCount("orders", pending);
   const badge = document.getElementById("sidebarOrderCount");
   if (badge) {
-    const pending = state.orders.filter(order => order.stage === "received").length;
     badge.textContent = pending;
     badge.setAttribute("aria-label", `${pending} orders awaiting payment collection or approval`);
   }

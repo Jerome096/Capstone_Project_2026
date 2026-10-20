@@ -38,6 +38,7 @@ function renderAlerts() {
   const banner = document.getElementById("alertBanner");
   const empty = document.getElementById("emptyAlerts");
   const count = state.alerts.length;
+  globalThis.QUVO_WORKSPACE?.setNotificationCount("alerts", count);
 
   const sidebarCount = document.getElementById("sidebarAlertCount");
   const activeCount = document.getElementById("activeAlertCount");

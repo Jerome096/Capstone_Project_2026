@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/online.php';
+if($_SERVER['REQUEST_METHOD']==='GET'&&($_GET['view']??'')==='menu-image'){try{menu_image_send(quvo_db(),$_GET['id']??null,$_GET['version']??null);}catch(Throwable $error){orders_error(null,$error);}}
 $csrf=online_start_session();$db=null;
 try {
     $method=$_SERVER['REQUEST_METHOD'];
@@ -21,7 +22,7 @@ try {
         }
         throw new OrderError('Unknown view.',404);
     }
-    $input=orders_input(3000000);$action=$input['action']??null;
+    $input=orders_input(4194304);$action=$input['action']??null;
     if($action==='logout') {
         $_SESSION=[];session_regenerate_id(true);$csrf=online_start_session();
         quvo_json(['ok'=>true,'csrf'=>$csrf]);

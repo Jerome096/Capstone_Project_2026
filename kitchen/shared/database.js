@@ -4,7 +4,7 @@ async function kitchenApi(input=null,query='') {
 }
 function kitchenCanReady(){return Boolean(kitchenSql.user&&kitchenSql.connected&&!kitchenSql.changing);}
 function mapKitchenOrder(row){
-  const items=row.items.map(item=>({name:item.name,category:item.category,qty:item.quantity,customizations:[...Object.values(item.customization||{}),item.notes].filter(value=>typeof value==='string'&&value&&value!=='Not applicable').join(' · ')}));
+  const items=row.items.map(item=>({name:item.name,category:item.category,qty:item.quantity,customizations:[...Object.values(item.customization||{}),...(item.customization?.options||[]).map(option=>option.label+": "+option.value),item.notes].filter(value=>typeof value==='string'&&value&&value!=='Not applicable').join(' · ')}));
   return {id:/^[A-Za-z0-9-]+$/.test(row.order_number)?row.order_number:'SQL-'+row.order_id,sqlId:row.order_id,status:row.status,table:row.location,customer:row.customer_name,receivedAt:row.received_at.replace(' ','T')+'Z',paymentStatus:'Payment approved',items,categoryMix:[...new Set(items.map(item=>item.category))],notes:items.map(item=>item.customizations).filter(Boolean).join('; '),hasDrinks:row.has_drinks,orderStatus:row.order_status};
 }
 function setKitchenUser(user){

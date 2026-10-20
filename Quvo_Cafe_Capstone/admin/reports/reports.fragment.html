@@ -7,9 +7,15 @@
     <span>Management reports are restricted to authorized admin access.</span>
   </div>
   <div class="report-date-controls">
-    <label for="reportDate">Report date <input type="date" id="reportDate" /></label>
+    <div class="report-period-controls" role="group" aria-label="Report period">
+      <button type="button" class="btn light" id="reportsDaily" aria-pressed="true">Daily</button>
+      <button type="button" class="btn light" id="reportsMonthly" aria-pressed="false">Monthly</button>
+      <button type="button" class="btn light" id="reportsYearly" aria-pressed="false">Yearly</button>
+    </div>
+    <label for="reportDate" id="reportDateControl">Report date <input type="date" id="reportDate" min="0001-01-01" max="9998-12-31" /></label>
+    <label for="reportMonth" id="reportMonthControl" hidden>Report month <input type="month" id="reportMonth" min="0001-01" max="9998-12" /></label>
+    <label for="reportYear" id="reportYearControl" hidden>Report year <input type="number" id="reportYear" min="1" max="9998" step="1" inputmode="numeric" /></label>
     <button type="button" class="btn light" id="reportsToday">Today</button>
-    <button type="button" class="btn light" id="reportsOverall" aria-pressed="false">Overall · All dates</button>
     <button type="button" class="btn light" id="reportsRefresh">Refresh</button>
   </div>
   <p class="helper-text" id="reportsStatus" role="status"></p>
@@ -36,14 +42,14 @@
   </section>
   <div class="report-layout">
     <section class="report-table-card">
-      <div class="eyebrow">Hourly orders</div>
-      <h2>Paid orders by hour</h2>
+      <div class="eyebrow" id="reportActivityEyebrow">Hourly orders</div>
+      <h2 id="reportActivityTitle">Paid orders by hour</h2>
       <p class="helper-text">Grouped by payment approval time in the Philippines.</p>
       <div class="report-table-wrap">
         <table class="report-sheet-table compact">
           <thead>
             <tr>
-              <th>Time block</th>
+              <th id="reportActivityHeading">Time block</th>
               <th>Paid orders</th>
               <th>Revenue</th>
             </tr>

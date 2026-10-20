@@ -62,6 +62,7 @@ async function loadSessions() {
 }
 function renderSessions() {
   const counts = diningSessionState.counts;
+  globalThis.QUVO_WORKSPACE?.setNotificationCount("sessions", counts.pending || 0);
   const badge = document.getElementById("sidebarSessionCount");
   if (badge) {
     badge.textContent = counts.pending || 0;
@@ -123,7 +124,12 @@ async function changeDiningSession(id, action) {
   }
 }
 function bindDiningSessions() {
-  if (!window.QUVO_CONFIG.allowedScreens.includes("sessions")) return;
+  if (!window.QUVO_CONFIG.allowedScreens.includes("sessions")) {
+    // Other workspaces still show pending session notifications in their menu.
+    loadSessions();
+    setInterval(() => { if (!document.hidden) loadSessions(); }, 5000);
+    return;
+  }
   document.getElementById("sessionRows").addEventListener("click", (event) => {
     const button = event.target.closest("[data-session-action]");
     if (button) changeDiningSession(Number(button.dataset.sessionId), button.dataset.sessionAction);

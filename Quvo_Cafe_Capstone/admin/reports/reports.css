@@ -171,6 +171,10 @@
 .report-date-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:10px; }
 .report-date-controls label { display:grid; gap:6px; color:#82735c; font-size:12px; font-weight:700; }
 .report-date-controls input { min-height:44px; border:1px solid var(--border); border-radius:10px; padding:8px 12px; background:var(--white); color:var(--black); font:inherit; }
+.report-date-controls label[hidden] { display:none; }
+.report-period-controls { display:flex; flex-wrap:wrap; gap:6px; }
+.report-period-controls .btn { min-height:44px; }
+.report-period-controls [aria-pressed="true"] { background:#191714; color:#fff; border-color:#191714; }
+#reportYear { width:110px; }
 #reportsStatus { margin-bottom:16px; }
 #reports .report-table-card { min-width:0; }
-#reportsOverall[aria-pressed="true"] { background:#191714; color:#fff; border-color:#191714; }

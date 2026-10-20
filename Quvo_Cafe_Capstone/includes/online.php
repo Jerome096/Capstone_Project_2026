@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/menu.php';
 require_once __DIR__.'/orders.php';
 require_once __DIR__.'/auth.php';
 require_once __DIR__.'/payment-images.php';
@@ -129,8 +130,8 @@ function online_change_password(PDO $db,int $id,array $input): array
 
 function online_menu(PDO $db): array
 {
-    $rows=$db->query('SELECT m.menu_item_id AS id,m.item_name AS name,m.category,m.price FROM dbo.menu_items m WHERE '.inventory_menu_condition().' ORDER BY m.item_name')->fetchAll();
-    foreach($rows as &$row) {$row['id']=(string)$row['id'];$row['price']=(float)$row['price'];$row['description']='';$row['icon']='☕';}
+    $rows=$db->query('SELECT m.menu_item_id AS id,m.item_name AS name,m.category,m.price,m.option_groups_json,CONVERT(varchar(36),mi.image_version) image_version FROM dbo.menu_items m LEFT JOIN dbo.menu_item_images mi ON mi.menu_item_id=m.menu_item_id WHERE '.inventory_menu_condition().' ORDER BY m.item_name')->fetchAll();
+    foreach($rows as &$row) {$row+=menu_metadata($row,'api/index.php?view=menu-image&');unset($row['option_groups_json'],$row['image_version']);$row['id']=(string)$row['id'];$row['price']=(float)$row['price'];$row['description']='';$row['icon']='☕';}
     return $rows;
 }
 
@@ -193,7 +194,7 @@ function online_submit(PDO $db,int $customerId,array $input): array
     $q=$db->prepare('INSERT dbo.order_items(order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes) VALUES(?,?,?,?,?,?,?,?,?)');
     foreach($lines as $index=>$line) {
         $menu=$catalog[$line['menu_item_id']];
-        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$menu['price'],$line['quantity'],json_encode($line['customization'],JSON_THROW_ON_ERROR),$line['notes']]);
+        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$menu['price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
     }
     $db->prepare('INSERT dbo.order_fulfillments(order_id,fulfillment_type,recipient_name,contact_snapshot,address_snapshot) VALUES(?,?,?,?,?)')->execute([$id,$fulfillment,$account['full_name'],$contact,$address]);
     $db->prepare("INSERT dbo.order_status_history(order_id,to_status) VALUES(?,'received')")->execute([$id]);

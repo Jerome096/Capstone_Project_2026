@@ -16,7 +16,7 @@ function renderAdminMenu() {
         .map(
           (item) => `
     <div class="admin-menu-row">
-      <span class="admin-menu-item-name">${escapeHtml(item.name)}</span>
+      <span class="admin-menu-item-name">${item.imageUrl?'<span class="admin-menu-thumbnail">'+QuvoMenuOptions.photoHTML(item)+'</span>':''}${escapeHtml(item.name)}</span>
       <span>${formatCategory(item.category)}</span>
       <span>₱${item.price}</span>
       <span class="menu-status ${item.available ? "" : "off"}">${item.available ? "Available" : "Unavailable"}</span>
@@ -28,7 +28,8 @@ function renderAdminMenu() {
     : `<div class="helper-text" style="padding:16px;">No menu items yet. Click Add item to create one.</div>`;
 
   if (state.selectedAdminMenuItemId) {
-    renderAdminEditPanel(state.selectedAdminMenuItemId);
+    const panel=document.getElementById("adminEditPanel");
+    if(panel?.dataset.itemId!==String(state.selectedAdminMenuItemId)||!panel.querySelector("form"))renderAdminEditPanel(state.selectedAdminMenuItemId);
   } else {
     const panel = document.getElementById("adminEditPanel");
     if (panel)
@@ -40,14 +41,17 @@ function renderAdminMenu() {
 }
 
 function selectAdminMenuItem(itemId) {
+  QuvoMenuEditor.capture();
   state.selectedAdminMenuItemId = itemId;
   renderAdminEditPanel(itemId);
 }
 
 function renderAdminEditPanel(itemId) {
   const panel = document.getElementById("adminEditPanel");
-  const item = state.menu.find((entry) => entry.id === itemId);
-  if (!panel || !item) return;
+  const savedItem = state.menu.find((entry) => entry.id === itemId);
+  if (!panel || !savedItem) return;
+  const item = QuvoMenuEditor.item(savedItem);
+  panel.dataset.itemId=String(itemId);
 
   panel.innerHTML = `
     <div class="eyebrow">Edit item</div>
@@ -94,6 +98,7 @@ function renderAdminEditPanel(itemId) {
       </button>
     </form>
   `;
+  QuvoMenuEditor.mount(panel.querySelector("form"),item);
 }
 
 function setAdminAvailability(value) {
@@ -115,7 +120,10 @@ async function saveAdminMenuItem(event, itemId) {
   const button = event.target.querySelector('button[type="submit"]');
   if (button.disabled) return;
 
+  let editorPayload;
+  try{editorPayload=QuvoMenuEditor.payload(itemId);}catch(error){showToast(error.message);return;}
   const payload = {
+    ...editorPayload,
     name: document.getElementById("adminItemName").value.trim(),
     category: document.getElementById("adminItemCategory").value,
     price: document.getElementById("adminItemPrice").value,
@@ -130,6 +138,7 @@ async function saveAdminMenuItem(event, itemId) {
   pendingMenuItems.add(itemId);
   button.disabled = true;
   button.textContent = "Saving...";
+  event.target.inert=true;
 
   try {
     const response = await fetch(quvoPath("api/menu/index.php"), {
@@ -155,6 +164,8 @@ async function saveAdminMenuItem(event, itemId) {
       state.menu.unshift(data.item);
     }
 
+    QuvoMenuEditor.forget(itemId);
+    document.getElementById("adminEditPanel").replaceChildren();
     state.selectedAdminMenuItemId = data.item.id;
 
     renderMenu();
@@ -165,6 +176,7 @@ async function saveAdminMenuItem(event, itemId) {
     showToast(error.message);
   } finally {
     pendingMenuItems.delete(itemId);
+    event.target.inert=false;
     button.disabled = false;
     button.textContent = "Save changes";
   }
@@ -199,6 +211,7 @@ async function removeAdminMenuItem(itemId, button) {
       }
     }
 
+    QuvoMenuEditor.forget(itemId);
     state.menu = state.menu.filter((entry) => entry.id !== itemId);
     if (state.selectedAdminMenuItemId === itemId) {
       state.selectedAdminMenuItemId = null;
@@ -232,6 +245,9 @@ function addAdminMenuItem() {
     category: "coffee",
     price: 0,
     available: false,
+    optionGroups: [],
+    customOptionsConfigured: true,
+    imageUrl: null,
   };
 
   state.menu.unshift(newItem);

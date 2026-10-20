@@ -51,13 +51,17 @@
       class="amount-field"
       id="checkoutCashBlock"
     >
-      <label>Amount received</label>
+      <label for="amountReceived">Amount received</label>
       <input
         id="amountReceived"
-        min="0"
-        placeholder="0"
-        step="1"
-        type="number"
+        placeholder="0.00"
+        type="text"
+        inputmode="decimal"
+        pattern="[0-9]+([.][0-9]{1,2})?"
+        maxlength="13"
+        enterkeyhint="done"
+        autocomplete="off"
+        spellcheck="false"
       />
     </div>
     <div

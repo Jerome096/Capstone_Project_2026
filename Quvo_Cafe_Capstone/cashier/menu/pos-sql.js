@@ -22,7 +22,7 @@ function startSqlPosReview(){
   const hex=Array.from(bytes,byte=>byte.toString(16).padStart(2,'0')).join('');
   const key=[hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
   const payload={submission_key:key,customer_name:customer,expected_total:(total/100).toFixed(2),payment_method:selectedPaymentMethod,amount_received:received,payment_reference:reference,
-    items:state.posCart.map(item=>({menu_id:item.menuId,quantity:item.qty,drink_options:item.drinkOptions,notes:item.note||''}))};
+    items:state.posCart.map(item=>({menu_id:item.menuId,quantity:item.qty,drink_options:item.drinkOptions,...(item.optionSelections?{custom_options:item.optionSelections,custom_options_version:item.optionVersion}:{}),notes:item.note||''}))};
   pendingPaymentReview={type:'manual',orderNumber:'New walk-in order',location:'Counter',source:'Walk-in / POS',customerName:customer,paymentMethod:selectedPaymentMethod,total:total/100,
     amountReceived:Number(received),change:Math.max(0,Number(received)-total/100),gcashReference:reference,payload,
     items:state.posCart.map(item=>({...item,category:state.menu.find(menu=>menu.id===item.menuId)?.category||'',customizations:[...(item.customizations||[])]}))};
@@ -52,10 +52,10 @@ async function confirmSqlPosPayment(){
     document.getElementById('paidState').classList.remove('hidden');document.getElementById('posReceiptActions').classList.remove('hidden');
     showToast(result.replayed?'Previously saved POS order restored.':'POS order '+result.order.order_number+' saved and sent to preparation.');
   }catch(error){
-    document.getElementById('posSqlError').textContent=error.message+' '+(error.status===422||['price_changed','item_unavailable','stock_unavailable'].includes(error.code)?'Cancel this review and correct the cart.':'Retry this same confirmation or check Orders before creating another order.');
-    if([400,413,422].includes(error.status)||['price_changed','item_unavailable','stock_unavailable'].includes(error.code)){
+    document.getElementById('posSqlError').textContent=error.message+' '+(error.status===422||['price_changed','item_unavailable','stock_unavailable','options_changed'].includes(error.code)?'Cancel this review and correct the cart.':'Retry this same confirmation or check Orders before creating another order.');
+    if([400,413,422].includes(error.status)||['price_changed','item_unavailable','stock_unavailable','options_changed'].includes(error.code)){
       try{savePosPending(null);}catch{posSql.pending=null;}
-      if(['price_changed','item_unavailable','stock_unavailable'].includes(error.code))loadMenuItems();
+      if(['price_changed','item_unavailable','stock_unavailable','options_changed'].includes(error.code))loadMenuItems();
     }
   }finally{
     posSql.busy=false;updatePosPendingUi();renderCart();

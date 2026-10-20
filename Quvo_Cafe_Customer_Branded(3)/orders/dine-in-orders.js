@@ -148,9 +148,9 @@ async function submitDineOrder() {
     if (result.order.payment_status === "unpaid") showCashierPaymentPopup(result.order);
     else showToast(result.replayed ? "Your saved order has been restored." : "Order submitted.");
   } catch (error) {
-    if (["price_changed", "item_unavailable"].includes(error.code) || [400, 413, 422].includes(error.status)) {
+    if (["price_changed", "item_unavailable", "options_changed"].includes(error.code) || [400, 413, 422].includes(error.status)) {
       try { saveDinePending(null); } catch { dineOrders.pending = null; }
-      if (["price_changed", "item_unavailable"].includes(error.code)) {
+      if (["price_changed", "item_unavailable", "options_changed"].includes(error.code)) {
         try { await refreshDineCartPrices(); } catch { /* The existing cart is kept for review. */ }
       }
       showToast(error.message + " Review your cart before submitting again.");
@@ -194,7 +194,7 @@ function renderDineTracking() {
     row("Table", order.table_name) + order.items.map(item =>
       row(item.quantity + " × " + item.item_name, formatCurrency(item.line_total)) +
       '<p class="small-copy">' + escapeCustomerHtml(
-        [item.customization.sugarLevel, item.customization.iceLevel, item.notes].filter(x => x && x !== "Not applicable").join(" · ")
+        [...QuvoMenuOptions.summary(item.customization), item.notes].filter(x => x && x !== "Not applicable").join(" · ")
       ) + "</p>").join("") + row("Total", formatCurrency(order.total_amount)) +
     (order.payment_status === "paid" ? row("Payment", order.payment_method) +
       row("Amount received", formatCurrency(order.amount_received)) + row("Change", formatCurrency(order.change_amount)) : "");

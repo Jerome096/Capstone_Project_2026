@@ -53,9 +53,9 @@ async function submitOrder(){
     state.onlineOrders=[result.order,...state.onlineOrders.filter(order=>order.order_id!==result.order.order_id)];
     renderHistory();renderTracking();showScreen("screenTracking");showToast("Order received. Payment will be confirmed by the cashier.");
   }catch(error){
-    if([400,413,422].includes(error.status)||["price_changed","item_unavailable","payment_qr_changed"].includes(error.code)){
+    if([400,413,422].includes(error.status)||["price_changed","item_unavailable","options_changed","payment_qr_changed"].includes(error.code)){
       try{saveOnlinePending(null);}catch{online.pending=null;}
-      if(["price_changed","item_unavailable"].includes(error.code))await refreshOnlineMenu(true).catch(()=>{});
+      if(["price_changed","item_unavailable","options_changed"].includes(error.code))await refreshOnlineMenu(true).catch(()=>{});
       if(["payment_qr_changed","payment_unavailable"].includes(error.code))await refreshOnlinePayment();
     }
     showToast(error.message);

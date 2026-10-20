@@ -229,23 +229,31 @@ Reports reads existing SQL orders, payments and immutable item snapshots through
 requires a confirmed Admin session. The endpoint is read-only and uses one
 serializable transaction so its sections agree during concurrent order activity.
 
-Choose a Philippine calendar date in Reports. Revenue and paid orders use the
+Choose Daily, Monthly or Yearly and select a Philippine calendar date, month or
+year. Today, This month or This year returns the selected view to its current
+period. Revenue and paid orders use the
 payment approval date and amount_applied, excluding change. Orders placed use
 creation date, completed orders use serving date, and voids use cancellation
 date. Average order value uses the paid-order count. Unpaid counts describe the
-current status of orders created on the selected date. All order sources are
-included. Reports retains full-day values after EOD.
+current status of orders created in the selected period. All order sources are
+included. Reports retains the selected period's values after EOD.
 
-Choose **Overall · All dates** to aggregate all SQL history; Today or a date
-selection switches back to a daily report. Overall hourly values combine dates
-by Philippine hour of day. The screen shows only hours with paid orders and
-displays an empty-state message when there are none. Hourly data reconciles with
+The Overall / All dates option has been removed. Daily activity groups approved
+payments by Philippine hour, Monthly by day of the selected month, and Yearly by
+month of the selected year. Only buckets with paid orders appear on screen;
+an empty-state message appears when there are none. Activity reconciles with
 paid-order revenue/counts. Top five items rank quantities sold in paid orders, using saved
 item names rather than current menu labels. Payment breakdown includes custom
 methods in Other digital; unpaid cancellations appear under No payment.
 
+The API accepts `period=daily&date=YYYY-MM-DD`, `period=monthly&date=YYYY-MM`, or
+`period=yearly&date=YYYY`. Omitting period preserves the daily default. Every
+range includes its first Philippine midnight and excludes the next period's
+first midnight, including leap February and December/January transitions.
+
 Verify with `C:\php85\php.exe tests/reports.php` (all fixtures and EOD markers
-roll back) and `node tests/reports.cjs`.
+roll back), `C:\php85\php.exe tests/report-periods.php` (calendar validation
+without database access), and `node tests/reports.cjs`.
 
 ## Inventory and Bill of Materials
 
