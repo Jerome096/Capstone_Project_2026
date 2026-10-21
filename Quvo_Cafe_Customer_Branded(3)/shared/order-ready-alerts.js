@@ -5,7 +5,7 @@
   const preferenceKey='quvo_ready_alert_preference';
   let started=false,scope='',audio=null,enabled=false,activating=false,pending=false,lastChime=0;
   let preference='auto',soundError=false,options={},controls,notice;
-  let previous=new Map(),announced=new Set();
+  let previous=new Map(),announced=new Set(),reminders=new Map();
   const queue=new Map();
   try{preference=sessionStorage.getItem(preferenceKey)||'auto';}catch{}
   const savePreference=value=>{preference=value;try{sessionStorage.setItem(preferenceKey,value);}catch{}};
@@ -13,9 +13,10 @@
     if(!scope)return;
     while(previous.size>200)previous.delete(previous.keys().next().value);
     announced=new Set([...announced].filter(id=>previous.has(id)));
-    try{sessionStorage.setItem('quvo_ready_orders_'+scope,JSON.stringify({orders:[...previous],announced:[...announced]}));}catch{}
+    reminders=new Map([...reminders].filter(([id])=>previous.has(id)));
+    try{sessionStorage.setItem('quvo_ready_orders_'+scope,JSON.stringify({orders:[...previous],announced:[...announced],reminders:[...reminders]}));}catch{}
   }
-  function reset(){scope='';previous=new Map();announced=new Set();queue.clear();pending=false;renderNotice();}
+  function reset(){scope='';previous=new Map();announced=new Set();reminders=new Map();queue.clear();pending=false;renderNotice();}
   function useScope(value){
     if(scope===value)return;
     reset();scope=value;
@@ -23,6 +24,7 @@
       const saved=JSON.parse(sessionStorage.getItem('quvo_ready_orders_'+scope)||'null');
       if(Array.isArray(saved?.orders))previous=new Map(saved.orders.filter(row=>Array.isArray(row)&&row.length===2&&typeof row[0]==='string'&&typeof row[1]==='string').slice(-200));
       if(Array.isArray(saved?.announced))announced=new Set(saved.announced.filter(id=>typeof id==='string'&&previous.has(id)));
+      if(Array.isArray(saved?.reminders))reminders=new Map(saved.reminders.filter(row=>Array.isArray(row)&&row.length===2&&typeof row[0]==='string'&&typeof row[1]==='string'&&/^[0-9]{1,20}$/.test(row[1])&&previous.has(row[0])));
     }catch{}
   }
   function renderControls(){
@@ -90,13 +92,18 @@
     useScope(String(identity));let fresh=false;
     const unique=new Map((rows||[]).filter(order=>order&&order.order_id!=null).map(order=>[String(order.order_id),order]));
     for(const [id,order] of unique){
-      const status=String(order.order_status),before=previous.get(id);
+      const status=String(order.order_status),before=previous.get(id),rawVersion=String(order.ready_alert_version||'0');
+      if((before==='served'||before==='cancelled')&&status!==before)continue;
+      const version=/^[0-9]{1,20}$/.test(rawVersion)?rawVersion.replace(/^0+(?=\d)/,''):'0',last=reminders.get(id);
+      // Audit IDs can exceed JavaScript's safe integer range. Compare decimal strings.
+      const reminder=last!==undefined&&(version.length>last.length||(version.length===last.length&&version>last));
       if(status==='ready'){
-        if(before&&before!=='ready'&&!announced.has(id)){queue.set(id,{...order,order_id:id});fresh=true;}
+        if(reminder||(before&&before!=='ready'&&!announced.has(id))){queue.set(id,{...order,order_id:id});fresh=true;}
         // A first snapshot of old ready orders is history, not a new ready event.
         announced.add(id);
       }else queue.delete(id);
       previous.delete(id);previous.set(id,status);
+      if(last===undefined||reminder)reminders.set(id,version);
     }
     saveSnapshot();renderNotice();
     if(fresh)pending=true;

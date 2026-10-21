@@ -76,6 +76,25 @@ async function main(){
  check(noStorage.calls.tones===3,'Storage restrictions do not break alert delivery or in-page deduplication');
  const completed=fixture();await completed.submit();completed.api.observe('online:A',[order(60,'preparing')]);await completed.visible('hidden');completed.api.observe('online:A',[order(60,'ready')]);completed.api.observe('online:A',[order(60,'served')]);await completed.visible('visible');
  check(completed.calls.tones===0&&completed.notice.hidden,'An order served while hidden does not ring as ready on return');
+ const reminder=fixture();await reminder.submit();reminder.api.observe('online:A',[order(70,'preparing')]);reminder.api.observe('online:A',[order(70,'ready')]);await reminder.notice.querySelector('[data-ready-dismiss]').click();reminder.advance();
+ reminder.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740993'}]);
+ check(reminder.calls.tones===6&&!reminder.notice.hidden,'Cashier reminder reannounces an already ready order');
+ reminder.advance();reminder.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740993'}]);
+ check(reminder.calls.tones===6,'Repeated polling of the same reminder stays silent');
+ reminder.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740994'}]);
+ check(reminder.calls.tones===9,'Distinct 64-bit reminder IDs produce separate alerts without precision loss');
+ reminder.advance();reminder.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740993'}]);reminder.api.observe('online:A',[order(70,'ready')]);reminder.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740994'}]);
+ check(reminder.calls.tones===9,'Older or incomplete responses cannot reset the reminder cursor');
+ const reminderReload=fixture({storage:reminder.storage});await reminderReload.submit();reminderReload.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740994'}]);
+ check(reminderReload.calls.tones===0&&reminderReload.notice.hidden,'Reload does not repeat a cashier reminder');
+ reminderReload.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740995'}]);
+ check(reminderReload.calls.tones===3,'A new reminder after reload is delivered');
+ await reminderReload.controls.querySelector('[data-ready-toggle]').click();reminderReload.advance();reminderReload.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740996'}]);
+ check(reminderReload.calls.tones===3&&!reminderReload.notice.hidden,'Cashier reminders honor mute while retaining their visual message');
+ reminderReload.api.observe('online:A',[{...order(70,'served'),ready_alert_version:'9007199254740996'}]);reminderReload.api.observe('online:A',[{...order(70,'ready'),ready_alert_version:'9007199254740997'}]);
+ check(reminderReload.notice.hidden,'An outdated ready response cannot reannounce a served order');
+ const historyReminder=fixture();await historyReminder.submit();historyReminder.api.observe('online:A',[{...order(80,'ready'),ready_alert_version:'99'}]);
+ check(historyReminder.calls.tones===0&&historyReminder.notice.hidden,'Initial ready history with old reminders stays silent');
  console.log(checks+' ready alert checks passed. No network or SQL access.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

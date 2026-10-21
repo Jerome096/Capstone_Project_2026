@@ -3,6 +3,7 @@ const sqlOrders = {
   loading: false, changing: false, revision: 0, cache: new Map(), known: new Map(),
   olderOffset: null, historyLoaded: false, paymentOrder: null, paymentAttempt: null,
   receiptDate:null, receiptRequest:0, receiptLoading:false,
+  reminderAttempts:new Map(),reminderTimes:new Map(),
 };
 const sqlMoney = value => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value));
 function sqlDate(value) {
@@ -16,10 +17,11 @@ async function sqlOrderApi(input, query = "") {
     ...(input ? { body: JSON.stringify(input) } : {}),
   });
   const data = await response.json();
-  if (!response.ok || !data.ok) throw new Error(data.error || "Could not confirm the order action.");
+  if (!response.ok || !data.ok) {const error=new Error(data.error || "Could not confirm the order action.");error.status=response.status;error.code=data.code;throw error;}
   return data;
 }
 function sqlMapOrder(row) {
+  rememberSqlReadyReminder(row);
   return {
     id: "sql" + row.order_id, sqlId: row.order_id, persisted: true, number: row.order_number,
     table: row.table_name, customerName: row.customer_name, total: Number(row.total_amount),
@@ -157,6 +159,44 @@ function sqlFoodReadyMarkup(order) {
   const detail=order.raw.kitchen_ready_at?'Kitchen · '+sqlDate(order.raw.kitchen_ready_at):'Order marked ready';
   return '<div class="food-readiness" role="status"><strong>✓ Food ready</strong><span>'+escapeHtml(detail)+'</span></div>';
 }
+function rememberSqlReadyReminder(row) {
+  const id=String(row.order_id),version=String(row.ready_alert_version||'0');
+  if(version==='0')return;
+  if(sqlOrders.reminderTimes.get(id)?.version!==version)sqlOrders.reminderTimes.set(id,{version,until:Date.now()+Math.max(0,Math.min(15,Number(row.ready_alert_retry_after)||0))*1000});
+  const attempt=sqlOrders.reminderAttempts.get(id);
+  if(attempt&&!attempt.busy&&attempt.version!==version)sqlOrders.reminderAttempts.delete(id);
+}
+function sqlReadyReminderState(id) {
+  const busy=Boolean(sqlOrders.reminderAttempts.get(String(id))?.busy);
+  const remaining=Math.max(0,Math.ceil(((sqlOrders.reminderTimes.get(String(id))?.until||0)-Date.now())/1000));
+  return {disabled:busy||sqlOrders.changing||remaining>0,label:busy?'Sending reminder…':remaining?'Alert again in '+remaining+'s':'Alert customer again'};
+}
+function sqlReadyReminderMarkup(order) {
+  if(order.stage!=='ready'||!order.paid||!['dine_in','online'].includes(order.raw.order_source)||!['admin','staff'].includes(QUVO_AUTH.getSession()?.role))return '';
+  const status=sqlReadyReminderState(order.sqlId);
+  return '<button type="button" class="btn dark" data-ready-reminder="'+escapeHtml(order.sqlId)+'" onclick="remindSqlCustomer(\''+order.sqlId+'\')" '+(status.disabled?'disabled':'')+'>'+status.label+'</button>'+
+    (order.raw.ready_alert_at?'<small class="helper-text">Last reminder: '+escapeHtml(sqlDate(order.raw.ready_alert_at))+'. Customer page must be open.</small>':'');
+}
+function updateSqlReadyReminderButtons() {
+  document.querySelectorAll('[data-ready-reminder]').forEach(button=>{const status=sqlReadyReminderState(button.dataset.readyReminder);button.disabled=status.disabled;button.textContent=status.label;});
+}
+async function remindSqlCustomer(id) {
+  id=String(id);
+  if(sqlReadyReminderState(id).disabled)return;
+  const row=sqlOrders.known.get(id);
+  if(!row||row.order_status!=='ready'||!['dine_in','online'].includes(row.order_source))return;
+  let attempt=sqlOrders.reminderAttempts.get(id);
+  if(!attempt){attempt={key:crypto.randomUUID(),version:String(row.ready_alert_version||'0'),busy:false};sqlOrders.reminderAttempts.set(id,attempt);}
+  attempt.busy=true;sqlOrders.changing=true;sqlOrders.revision++;renderOrders();
+  try {
+    const result=await sqlOrderApi({action:'remind_ready',id,request_key:attempt.key});
+    installSqlOrder(result.order);sqlOrders.reminderAttempts.delete(id);
+    showToast(result.replayed?'This reminder was already sent.':'Reminder sent. Customer page must be open with alerts enabled for sound.');
+  } catch(error) {
+    if(error.status>=400&&error.status<500)sqlOrders.reminderAttempts.delete(id);
+    showToast(error.message||'Could not confirm the reminder. Refresh or try again.');
+  } finally {attempt.busy=false;sqlOrders.changing=false;renderOrders();await loadSqlOrders();}
+}
 function renderSqlOrderCard(order) {
   const e = escapeHtml;
   const row = order.raw;
@@ -173,7 +213,7 @@ function renderSqlOrderCard(order) {
   if (row.order_source === "online") {
     actions = '<button class="btn light" onclick="openOnlineOrderDetails(\'' + order.sqlId + '\')">View customer details</button>' + actions;
   }
-  actions += preparationReprintMarkup(order);
+  actions += sqlReadyReminderMarkup(order)+preparationReprintMarkup(order);
   return '<article class="order-card"><div class="order-top"><strong>' + e(order.number) +
     '</strong><span class="table-chip">' + e(order.table) + '</span></div><p class="order-context">Customer: ' +
     e(order.customerName) + '</p>' + (row.order_source === "online" ?
@@ -338,4 +378,5 @@ function bindSqlOrders() {
   document.getElementById("sqlOlderReceipts").addEventListener("click", loadOlderSqlReceipts);
   loadSqlOrders();
   setInterval(loadSqlOrders, 5000);
+  setInterval(updateSqlReadyReminderButtons, 1000);
 }

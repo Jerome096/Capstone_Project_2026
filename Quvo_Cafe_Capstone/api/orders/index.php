@@ -34,6 +34,7 @@ try {
         "pay" => orders_pay($db, $actor["staff_id"], $id, $input),
         "status" => ["order" => orders_status($db, $actor["staff_id"], $id, $input["status"] ?? null)],
         "cancel" => ["order" => orders_cancel($db, $actor, $id, $input["reason"] ?? null)],
+        "remind_ready" => orders_remind_ready($db, $actor, $id, $input["request_key"] ?? null),
         default => throw new OrderError("Unknown order action."),
     };
     $db->commit();

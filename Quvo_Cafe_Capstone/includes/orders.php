@@ -113,6 +113,8 @@ function orders_header_sql(): string
     return "SELECT o.order_id,o.order_number,o.session_id,o.customer_name,o.total_amount,
         o.order_status,o.created_at,o.updated_at,o.cancelled_at,o.cancellation_reason,
         o.order_source,o.customer_account_id,o.preferred_payment_method,k.ready_at AS kitchen_ready_at,
+        COALESCE(CONVERT(varchar(20),reminder.audit_id),'0') AS ready_alert_version,reminder.occurred_at AS ready_alert_at,
+        CASE WHEN reminder.occurred_at>DATEADD(second,-15,SYSUTCDATETIME()) THEN 15-DATEDIFF(second,reminder.occurred_at,SYSUTCDATETIME()) ELSE 0 END AS ready_alert_retry_after,
         COALESCE(pm.display_name,o.preferred_payment_method) AS preferred_payment_label,
         COALESCE(am.display_name,p.payment_method) AS payment_method_label,
         CASE WHEN EXISTS(SELECT 1 FROM dbo.online_payment_receipts pr WHERE pr.order_id=o.order_id) THEN 1 ELSE 0 END AS has_payment_receipt,
@@ -127,7 +129,10 @@ function orders_header_sql(): string
         LEFT JOIN dbo.payments p ON p.order_id=o.order_id
         LEFT JOIN dbo.online_payment_methods pm ON pm.payment_method=o.preferred_payment_method
         LEFT JOIN dbo.online_payment_methods am ON am.payment_method=p.payment_method
-        LEFT JOIN dbo.staff_users approver ON approver.staff_id=p.received_by_staff_id";
+        LEFT JOIN dbo.staff_users approver ON approver.staff_id=p.received_by_staff_id
+        OUTER APPLY (SELECT TOP 1 a.audit_id,a.occurred_at FROM dbo.system_audit_log a
+            WHERE a.entity_type='order' AND a.entity_key=CONVERT(nvarchar(100),o.order_id)
+              AND a.action='customer_ready_reminder' ORDER BY a.occurred_at DESC,a.audit_id DESC) reminder";
 }
 
 function orders_public_header(array $row): array
@@ -419,6 +424,31 @@ function orders_cancel(PDO $db, array $actor, int $id, mixed $reason): array
         updated_by_staff_id=? WHERE order_id=?")->execute([$actor["staff_id"], $reason, $actor["staff_id"], $id]);
     orders_online_history($db, $id, 'received', 'cancelled', $actor['staff_id'], $reason);
     return orders_get($db, $id);
+}
+
+function orders_remind_ready(PDO $db, array $actor, int $id, mixed $key): array
+{
+    if (!in_array($actor['role'] ?? '', ['admin','staff'], true)) throw new OrderError('Only staff and admins can alert customers.',403);
+    if (!$db->inTransaction()) throw new LogicException('Customer reminders require a transaction.');
+    if (!is_string($key) || !preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i',$key)) throw new OrderError('Refresh the order and try again.');
+    $key=strtolower($key);$order=orders_lock($db,$id);
+    // The order lock serializes reminders, status changes and retries.
+    $q=$db->prepare("SELECT TOP 1 audit_id FROM dbo.system_audit_log WHERE entity_type='order' AND entity_key=?
+        AND action='customer_ready_reminder' AND JSON_VALUE(details_json,'$.request_key')=?");
+    $q->execute([(string)$id,$key]);$replayed=$q->fetchColumn()!==false;$q->closeCursor();
+    if ($replayed) return ['order'=>orders_get($db,$id),'replayed'=>true];
+    if ($order['order_status']!=='ready') throw new OrderError('Only Ready orders can send a customer reminder.',409,'order_not_ready');
+    if (!in_array($order['order_source'],['dine_in','online'],true)) throw new OrderError('This order does not have a customer ordering page.',409,'no_customer_page');
+    $q=$db->prepare('SELECT payment_id FROM dbo.payments WHERE order_id=?');$q->execute([$id]);$paid=$q->fetchColumn();$q->closeCursor();
+    if (!$paid) throw new OrderError('Payment must be confirmed before alerting the customer.',409);
+    $q=$db->prepare("SELECT TOP 1 DATEDIFF(second,occurred_at,SYSUTCDATETIME()) elapsed FROM dbo.system_audit_log
+        WHERE entity_type='order' AND entity_key=? AND action='customer_ready_reminder' ORDER BY occurred_at DESC,audit_id DESC");
+    $q->execute([(string)$id]);$elapsed=$q->fetchColumn();$q->closeCursor();
+    if ($elapsed!==false && (int)$elapsed<15) throw new OrderError('A reminder was just sent. Wait '.max(1,15-(int)$elapsed).' seconds before sending again.',429,'reminder_cooldown');
+    $db->prepare("INSERT dbo.system_audit_log(actor_staff_id,action,entity_type,entity_key,details_json)
+        VALUES(?,'customer_ready_reminder','order',?,?)")
+        ->execute([(int)$actor['staff_id'],(string)$id,json_encode(['request_key'=>$key],JSON_THROW_ON_ERROR)]);
+    return ['order'=>orders_get($db,$id),'replayed'=>false];
 }
 
 function orders_online_history(PDO $db, int $id, ?string $from, string $to, int $actor, ?string $reason=null): void
