@@ -61,6 +61,7 @@ async function dineOrderApi(input, query = "") {
 function setDineOrder(order) {
   state.order = { ...order, persisted: true, accessMode: "dineIn", orderCode: order.order_number };
   dineOrders.selected = order.order_id;
+  if(dineOrders.sessionId&&String(order.session_id)===dineOrders.sessionId)window.QuvoReadyAlerts?.observe("dine:"+dineOrders.sessionId,[order]);
   renderTracking();
 }
 async function refreshDineOrders() {
@@ -77,6 +78,7 @@ async function refreshDineOrders() {
     } while (offset !== null);
     if (sessionId !== dineOrders.sessionId || !state.sessionApproved || dineOrders.busy) return;
     dineOrders.rows = rows;
+    window.QuvoReadyAlerts?.observe("dine:"+sessionId,rows);
     const id = dineOrders.selected || rows[0]?.order_id;
     if (id) {
       const result = await dineOrderApi(null, "&id=" + encodeURIComponent(id));

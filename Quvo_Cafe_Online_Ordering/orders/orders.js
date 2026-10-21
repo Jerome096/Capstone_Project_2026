@@ -10,6 +10,7 @@ async function refreshOnlineOrders(more=false){
   try{
     const data=await onlineApi(null,"orders&offset="+(more?online.nextOffset:0));
     if(generation!==online.generation||revision!==online.revision)return;
+    const observed=data.orders.slice();
     const merged=new Map(state.onlineOrders.map(order=>[order.order_id,order]));
     data.orders.forEach(order=>merged.set(order.order_id,order));
     state.onlineOrders=Array.from(merged.values()).sort((a,b)=>Number(b.order_id)-Number(a.order_id));
@@ -20,8 +21,10 @@ async function refreshOnlineOrders(more=false){
       if(!order)order=(await onlineApi(null,"orders&id="+encodeURIComponent(online.selectedId))).order;
       if(generation!==online.generation||revision!==online.revision||order.order_id!==online.selectedId)return;
       state.order=order;
+      observed.push(order);
       state.onlineOrders=state.onlineOrders.map(row=>row.order_id===order.order_id?order:row);
     }
+    window.QuvoReadyAlerts?.observe("online:"+state.onlineCustomer.id,observed);
     online.error="";renderHistory();renderTracking();
   }catch(error){
     if(generation!==online.generation)return;

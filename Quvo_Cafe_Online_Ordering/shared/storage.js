@@ -37,6 +37,7 @@ function restoreOnlinePending(){
 }
 function onlineCartLocked(){return online.busy||Boolean(online.pending);}
 function resetOnlineView(){
+  window.QuvoReadyAlerts?.reset();
   checkoutPayment.request++;checkoutPayment.methods={};checkoutPayment.loading=false;checkoutPayment.qrLoaded=false;clearOnlinePaymentReceipt();renderOnlinePaymentOptions();
   online.generation++;clearTimeout(online.poll);online.poll=null;online.pending=null;online.selectedId=null;online.error="";online.nextOffset=null;
   state.onlineCustomer=null;state.customerName="";state.order=null;state.onlineOrders=[];state.cart=[];

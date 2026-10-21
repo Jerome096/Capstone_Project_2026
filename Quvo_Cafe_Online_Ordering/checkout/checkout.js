@@ -31,6 +31,7 @@ async function submitOrder(){
   if(online.busy)return;
   if(!online.pending&&!onlinePaymentReady())return showToast("Choose an available payment method and upload your payment receipt first.");
   online.busy=true;online.revision++;
+  const readyCustomerId=String(state.onlineCustomer.id),readyGeneration=online.generation;
   try{
     if(!online.pending){
       const fulfillment=getSelectedFulfillment()==="Pickup"?"pickup":"delivery";
@@ -53,6 +54,7 @@ async function submitOrder(){
     clearOnlinePaymentReceipt();
     state.cart=[];online.selectedId=result.order.order_id;state.order=result.order;
     state.onlineOrders=[result.order,...state.onlineOrders.filter(order=>order.order_id!==result.order.order_id)];
+    if(readyGeneration===online.generation&&String(state.onlineCustomer?.id)===readyCustomerId)window.QuvoReadyAlerts?.observe("online:"+readyCustomerId,[result.order]);
     renderHistory();renderTracking();showScreen("screenTracking");showToast("Order received. Payment will be confirmed by the cashier.");
   }catch(error){
     if(error.code==="ordering_closed"){

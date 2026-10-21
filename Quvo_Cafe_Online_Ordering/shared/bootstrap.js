@@ -12,6 +12,7 @@ async function initializeCustomerApp() {
   bindCheckoutEvents();
   bindCartEvents();
   bindAccountEvents();
+  window.QuvoReadyAlerts?.start({channel:"online",onSelect:selectOnlineOrder,onVisible:()=>refreshOnlineOrders()});
 
   document.getElementById("refreshOnlineMenu").addEventListener("click",()=>refreshOnlineMenu().catch(error=>showToast(error.message)));
   window.QuvoOrdering?.start();
