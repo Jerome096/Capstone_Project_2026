@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . "/dining.php";
 require_once __DIR__ . "/inventory.php";
 require_once __DIR__."/menu-options.php";
+require_once __DIR__."/ordering.php";
 
 // Business errors are safe to show without exposing database or guest-token details.
 final class OrderError extends RuntimeException
@@ -250,6 +251,7 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     if (!(bool) $table["is_active"] || $session["status"] !== "active") {
         throw new OrderError("An active, approved customer session is required.", 403);
     }
+    ordering_require_open($db);
     [$catalog, $total] = orders_catalog($db, $lines, $expectedTotal);
     $query = $db->prepare("INSERT INTO dbo.orders
         (session_id,customer_name,submission_key,submission_hash,total_amount)

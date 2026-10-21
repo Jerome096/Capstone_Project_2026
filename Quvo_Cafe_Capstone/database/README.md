@@ -1,5 +1,15 @@
 # QuvoCafeDB SQL export
 
+## Customer ordering availability
+
+Run `19_ordering_availability.sql` in desktop SQL Server Management Studio before
+installing the ordering-control update. It adds a shared setting and operations
+workspace leases while preserving existing records. A new installation starts
+paused. Staff/admin use Start accepting orders or Pause orders in their workspace
+to control both dine-in and online submissions. Customers can still browse.
+Ordering also pauses at EOD, on the last operations logout, or within 90 seconds
+after all operations workspaces disconnect. See `docs/ORDERING_AVAILABILITY.md`.
+
 This folder contains the application database schema and a public-safe data snapshot exported on October 8, 2026 (Asia/Manila).
 
 ## Included

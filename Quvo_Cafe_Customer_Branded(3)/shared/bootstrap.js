@@ -11,5 +11,6 @@ async function initializeCustomerApp() {
   bindCustomizationEvents();
   bindCheckoutEvents();
   bindCartEvents();
+  window.QuvoOrdering?.start();
   await startDineInFlow();
 }

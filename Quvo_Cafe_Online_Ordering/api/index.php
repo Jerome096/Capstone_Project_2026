@@ -10,6 +10,7 @@ try {
     $db=quvo_db();$account=online_current($db);
     if($method==='GET') {
         $view=$_GET['view']??'session';
+        if($view==='ordering') quvo_json(['ok'=>true,'ordering'=>ordering_status($db)]);
         if ($view==='payment-qr') payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null),'quvo-payment-qr',isset($_GET['download']));
         if($view==='session') quvo_json(['ok'=>true,'csrf'=>$csrf,'account'=>$account?online_public_account($db,$account):null]);
         if(!$account) throw new OrderError('Please sign in first.',401);

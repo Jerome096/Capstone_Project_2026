@@ -31,6 +31,7 @@ $_SESSION["operations_portal"] = "barista";
   <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
   <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
   <link rel="stylesheet" href="../shared/css/menu-options.css?v=menu-photos-options-1" />
+  <link rel="stylesheet" href="../shared/css/ordering-control.css?v=ordering-availability-1" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
 <script src="../shared/js/auth.js"></script>
@@ -93,6 +94,6 @@ $_SESSION["operations_portal"] = "barista";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=menu-photos-options-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=ordering-availability-1"></script>
 </body>
 </html>
