@@ -10,6 +10,7 @@ ctx.QuvoMenuOptions={
   read(root,item){if(item.category!=='coffee')return {options:{},optionLabels:[]};return {options:{'sugar-level':el('sugarLevel').value,'ice-level':el('iceLevel').value},optionLabels:[{label:'Sugar level',value:el('sugarLevel').value.replace('sugar-','')+'%'},{label:'Ice level',value:el('iceLevel').value}]};},
   valid:()=>true,summary:custom=>(custom.optionLabels||[]).map(option=>option.label+': '+option.value)
 };
+ctx.window=ctx;ctx.guestBrowseOnly=false;
 ctx.onlineCartLocked=()=>locked;ctx.online={busy:false,pending:null};ctx.renderOnlinePayment=()=>{};ctx.onlinePaymentReady=()=>true;ctx.updateFulfillmentDisplay=()=>{};
 ctx.document.querySelector=()=>({value:'GCash'});ctx.onlineApiUrl=value=>'api/index.php?action='+value;
 const run=code=>vm.runInContext(code,ctx),root=path.resolve(__dirname,onlineMode?'../../Quvo_Cafe_Online_Ordering':'../../Quvo_Cafe_Customer_Branded(3)');for(const file of ['cart/cart.js','menu/customization.js'])run(fs.readFileSync(path.join(root,file),'utf8'));

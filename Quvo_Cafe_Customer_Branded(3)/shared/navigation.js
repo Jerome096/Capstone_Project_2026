@@ -5,7 +5,7 @@ const bottomNav = document.querySelector(".bottom-nav");
 function canNavigateTo(screenId) {
   if (!["screenDineInStart", "screenWaiting", "screenMenu", "screenCart", "screenTracking"].includes(screenId)) return false;
   if (screenId === "screenDineInStart") return true;
-  if (!state.sessionApproved) {
+  if (!state.sessionApproved && !(guestBrowseOnly && ["screenMenu","screenCart"].includes(screenId))) {
     showToast("Your table session must be approved before ordering.");
     return false;
   }
@@ -17,6 +17,7 @@ function showScreen(screenId) {
   if (
     state.accessMode === "dineIn" &&
     !state.sessionApproved &&
+    !(guestBrowseOnly && ["screenMenu","screenCart"].includes(screenId)) &&
     ["screenMenu", "screenCart", "screenTracking"].includes(
       screenId,
     )

@@ -24,15 +24,16 @@ function renderOnlinePayment() {
   if(!online.pending && checkoutPayment.receipt && checkoutPayment.receiptCents!==Math.round(getCartSubtotal()*100)) {
     clearOnlinePaymentReceipt();showToast("The total changed. Attach a receipt covering the updated total.");
   }
+  const orderingPaused=window.QuvoOrdering?.isClosed()===true;
   const method=selectedOnlinePayment(),entry=checkoutPayment.methods[method];
   const label=entry?.label||method;
   const image=document.getElementById("paymentQrImage"),download=document.getElementById("paymentQrDownload");
   document.getElementById("paymentQrAmount").textContent=formatCurrency(getCartSubtotal());
-  document.getElementById("paymentQrStatus").textContent=checkoutPayment.loading?"Checking payment options…":
+  document.getElementById("paymentQrStatus").textContent=orderingPaused?"Ordering is paused. Please wait until ordering reopens before making a payment.":checkoutPayment.loading?"Checking payment options…":
     !method?"No payment methods are available. Please contact the café.":
     !entry?.available?label+" is unavailable. The café has not configured its payment QR code.":
     "Pay using the "+label+" QR code below.";
-  image.hidden=!entry?.available || checkoutPayment.loading;
+  image.hidden=orderingPaused || !entry?.available || checkoutPayment.loading;
   document.getElementById("paymentQrPlaceholder").hidden=!image.hidden;
   document.getElementById("paymentQrInstructions").hidden=image.hidden;
   download.hidden=image.hidden || !checkoutPayment.qrLoaded;
@@ -45,7 +46,7 @@ function renderOnlinePayment() {
   const receipt=online.pending?.payload.receipt_image || checkoutPayment.receipt;
   const preview=document.getElementById("paymentReceiptPreview");
   preview.hidden=!receipt;if(receipt)preview.src=receipt;else preview.removeAttribute("src");
-  document.getElementById("onlinePaymentReceipt").disabled=onlineCartLocked() || !entry?.available || checkoutPayment.loading || checkoutPayment.receiptBusy;
+  document.getElementById("onlinePaymentReceipt").disabled=orderingPaused || onlineCartLocked() || !entry?.available || checkoutPayment.loading || checkoutPayment.receiptBusy;
   document.getElementById("paymentReceiptButtonText").textContent=receipt?"Replace receipt image":"Choose receipt image";
   document.getElementById("paymentReceiptStatus").textContent=checkoutPayment.receiptBusy?"Checking receipt…":receipt?"Receipt attached. Ready for cashier review.":
     !entry?.available?"Receipt upload will be available once the payment QR is added.":"Upload your receipt to place the order.";

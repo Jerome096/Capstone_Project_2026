@@ -1,0 +1,25 @@
+.ordering-control {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin:20px 32px 0;padding:16px 18px;border:1px solid #dfcba6;
+  border-radius:16px;background:#fffcf6;color:#211e18;
+}
+.ordering-control-copy{min-width:0;}
+.ordering-control strong{display:block;font-size:16px;}
+.ordering-control strong::before{content:"";display:inline-block;width:10px;height:10px;margin-right:9px;border-radius:50%;background:#a36f18;}
+.ordering-control[data-ordering-state="open"] strong::before{background:#397349;}
+.ordering-control p{margin:6px 0 0;line-height:1.45;font-size:13px;color:#6a6054;overflow-wrap:anywhere;}
+.ordering-control button{flex-shrink:0;min-height:44px;padding:11px 18px;border:1px solid #211e18;border-radius:12px;background:#211e18;color:#fff;font:inherit;font-weight:700;cursor:pointer;}
+.ordering-control button:disabled{opacity:.6;cursor:wait;}
+.ordering-control button:focus-visible{outline:3px solid #b38a3d;outline-offset:3px;}
+.ordering-confirmation{box-sizing:border-box;width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);margin:auto;padding:24px;border:1px solid #dfcba6;border-radius:20px;background:#fffcf6;color:#211e18;box-shadow:0 20px 80px #0004;overflow:auto;}
+.ordering-confirmation::backdrop{background:#19161099;backdrop-filter:blur(2px);}
+.ordering-confirmation h2{margin:0;font:inherit;font-size:22px;font-weight:750;line-height:1.25;}
+.ordering-confirmation p{margin:14px 0 24px;font-size:15px;line-height:1.55;color:#6a6054;}
+.ordering-confirmation-actions{display:flex;flex-wrap:wrap;gap:10px;}
+.ordering-confirmation button{flex:1 1 150px;min-height:48px;padding:12px 16px;border:1px solid #dfcba6;border-radius:12px;background:#f1e9dc;color:#211e18;font:inherit;font-weight:700;cursor:pointer;}
+.ordering-confirmation [data-confirm-ordering]{border-color:#211e18;background:#211e18;color:#fff;}
+.ordering-confirmation button:disabled{opacity:.6;cursor:wait;}
+.ordering-confirmation button:focus-visible{outline:3px solid #b38a3d;outline-offset:3px;}
+@media(max-width:1180px){.ordering-control{margin:16px 20px 0;}}
+@media(max-width:580px){.ordering-control{margin:12px 14px 0;align-items:stretch;flex-direction:column;}.ordering-control button{width:100%;}}
+@media print{.ordering-control{display:none!important;}}

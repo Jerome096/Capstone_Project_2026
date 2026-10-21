@@ -21,7 +21,8 @@ function renderCart() {
   totalText.textContent = formatCurrency(subtotal);
 
   renderOnlinePayment();
-  submitOrderBtn.disabled = online.busy || (!online.pending && (cartCount === 0 || !onlinePaymentReady()));
+  const orderingPaused=window.QuvoOrdering?.isClosed()===true;
+  submitOrderBtn.disabled = online.busy || (!online.pending && (cartCount === 0 || (!orderingPaused && !onlinePaymentReady())));
   document.getElementById("onlineRetryNote").hidden = !online.pending;
   document.querySelectorAll('input[name="fulfillmentOption"],input[name="paymentMethod"],#deliveryAddress,#deliveryContact').forEach(input=>input.disabled=onlineCartLocked());
   submitOrderBtn.textContent = online.busy ? "Submitting…" : online.pending ? "Retry order" : "Submit order";

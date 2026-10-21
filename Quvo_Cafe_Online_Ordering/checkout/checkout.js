@@ -27,6 +27,8 @@ function getSelectedFulfillment() {
 async function submitOrder(){
   if(online.busy||!state.onlineCustomer)return;
   if(!state.cart.length&&!online.pending)return showToast("Add an item first.");
+  if(!online.pending && window.QuvoOrdering && !(await window.QuvoOrdering.ensureOpen()))return;
+  if(online.busy)return;
   if(!online.pending&&!onlinePaymentReady())return showToast("Choose an available payment method and upload your payment receipt first.");
   online.busy=true;online.revision++;
   try{
@@ -53,7 +55,10 @@ async function submitOrder(){
     state.onlineOrders=[result.order,...state.onlineOrders.filter(order=>order.order_id!==result.order.order_id)];
     renderHistory();renderTracking();showScreen("screenTracking");showToast("Order received. Payment will be confirmed by the cashier.");
   }catch(error){
-    if([400,413,422].includes(error.status)||["price_changed","item_unavailable","options_changed","payment_qr_changed"].includes(error.code)){
+    if(error.code==="ordering_closed"){
+      try{saveOnlinePending(null);}catch{online.pending=null;}
+      window.QuvoOrdering?.showClosed(error.message);
+    }else if([400,413,422].includes(error.status)||["price_changed","item_unavailable","options_changed","payment_qr_changed"].includes(error.code)){
       try{saveOnlinePending(null);}catch{online.pending=null;}
       if(["price_changed","item_unavailable","options_changed"].includes(error.code))await refreshOnlineMenu(true).catch(()=>{});
       if(["payment_qr_changed","payment_unavailable"].includes(error.code))await refreshOnlinePayment();
