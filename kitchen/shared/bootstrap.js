@@ -1,9 +1,11 @@
-// Clear only the obsolete kitchen prototype cache; never import its old tickets.
-try{localStorage.removeItem("quvoKitchenFoodOrdersV3");}catch{}
-bindKitchenLogin();bindKitchenNavigation();bindKitchenOrders();bindKitchenDetails();
-document.getElementById("refreshViewBtn").addEventListener("click",loadKitchenOrders);
-render();
-initializeKitchenDatabase();
+async function initializeKitchenApp() {
+  // Clear only the obsolete kitchen prototype cache; never import its old tickets.
+  try{localStorage.removeItem("quvoKitchenFoodOrdersV3");}catch{}
+  bindKitchenLogin();bindKitchenNavigation();bindKitchenOrders();bindKitchenDetails();
+  document.getElementById("refreshViewBtn").addEventListener("click",loadKitchenOrders);
+  render();
+  await initializeKitchenDatabase();
+}
 
 function render() {
   const preparingOrders = filteredOrders("preparing");

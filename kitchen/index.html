@@ -9,8 +9,13 @@
 <link rel="stylesheet" href="orders/orders.css" />
 <link rel="stylesheet" href="alerts/alerts.css" />
 <link rel="stylesheet" href="shared/css/responsive.css" />
+<link rel="stylesheet" href="shared/css/workspace-loading.css?v=centered-loading-1" />
 </head>
-<body>
+<body class="workspace-loading" aria-busy="true">
+<div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-live="polite">
+  <span class="workspace-spinner" aria-hidden="true"></span>
+  <p>Preparing kitchen workspace</p>
+</div>
 <template data-fragment="login/login.fragment.html"></template>
 <main class="app-shell hidden" id="appShell">
     <aside class="sidebar">
@@ -59,5 +64,6 @@
   </main>
 <template data-fragment="orders/order-details.html"></template>
 <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
-<script src="shared/loader.js?v=menu-photos-options-1"></script>
+<noscript><style>.workspace-loading-screen { display: none; }</style>Please enable JavaScript to use the kitchen workspace.</noscript>
+<script src="shared/loader.js?v=centered-loading-1"></script>
 </body></html>

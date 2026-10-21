@@ -24,8 +24,13 @@
     <link rel="stylesheet" href="shared/css/menu-options.css?v=menu-photos-options-1" />
     <link rel="stylesheet" href="shared/css/ordering-status.css?v=ordering-availability-1" />
     <link rel="stylesheet" href="shared/css/order-ready-alerts.css?v=ready-alerts-1" />
+    <link rel="stylesheet" href="shared/css/workspace-loading.css?v=centered-loading-1" />
   </head>
-  <body>
+  <body class="workspace-loading" aria-busy="true">
+    <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-live="polite">
+      <span class="workspace-spinner" aria-hidden="true"></span>
+      <p>Preparing online ordering</p>
+    </div>
     <main class="customer-shell">
       <section class="app-frame">
         <template data-fragment="login/login.html"></template>
@@ -43,8 +48,8 @@
       </section>
     </main>
 
-    <noscript>Please enable JavaScript to use customer ordering.</noscript>
+    <noscript><style>.workspace-loading-screen { display: none; }</style>Please enable JavaScript to use customer ordering.</noscript>
     <script src="shared/viewport.js" defer></script>
-    <script src="shared/loader.js?v=customer-reminder-1" defer></script>
+    <script src="shared/loader.js?v=centered-loading-1" defer></script>
   </body>
 </html>

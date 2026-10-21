@@ -36,7 +36,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=customer-reminder-1";
+        script.src = src + "?v=centered-loading-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);
@@ -53,5 +53,9 @@
       "Customer ordering could not start. Open this customer page through the project PHP server and reload. " +
       error.message;
     document.querySelector(".app-frame").replaceChildren(message);
+  } finally {
+    document.getElementById("workspaceLoading")?.remove();
+    document.body.classList.remove("workspace-loading");
+    document.body.setAttribute("aria-busy", "false");
   }
 })();

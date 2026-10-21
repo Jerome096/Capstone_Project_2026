@@ -1,0 +1,51 @@
+/* Match the operation workspace spinner from the first paint until startup ends. */
+.workspace-loading {
+  overflow: hidden;
+}
+
+.workspace-loading > :not(.workspace-loading-screen):not(script):not(noscript) {
+  visibility: hidden;
+}
+
+.workspace-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--q-canvas, #f7f2e9);
+  text-align: center;
+}
+
+.workspace-loading-screen p {
+  margin: 0;
+  color: var(--q-ink-400, #82735c);
+  font-size: 14px;
+}
+
+.workspace-spinner {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 52px;
+  height: 52px;
+  border: 4px solid var(--q-border, #e2d8c6);
+  border-top-color: var(--q-brand-600, #a98132);
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: quvo-workspace-spin 0.8s linear infinite;
+}
+
+@keyframes quvo-workspace-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-spinner { animation: none; }
+}
+
+@media print {
+  .workspace-loading-screen { display: none; }
+}
