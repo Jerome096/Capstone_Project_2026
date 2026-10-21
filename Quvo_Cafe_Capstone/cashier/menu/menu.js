@@ -151,6 +151,7 @@ function bindItemModal() {
     const addedItemName = selectedMenuItem.name;
     closeItemModal();
     renderCart();
+    window.QUVO_WORKSPACE?.revealPanel("#menu .pos-cart");
     showToast(`${addedItemName} added to manual order.`);
   });
 }

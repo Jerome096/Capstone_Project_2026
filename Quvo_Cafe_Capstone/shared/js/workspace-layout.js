@@ -41,6 +41,33 @@
   let activeModal = null;
   let restoreModalFocus = null;
 
+  let revealFrame = 0;
+  function revealPanel(target) {
+    cancelAnimationFrame(revealFrame);
+    // Wait for rendering and any closing modal to restore the page's scroll.
+    revealFrame = requestAnimationFrame(() => {
+      revealFrame = requestAnimationFrame(() => {
+        const panel = typeof target === "string" ? document.querySelector(target) : target;
+        if (!panel?.isConnected || !panel.getClientRects().length || !main.contains(panel)) return;
+        if (activeModal || navOpen || document.querySelector("dialog[open]")) return;
+        const viewport = window.visualViewport;
+        const viewportTop = viewport?.offsetTop || 0;
+        const viewportBottom = viewportTop + (viewport?.height || innerHeight);
+        const bar = topbar.getBoundingClientRect();
+        const pinned = ["sticky", "fixed"].includes(getComputedStyle(topbar).position);
+        const visibleTop = Math.max(viewportTop, pinned ? bar.bottom : viewportTop) + 16;
+        const bounds = panel.getBoundingClientRect();
+        const previewHeight = Math.min(bounds.height, 160, Math.max(0, viewportBottom - visibleTop - 16));
+        if (bounds.top >= visibleTop && bounds.top + previewHeight <= viewportBottom - 16) return;
+        panel.style.scrollMarginTop = `${(pinned ? bar.height : 0) + 16}px`;
+        panel.scrollIntoView({
+          block: "start", inline: "nearest",
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        });
+      });
+    });
+  }
+
   // Reuse the existing queues; opening the menu never acknowledges a request.
   const notificationTypes = { sessions: "Sessions", orders: "Payments", alerts: "Assistance" };
   const notificationCounts = { sessions: 0, orders: 0, alerts: 0 };
@@ -81,6 +108,7 @@
     notificationGroup.hidden = !Array.from(notificationLinks.values()).some(link => !link.hidden);
   }
   window.QUVO_WORKSPACE = {
+    revealPanel,
     setNotificationCount(screen, count) {
       if (!Object.hasOwn(notificationCounts, screen)) return;
       notificationCounts[screen] = Math.max(0, Math.floor(Number(count) || 0));

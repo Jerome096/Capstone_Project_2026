@@ -44,6 +44,7 @@ function selectAdminMenuItem(itemId) {
   QuvoMenuEditor.capture();
   state.selectedAdminMenuItemId = itemId;
   renderAdminEditPanel(itemId);
+  window.QUVO_WORKSPACE?.revealPanel("#adminEditPanel");
 }
 
 function renderAdminEditPanel(itemId) {
@@ -255,7 +256,7 @@ function addAdminMenuItem() {
 
   renderAdminMenu();
 
-  document.getElementById("adminItemName")?.focus();
+  window.QUVO_WORKSPACE?.revealPanel("#adminEditPanel");
 }
 
 async function loadMenuItems() {

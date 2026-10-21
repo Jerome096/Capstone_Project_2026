@@ -315,6 +315,7 @@ function showReceipt(receiptId) {
   }
   state.selectedReceiptId = receiptId;
   renderReceipts();
+  window.QUVO_WORKSPACE?.revealPanel("#receiptPreview");
 }
 
 function buildReceiptPaper(receipt) {

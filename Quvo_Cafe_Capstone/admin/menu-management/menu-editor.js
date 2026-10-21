@@ -26,7 +26,12 @@
       <label>Default choice<select data-group-default><option value="">No default</option>${group.choices.map((choice,i)=>`<option value="${e(choice.id)}" ${group.default===choice.id?'selected':''}>${escapeHtml(choice.label||'Choice '+(i+1))}</option>`).join('')}</select></label>
       <button class="btn light" type="button" data-remove-group>Remove option</button></fieldset>`).join(''):'<p class="helper-text">No options. Customers can order this item without making a selection.</p>';
     for(const card of root.querySelectorAll('.admin-option-card')){
-      card.querySelector('[data-add-choice]').onclick=()=>change(groups=>{groups.find(group=>group.id===card.dataset.groupId).choices.push({id:id('c'),label:''});});
+      card.querySelector('[data-add-choice]').onclick=()=>{
+        const groupId=card.dataset.groupId;
+        change(groups=>{groups.find(group=>group.id===groupId).choices.push({id:id('c'),label:''});});
+        const updated=[...root.querySelectorAll('.admin-option-card')].find(group=>group.dataset.groupId===groupId);
+        window.QUVO_WORKSPACE?.revealPanel(updated?.querySelector('.admin-option-choice:last-child'));
+      };
       card.querySelector('[data-remove-group]').onclick=()=>change(groups=>groups.splice(groups.findIndex(group=>group.id===card.dataset.groupId),1));
       for(const row of card.querySelectorAll('[data-choice-id]')){
         row.querySelector('button').onclick=()=>change(groups=>{const group=groups.find(group=>group.id===card.dataset.groupId);group.choices=group.choices.filter(choice=>choice.id!==row.dataset.choiceId);if(group.default===row.dataset.choiceId)group.default='';});
@@ -56,7 +61,10 @@
       finally{if(request===draft.photoRequest){draft.imageBusy=false;photoNodes().save.disabled=false;}event.target.value='';}
     });
     photo.querySelector('#adminRemovePhoto').onclick=()=>{draft.photoRequest=(draft.photoRequest||0)+1;draft.imageBusy=false;draft.image=null;draft.imageChanged=true;save.disabled=false;renderPhoto();setStatus('Save changes to remove the photo.');};
-    options.querySelector('#adminAddOption').onclick=()=>change(groups=>groups.push({id:id('g'),label:'',type:'select',required:true,default:'',choices:[{id:id('c'),label:''},{id:id('c'),label:''}]}));
+    options.querySelector('#adminAddOption').onclick=()=>{
+      change(groups=>groups.push({id:id('g'),label:'',type:'select',required:true,default:'',choices:[{id:id('c'),label:''},{id:id('c'),label:''}]}));
+      window.QUVO_WORKSPACE?.revealPanel(document.querySelector('#adminOptionGroups .admin-option-card:last-child'));
+    };
   }
   function payload(itemId){const draft=drafts.get(itemId);if(!draft)throw Error('Choose a menu item first.');if(draft.imageBusy)throw Error('Wait until the photo is ready.');capture();return {optionGroups:draft.optionGroups,...(draft.imageChanged?{image:draft.image}:{})};}
   window.QuvoMenuEditor={capture,item,mount,payload,forget};
