@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  let started=false, status=null, busy=false, message='';
+  let started=false, status=null, busy=false, message='', pendingAction='';
   const workspaceId=crypto.randomUUID();
   let panel, label, detail, button;
   async function request(input) {
@@ -10,7 +10,9 @@
       headers:{'Content-Type':'application/json','X-CSRF-Token':window.QUVO_CSRF||''},
       ...(input?{body:JSON.stringify(input)}:{})
     });
-    const result=await response.json();
+    let result;
+    try {result=await response.json();}
+    catch {throw new Error('Could not reach ordering. Check the connection and try Start accepting orders again.');}
     if(!response.ok||!result.ok){const error=new Error(result.error||'Could not check ordering status.');error.code=result.code;throw error;}
     if(typeof result.ordering?.acceptingOrders!=='boolean'||!result.ordering.revision)throw new Error('Could not check ordering status.');
     return result.ordering;
@@ -18,11 +20,11 @@
   function render() {
     if(!panel)return;
     panel.dataset.orderingState=status?.acceptingOrders?'open':status?'paused':'unknown';
-    label.textContent=status?.acceptingOrders?'Accepting customer orders':status?'Customer orders paused':'Checking customer ordering';
+    label.textContent=status?.acceptingOrders?'Accepting customer orders':status?'Customer orders paused':message?'Customer ordering unavailable':'Checking customer ordering';
     detail.textContent=message||(status?.acceptingOrders?'Dine-in and online orders are open. Keep a staff or admin workspace connected.':
       status?.state==='offline'?'Ordering paused because operations went offline. Start accepting orders when you are ready.':
       status?'Customers can still browse. Start accepting orders when staff are ready.':'Ordering status is unavailable until this workspace reconnects.');
-    button.textContent=busy?'Checking…':!status?'Check status':status.acceptingOrders?'Pause orders':'Start accepting orders';
+    button.textContent=busy?(pendingAction==='start'?'Starting orders…':pendingAction==='pause'?'Pausing orders…':'Checking…'):status?.acceptingOrders?'Pause orders':'Start accepting orders';
     button.disabled=busy;
   }
   async function refresh() {
@@ -36,14 +38,23 @@
   }
   async function change() {
     if(busy)return;
-    if(!status)return refresh();
-    const action=status.acceptingOrders?'pause':'start', revision=status.revision;
-    busy=true;message='';render();
-    try {status=await request({action,workspaceId,revision});}
+    const action=status?.acceptingOrders?'pause':'start';
+    busy=true;pendingAction=action;message='';render();
+    try {
+      if(!status) {
+        status=await request();
+        // A Start click reconnects without pausing orders another staff member opened.
+        if(action==='start'&&status.acceptingOrders){
+          status=await request({action:'heartbeat',workspaceId,revision:status.revision});
+          return;
+        }
+      }
+      status=await request({action,workspaceId,revision:status.revision});
+    }
     catch(error) {
       message=error.message||'Could not change ordering. Check the current status before trying again.';
       try {status=await request();}catch{status=null;}
-    } finally {busy=false;render();}
+    } finally {busy=false;pendingAction='';render();}
   }
   window.QuvoOrderingStaff={
     start() {

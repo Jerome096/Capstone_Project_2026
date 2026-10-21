@@ -84,5 +84,8 @@ try{
     $eod=sales_close($db,$actor['staff_id'],'Ordering rollback EOD',ordering_test_uuid());
     verify_ordering(!ordering_status($db)['acceptingOrders'],'end of day pauses customer ordering');
     verify_ordering(orders_get($db,(int)$savedOnline['order']['order_id'])['order_status']==='received','end of day preserves pending customer orders');
-    echo "$checks ordering availability checks passed.\n";
+    $db->exec("EXEC sys.sp_rename 'dbo.ordering_workspaces','ordering_workspaces_probe_".$tag."'");
+    reject_ordering(fn()=>ordering_status($db),503,'ordering_setup_required','missing ordering tables produce a specific setup error');
 }finally{if($db->inTransaction())$db->rollBack();echo "Ordering state, workspace leases and all test records rolled back.\n";}
+verify_ordering((bool)$db->query("SELECT CASE WHEN OBJECT_ID('dbo.ordering_workspaces','U') IS NOT NULL AND OBJECT_ID('dbo.ordering_workspaces_probe_".$tag."','U') IS NULL THEN 1 ELSE 0 END")->fetchColumn(),'missing-table setup probe rolls back and restores the schema');
+echo "$checks ordering availability checks passed.\n";

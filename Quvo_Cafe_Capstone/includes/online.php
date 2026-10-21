@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+const QUVO_ONLINE_ORDERING_GATE_VERSION = 1;
 require_once __DIR__.'/menu.php';
 require_once __DIR__.'/orders.php';
 require_once __DIR__.'/auth.php';

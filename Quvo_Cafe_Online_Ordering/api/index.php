@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/online.php';
+require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/ordering.php';
 if($_SERVER['REQUEST_METHOD']==='GET'&&($_GET['view']??'')==='menu-image'){try{menu_image_send(quvo_db(),$_GET['id']??null,$_GET['version']??null);}catch(Throwable $error){orders_error(null,$error);}}
 $csrf=online_start_session();$db=null;
 try {
@@ -10,7 +11,7 @@ try {
     $db=quvo_db();$account=online_current($db);
     if($method==='GET') {
         $view=$_GET['view']??'session';
-        if($view==='ordering') quvo_json(['ok'=>true,'ordering'=>ordering_status($db)]);
+        if($view==='ordering') {ordering_assert_backend(true);quvo_json(['ok'=>true,'ordering'=>ordering_status($db)]);}
         if ($view==='payment-qr') payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null),'quvo-payment-qr',isset($_GET['download']));
         if($view==='session') quvo_json(['ok'=>true,'csrf'=>$csrf,'account'=>$account?online_public_account($db,$account):null]);
         if(!$account) throw new OrderError('Please sign in first.',401);
@@ -40,6 +41,7 @@ try {
     if(!$account) throw new OrderError('Please sign in first.',401);
     $id=(int)$account['customer_account_id'];$db->beginTransaction();
     if($action==='submit') {
+        ordering_assert_backend(true);
         $result=online_submit($db,$id,$input);$db->commit();
         quvo_json(['ok'=>true,'csrf'=>$csrf]+$result,$result['replayed']?200:201);
     }

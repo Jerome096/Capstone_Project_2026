@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/guest.php";
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/orders.php";
 require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/menu.php";
+require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/ordering.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {

@@ -26,8 +26,18 @@ function ordering_lock(PDO $db, string $mode = 'Exclusive'): void
     if ($result < 0) throw new OrderError('Ordering status is being updated. Please try again.', 409, 'ordering_busy');
 }
 
+function ordering_assert_backend(bool $online = false): void
+{
+    if (!defined('QUVO_ORDERING_GATE_VERSION') || QUVO_ORDERING_GATE_VERSION !== 1
+        || ($online && (!defined('QUVO_ONLINE_ORDERING_GATE_VERSION') || QUVO_ONLINE_ORDERING_GATE_VERSION !== 1))) {
+        throw new OrderError('Customer ordering is unavailable. Please ask a staff member.',503,'ordering_files_required');
+    }
+}
+
 function ordering_row(PDO $db): array
 {
+    ordering_assert_backend();
+    try {
     $query = $db->query("SELECT s.*,
         (SELECT COUNT(*) FROM dbo.ordering_workspaces w
          JOIN dbo.staff_users u ON u.staff_id=w.staff_id JOIN dbo.roles r ON r.role_id=u.role_id
@@ -36,7 +46,13 @@ function ordering_row(PDO $db): array
            AND w.credential_stamp=LOWER(CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varchar(255),u.password_hash)),2))) AS online_workspaces
         FROM dbo.ordering_settings s WHERE s.settings_id=1");
     $row = $query->fetch(); $query->closeCursor();
-    return $row ?: throw new OrderError('Customer ordering is unavailable. Please ask a staff member.', 503, 'ordering_closed');
+    } catch (PDOException $error) {
+        if (in_array((int)($error->errorInfo[1]??0),[207,208],true)) {
+            throw new OrderError('Customer ordering is unavailable. Please ask a staff member.',503,'ordering_setup_required');
+        }
+        throw $error;
+    }
+    return $row ?: throw new OrderError('Customer ordering is unavailable. Please ask a staff member.',503,'ordering_setup_required');
 }
 
 function ordering_status(PDO $db, bool $staff = false): array

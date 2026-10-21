@@ -99,6 +99,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=ordering-availability-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=ordering-start-2"></script>
 </body>
 </html>

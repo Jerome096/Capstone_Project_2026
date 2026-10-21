@@ -38,6 +38,13 @@ The migration adds `ordering_settings` and `ordering_workspaces`; it preserves
 existing cafe records and can be repeated without resetting an existing setting.
 It does not include a database password or require a database restore.
 
+Start accepting orders remains available after a status error. Clicking it
+reconnects and starts ordering once setup is ready. If another staff member
+already opened ordering during the outage, the same click keeps it open.
+Staff see a specific message if the SQL setup or backend files are incomplete.
+Extract updates with existing-file replacement enabled and refresh the page;
+the SQL update must complete before ordering can start.
+
 `api/ordering/index.php` requires an active staff/admin session and CSRF validation
 for every mutation. A revision prevents a stale control from undoing another
 staff member's change. Leases use hashed session identities and credential stamps,
