@@ -40,7 +40,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=centered-loading-1";
+        script.src = src + "?v=ready-alert-recovery-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

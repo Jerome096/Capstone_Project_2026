@@ -4,6 +4,7 @@
   const vibrationSupported=typeof navigator.vibrate==='function';
   const preferenceKey='quvo_ready_alert_preference';
   let started=false,scope='',audio=null,enabled=false,activating=false,pending=false,lastChime=0;
+  let soundPending=false,soundRetry=0;
   let preference='auto',soundError=false,options={},controls,notice;
   let previous=new Map(),announced=new Set(),reminders=new Map();
   const queue=new Map();
@@ -16,7 +17,7 @@
     reminders=new Map([...reminders].filter(([id])=>previous.has(id)));
     try{sessionStorage.setItem('quvo_ready_orders_'+scope,JSON.stringify({orders:[...previous],announced:[...announced],reminders:[...reminders]}));}catch{}
   }
-  function reset(){scope='';previous=new Map();announced=new Set();reminders=new Map();queue.clear();pending=false;renderNotice();}
+  function reset(){scope='';previous=new Map();announced=new Set();reminders=new Map();queue.clear();pending=false;soundPending=false;clearTimeout(soundRetry);soundRetry=0;renderNotice();}
   function useScope(value){
     if(scope===value)return;
     reset();scope=value;
@@ -30,11 +31,12 @@
   function renderControls(){
     if(!controls)return;
     const canAlert=Boolean(AudioEngine)||vibrationSupported;
-    const active=enabled&&preference!=='off';
-    controls.querySelector('strong').textContent=active?'Ready alerts on':'Order ready alerts';
+    const needsSound=Boolean(AudioEngine)&&preference==='on'&&audio?.state!=='running';
+    const active=enabled&&preference!=='off'&&!needsSound&&!soundError;
+    controls.querySelector('strong').textContent=needsSound?'Tap to enable sound':active?'Ready alerts on':'Order ready alerts';
     controls.querySelector('p').textContent=!canAlert?'Ready messages will appear here. Sound and vibration are unavailable in this browser.':
-      soundError?'Sound could not start. Tap Enable alerts to try again. Vibration works where supported.':
-      active?'Keep this page open. We will alert you when an order is ready. Vibration works where supported.':
+      needsSound||soundError?'Sound is paused or blocked. Tap Enable sound, then Test alert. Check your device media volume.':
+      active?'Keep this page open with media volume on. We will alert you when an order is ready. Vibration works where supported.':
       preference==='off'?'Sound and vibration are muted. Order ready messages will still appear.':
       'Turn on alerts, or place an order to enable them. Keep this page open while waiting.';
     const toggle=controls.querySelector('[data-ready-toggle]');
@@ -43,12 +45,11 @@
     toggle.setAttribute('aria-pressed',String(active));
     controls.querySelector('[data-ready-test]').hidden=!active;
   }
-  function play(preview=false){
-    if(!enabled||preference==='off'||document.visibilityState==='hidden')return;
-    if(!preview&&Date.now()-lastChime<900)return;
-    if(!preview)lastChime=Date.now();
-    if(vibrationSupported){try{navigator.vibrate(preview?[100]:[180,100,180,100,320]);}catch{}}
-    if(!audio||audio.state!=='running'){if(AudioEngine){soundError=true;renderControls();}return;}
+  function play(preview=false,withVibration=true){
+    if(!enabled||preference==='off'||document.visibilityState==='hidden')return false;
+    if(!preview&&Date.now()-lastChime<900)return false;
+    if(withVibration&&vibrationSupported){try{navigator.vibrate(preview?[100]:[180,100,180,100,320]);}catch{}}
+    if(!audio||audio.state!=='running'){if(AudioEngine){soundError=true;renderControls();}return false;}
     try{
       const start=audio.currentTime+.02;
       for(const [index,frequency] of [659.25,830.61,987.77].entries()){
@@ -58,7 +59,20 @@
         tone.connect(gain);gain.connect(audio.destination);
         tone.onended=()=>{tone.disconnect();gain.disconnect();};tone.start(at);tone.stop(at+.19);
       }
-    }catch{soundError=true;renderControls();}
+      if(!preview)lastChime=Date.now();
+      soundError=false;return true;
+    }catch{soundError=true;renderControls();return false;}
+  }
+  function deliverPendingSound(recover=false){
+    if(!soundPending||!queue.size||preference==='off'||document.visibilityState==='hidden')return;
+    if(audio?.state==='running'&&enabled){
+      if(play(false,false)){soundPending=false;clearTimeout(soundRetry);soundRetry=0;renderNotice();}
+      else if(!soundError&&!soundRetry)soundRetry=setTimeout(()=>{soundRetry=0;deliverPendingSound();},950);
+    }else if(recover&&audio&&preference==='on'&&!activating){
+      // Browsers can suspend an enabled context after changing tabs or locking the screen.
+      // Keep the sound pending if resuming still requires the customer's next tap.
+      enable(false);
+    }
   }
   async function enable(preview=false){
     if(activating)return;
@@ -66,18 +80,28 @@
     let timer;
     try{
       if(AudioEngine){
-        if(!audio||audio.state==='closed')audio=new AudioEngine();
+        if(!audio||audio.state==='closed'){
+          const context=audio=new AudioEngine();
+          context.addEventListener?.('statechange',()=>{
+            if(context!==audio)return;
+            soundError=context.state!=='running';renderControls();if(!activating)deliverPendingSound();
+          });
+        }
         if(audio.state!=='running')await Promise.race([audio.resume(),new Promise(resolve=>{timer=setTimeout(resolve,1200);})]);
         soundError=audio.state!=='running';
       }
     }catch{soundError=true;}
-    finally{clearTimeout(timer);activating=false;enabled=Boolean(audio?.state==='running')||vibrationSupported;renderControls();}
-    if(preview)play(true);
+    finally{clearTimeout(timer);activating=false;enabled=preference!=='off'&&(Boolean(audio?.state==='running')||vibrationSupported);renderControls();}
+    if(preview){if(play(true))soundPending=false;}
+    else deliverPendingSound();
+    renderNotice();
   }
-  function mute(){savePreference('off');enabled=false;pending=false;try{navigator.vibrate?.(0);}catch{}renderControls();}
+  function mute(){savePreference('off');enabled=false;pending=false;soundPending=false;clearTimeout(soundRetry);soundRetry=0;try{navigator.vibrate?.(0);}catch{}renderControls();renderNotice();}
   function renderNotice(){
     if(!notice)return;
     const order=queue.values().next().value;notice.hidden=!order;
+    if(!order){soundPending=false;pending=false;clearTimeout(soundRetry);soundRetry=0;}
+    notice.querySelector('[data-ready-play]').hidden=!order||!soundPending||preference==='off';
     if(!order){notice.querySelector('strong').textContent='';notice.querySelector('p').textContent='';return;}
     notice.querySelector('strong').textContent=queue.size>1?'Your orders are ready':'Your order is ready';
     const message=options.channel==='dine'?' is ready to serve.':order.fulfillment_type==='delivery'?' is ready for delivery.':' is ready for pickup.';
@@ -85,7 +109,12 @@
   }
   function flush(){
     if(!pending||document.visibilityState==='hidden')return;
-    pending=false;if(queue.size)play();
+    pending=false;
+    if(queue.size){
+      const played=play();
+      soundPending=Boolean(AudioEngine)&&preference!=='off'&&!played;
+      deliverPendingSound(true);renderNotice();
+    }
   }
   function observe(identity,rows){
     if(!identity){reset();return;}
@@ -115,10 +144,11 @@
     controls.innerHTML='<div><strong>Order ready alerts</strong><p></p></div><div class="ready-alert-actions"><button type="button" data-ready-toggle></button><button type="button" data-ready-test hidden>Test alert</button></div>';
     document.querySelector('#screenTracking .order-ticket')?.after(controls);
     notice=document.createElement('section');notice.className='ready-order-notice';notice.hidden=true;notice.setAttribute('aria-label','Order ready');
-    notice.innerHTML='<div role="status" aria-live="polite" aria-atomic="true"><strong></strong><p></p></div><div class="ready-alert-actions"><button type="button" data-ready-view>View order</button><button type="button" data-ready-dismiss>Dismiss</button></div>';
+    notice.innerHTML='<div role="status" aria-live="polite" aria-atomic="true"><strong></strong><p></p></div><div class="ready-alert-actions"><button type="button" data-ready-play hidden>Tap to play alert</button><button type="button" data-ready-view>View order</button><button type="button" data-ready-dismiss>Dismiss</button></div>';
     document.body.append(notice);
     controls.querySelector('[data-ready-toggle]').addEventListener('click',()=>enabled&&preference!=='off'&&!soundError?mute():enable(true));
     controls.querySelector('[data-ready-test]').addEventListener('click',()=>enable(true));
+    notice.querySelector('[data-ready-play]').addEventListener('click',()=>enable(true));
     notice.querySelector('[data-ready-dismiss]').addEventListener('click',()=>{const id=queue.keys().next().value;queue.delete(id);renderNotice();});
     notice.querySelector('[data-ready-view]').addEventListener('click',async event=>{
       const button=event.currentTarget,id=queue.keys().next().value;if(!id||button.disabled)return;
@@ -127,14 +157,14 @@
     });
     // Unlock sound during the customer's actual tap, before checkout awaits fetch.
     document.addEventListener('click',event=>{
-      if(preference==='off'||enabled||activating)return;
-      if(controls.contains(event.target))return;
+      if(preference==='off'||activating)return;
+      if(controls.contains(event.target)||notice.contains(event.target))return;
       const submit=event.target.closest?.('#submitOrderBtn');
-      if((submit&&!submit.disabled)||preference==='on')enable(false);
+      if(((submit&&!submit.disabled)||preference==='on')&&(!enabled||(AudioEngine&&audio?.state!=='running')))enable(false);
     },true);
     document.addEventListener('visibilitychange',async()=>{
       if(document.visibilityState!=='visible')return;
-      try{await options.onVisible?.();}catch{}flush();renderControls();
+      try{await options.onVisible?.();}catch{}flush();deliverPendingSound(true);renderControls();
     });
     renderControls();
   }

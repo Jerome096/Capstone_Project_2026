@@ -7,7 +7,7 @@ assert.equal(source,read('Quvo_Cafe_Online_Ordering'),'Both customer apps share 
 let checks=1;
 const check=(value,label)=>{assert.ok(value,label);checks++;};
 function fixture({storage=new Map(),sound=true,vibration=true,blocked=false,storageBlocked=false}={}){
- const events=new Map(),nodes=new Map(),calls={tones:0,vibration:[],view:[]};
+ const events=new Map(),nodes=new Map(),calls={tones:0,vibration:[],view:[],audio:[],resumes:0};
  class Element{
   constructor(){this.hidden=false;this.disabled=false;this.textContent='';this.children=new Map();this.listeners=new Map();}
   querySelector(selector){if(!this.children.has(selector))this.children.set(selector,new Element());return this.children.get(selector);}
@@ -19,8 +19,10 @@ function fixture({storage=new Map(),sound=true,vibration=true,blocked=false,stor
  const document={visibilityState:'visible',body:new Element(),createElement:()=>new Element(),querySelector:()=>new Element(),
   addEventListener(name,fn){if(!events.has(name))events.set(name,[]);events.get(name).push(fn);}};
  class Audio{
-  constructor(){this.state=blocked?'suspended':'running';this.currentTime=0;this.destination={};}
-  resume(){return blocked?Promise.reject(Error('Sound blocked')):Promise.resolve();}
+  constructor(){this.state=blocked?'suspended':'running';this.currentTime=0;this.destination={};this.listeners=new Map();calls.audio.push(this);}
+  addEventListener(name,handler){this.listeners.set(name,handler);}
+  resume(){calls.resumes++;if(blocked)return Promise.reject(Error('Sound blocked'));this.state='running';this.listeners.get('statechange')?.();return Promise.resolve();}
+  suspend(){this.state='suspended';this.listeners.get('statechange')?.();}
   createOscillator(){calls.tones++;return {frequency:{value:0},connect(){},disconnect(){},start(){},stop(){}};}
   createGain(){return {gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}};}
  }
@@ -31,7 +33,7 @@ function fixture({storage=new Map(),sound=true,vibration=true,blocked=false,stor
  vm.runInNewContext(source,context);const api=context.window.QuvoReadyAlerts;
  api.start({channel:'online',onSelect:async id=>calls.view.push(id),onVisible:async()=>{}});
  const controls=nodes.get('ready-alert-controls'),notice=nodes.get('ready-order-notice');
- return {api,calls,storage,controls,notice,advance(){now+=1500;},async submit(){for(const fn of events.get('click')||[])await fn({target:{closest:()=>({disabled:false})}});await new Promise(resolve=>setImmediate(resolve));},async visible(value){document.visibilityState=value;for(const fn of events.get('visibilitychange')||[])await fn();}};
+ return {api,calls,storage,controls,notice,setBlocked(value){blocked=value;},advance(){now+=1500;},async submit(){for(const fn of events.get('click')||[])await fn({target:{closest:()=>({disabled:false})}});await new Promise(resolve=>setImmediate(resolve));},async visible(value){document.visibilityState=value;for(const fn of events.get('visibilitychange')||[])await fn();}};
 }
 const order=(id,status)=>({order_id:String(id),order_number:'QVO-'+id,order_status:status,fulfillment_type:'pickup'});
 async function main(){
@@ -95,6 +97,30 @@ async function main(){
  check(reminderReload.notice.hidden,'An outdated ready response cannot reannounce a served order');
  const historyReminder=fixture();await historyReminder.submit();historyReminder.api.observe('online:A',[{...order(80,'ready'),ready_alert_version:'99'}]);
  check(historyReminder.calls.tones===0&&historyReminder.notice.hidden,'Initial ready history with old reminders stays silent');
+ const interrupted=fixture();await interrupted.submit();interrupted.api.observe('online:A',[order(90,'preparing')]);
+ interrupted.calls.audio[0].suspend();
+ check(interrupted.controls.querySelector('strong').textContent!=='Ready alerts on','Paused audio must not claim that sound is ready');
+ interrupted.api.observe('online:A',[order(90,'ready')]);await new Promise(resolve=>setImmediate(resolve));
+ check(interrupted.calls.resumes===1&&interrupted.calls.tones===3,'A ready event resumes paused audio and delivers the pending sound');
+ interrupted.advance();interrupted.calls.audio[0].suspend();
+ interrupted.api.observe('online:A',[{...order(90,'ready'),ready_alert_version:'1'}]);await new Promise(resolve=>setImmediate(resolve));
+ check(interrupted.calls.resumes===2&&interrupted.calls.tones===6,'A cashier reminder also recovers interrupted audio');
+ interrupted.advance();interrupted.api.observe('online:A',[{...order(90,'ready'),ready_alert_version:'1'}]);
+ check(interrupted.calls.tones===6,'Recovering audio does not repeat the same reminder on polling');
+ const lateTap=fixture({blocked:true});await lateTap.submit();lateTap.api.observe('online:A',[order(91,'preparing')]);lateTap.api.observe('online:A',[order(91,'ready')]);await new Promise(resolve=>setImmediate(resolve));
+ check(lateTap.calls.tones===0&&!lateTap.notice.querySelector('[data-ready-play]').hidden,'Blocked sound offers a play button on the visible ready message');
+ lateTap.setBlocked(false);await lateTap.notice.querySelector('[data-ready-play]').click();
+ check(lateTap.calls.tones===3&&lateTap.notice.querySelector('[data-ready-play]').hidden,'A customer tap plays the missed alert and clears the pending sound');
+ lateTap.advance();lateTap.api.observe('online:A',[order(91,'ready')]);
+ check(lateTap.calls.tones===3,'Playing a missed alert does not duplicate it on the next poll');
+ const cancelledSound=fixture({blocked:true});await cancelledSound.submit();cancelledSound.api.observe('online:A',[order(92,'preparing')]);cancelledSound.api.observe('online:A',[order(92,'ready')]);await new Promise(resolve=>setImmediate(resolve));
+ await cancelledSound.notice.querySelector('[data-ready-dismiss]').click();cancelledSound.setBlocked(false);await cancelledSound.submit();
+ check(cancelledSound.calls.tones===0,'Dismissing a ready notice cancels its blocked pending sound');
+ const servedSound=fixture({blocked:true});await servedSound.submit();servedSound.api.observe('online:A',[order(93,'preparing')]);servedSound.api.observe('online:A',[order(93,'ready')]);await new Promise(resolve=>setImmediate(resolve));
+ servedSound.api.observe('online:A',[order(93,'served')]);servedSound.setBlocked(false);await servedSound.submit();
+ check(servedSound.calls.tones===0&&servedSound.notice.hidden,'Serving an order cancels its blocked pending sound');
+ const vibrationOnly=fixture({sound:false});await vibrationOnly.submit();vibrationOnly.api.observe('online:A',[order(94,'preparing')]);vibrationOnly.api.observe('online:A',[order(94,'ready')]);
+ check(vibrationOnly.calls.vibration.length===1&&vibrationOnly.calls.tones===0,'Vibration-only browsers still receive ready alerts');
  console.log(checks+' ready alert checks passed. No network or SQL access.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});
