@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-const QUVO_ONLINE_ORDERING_GATE_VERSION = 1;
 require_once __DIR__.'/menu.php';
 require_once __DIR__.'/orders.php';
 require_once __DIR__.'/auth.php';
@@ -180,7 +179,6 @@ function online_submit(PDO $db,int $customerId,array $input): array
         if(!hash_equals(strtolower($old['request_hash']),$hash)) throw new OrderError('Submission key already used for a different order.',409);
         return ['order'=>online_order($db,$customerId,(int)$old['order_id']),'replayed'=>true];
     }
-    ordering_require_open($db);
     // Existing submissions can still be recovered with their original payment choice.
     if($method==='Cash') throw new OrderError('Choose an available online payment method.');
     $paymentMethod=payment_active_method($db,$method);

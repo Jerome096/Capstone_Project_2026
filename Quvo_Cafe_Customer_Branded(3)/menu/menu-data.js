@@ -1,4 +1,4 @@
-// Table visitors can browse the live catalog; placing an order still requires staff approval.
+// Approved dine-in sessions load available menu records from SQL through the protected API.
 // Status labels describe the UI workflow; they are not sample orders.
 const CUSTOMER_DATA = {
   tableNumber: "",

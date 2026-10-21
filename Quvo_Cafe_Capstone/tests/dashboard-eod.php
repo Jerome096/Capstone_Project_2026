@@ -9,10 +9,9 @@ function verify_eod(bool $ok, string $label): void {
     if (!$ok) throw new RuntimeException('FAIL: ' . $label);
     echo 'PASS: ' . $label . PHP_EOL; $checks++;
 }
-require_once __DIR__.'/ordering-fixture.php';
 $db = quvo_db();
 try {
-    $db->beginTransaction();ordering_test_open($db);
+    $db->beginTransaction();
     $baseline = dashboard_completed_today($db);
     $initialOrders = (int)$db->query('SELECT COUNT(*) FROM dbo.orders')->fetchColumn();
     $actor = (int)$db->query('SELECT TOP 1 staff_id FROM dbo.staff_users WHERE is_active=1')->fetchColumn();

@@ -33,7 +33,6 @@ const QUVO_MODAL_FRAGMENTS = [
 ];
 
 const QUVO_WORKSPACE_SCRIPTS = [
-  "shared/js/ordering-control.js",
   "shared/js/menu-options.js",
   "admin/menu-management/menu-photo.js",
   "admin/menu-management/menu-editor.js",
@@ -79,7 +78,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=ordering-start-2";
+    script.src = quvoPath(path) + "?v=menu-photos-options-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);
@@ -94,7 +93,6 @@ function loadQuvoScript(path) {
     for (const script of QUVO_WORKSPACE_SCRIPTS) {
       await loadQuvoScript(script);
     }
-    window.QuvoOrderingStaff?.start();
   } catch (error) {
     console.error(error);
     document.getElementById("screenTitle").textContent = "Workspace unavailable";

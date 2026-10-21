@@ -8,10 +8,9 @@ function check(bool $ok,string $label): void {global $checks;if(!$ok)throw new R
 function rejected(callable $fn,int $status,string $label): void {
     try{$fn();}catch(OrderError $e){check($e->status===$status,$label);return;}throw new RuntimeException('FAIL: accepted '.$label);
 }
-require_once __DIR__.'/ordering-fixture.php';
 $db=quvo_db();$before=$db->query('SELECT COUNT(*) FROM dbo.customer_sessions')->fetchColumn();
 try {
-    $db->beginTransaction();ordering_test_open($db);
+    $db->beginTransaction();
     $tag=bin2hex(random_bytes(6));
     $input=['name'=>'Online <test>','email'=>"online-$tag@example.invalid",'contact'=>'09123456789','address'=>'Test address','password'=>'Temporary-only-123'];
     $a=online_register($db,$input);$id=(int)$a['customer_account_id'];

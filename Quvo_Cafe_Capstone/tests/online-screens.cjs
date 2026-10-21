@@ -21,7 +21,6 @@ const ctx=vm.createContext({console,AbortSignal,Error,Number,Math,JSON,Array,Dat
     return {ok:true,json:async()=>({ok:true,order:saved.get(body.submission_key)})};
   }
 });
-ctx.window=ctx;
 const run=source=>vm.runInContext(source,ctx);
 for(const file of ['shared/storage.js','checkout/checkout.js','checkout/payment.js'])run(fs.readFileSync(path.join(root,file),'utf8'));
 (async()=>{

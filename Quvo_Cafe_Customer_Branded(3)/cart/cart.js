@@ -22,7 +22,7 @@ function renderCart() {
 
   const dineIn = state.accessMode === "dineIn";
   submitOrderBtn.disabled = (cartCount === 0 && !(dineIn && dineOrders.pending)) ||
-    (dineIn && ((!state.sessionApproved && !guestBrowseOnly) || dineOrders.busy));
+    (dineIn && (!state.sessionApproved || dineOrders.busy));
   submitOrderBtn.textContent =
     dineIn && dineOrders.busy ? "Submitting…" : dineIn && dineOrders.pending ? "Retry order" : "Submit order";
   document.getElementById("dineRetryNote").hidden = !(dineIn && dineOrders.pending);

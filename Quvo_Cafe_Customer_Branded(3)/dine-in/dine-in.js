@@ -10,7 +10,6 @@ let guestTableCode = "";
 let guestGeneration = 0;
 let guestActionBusy = false;
 let guestSessionStatus = null;
-let guestBrowseOnly = false;
 let guestActionError = "";
 let guestIdleClock = null;
 let guestActivityTimer = null;
@@ -132,7 +131,6 @@ async function applyGuestSession(data, generation) {
   guestSessionStatus = data.session?.status || null;
   updateGuestIdleNotice(data.session);
   nameForm.querySelector('button[type="submit"]').disabled = !data.table.active;
-  document.getElementById("browseDineMenu").disabled = !data.table.active;
   if (data.table.active && guestSessionStatus === "active") {
     const wasApproved = state.sessionApproved;
     if (!wasApproved) {
@@ -147,7 +145,6 @@ async function applyGuestSession(data, generation) {
     }
     state.customerName = data.session.guest_name;
     state.sessionApproved = true;
-    guestBrowseOnly = false;
     renderGuestIdleNotice();
     restoreDinePending(String(data.session.session_id));
     if (dineOrders.pending && !state.cart.length) state.cart = dineOrders.pending.cart || [];
@@ -159,18 +156,18 @@ async function applyGuestSession(data, generation) {
     await refreshDineOrders();
     if (typeof refreshGuestAssistance === "function") await refreshGuestAssistance();
   } else if (data.table.active && guestSessionStatus === "pending") {
-    if (!guestBrowseOnly) lockGuestMenu();
+    lockGuestMenu();
     state.customerName = data.session.guest_name;
     state.sessionRequestCode = "QVO-" + data.session.session_id;
     sessionRequestCode.textContent = state.sessionRequestCode;
     sessionRequestStatus.textContent =
       "Waiting for staff confirmation. This page updates automatically.";
-    if (!guestBrowseOnly || ["screenDineInStart","screenWaiting"].includes(state.currentScreen)) showScreen("screenWaiting");
+    showScreen("screenWaiting");
   } else {
-    if (!guestBrowseOnly || !data.table.active) { guestBrowseOnly=false; lockGuestMenu(); }
+    lockGuestMenu();
     state.sessionRequestCode = "";
     state.customerName = "";
-    if (!guestBrowseOnly || ["screenDineInStart","screenWaiting"].includes(state.currentScreen)) showScreen("screenDineInStart");
+    showScreen("screenDineInStart");
     nameError.textContent =
       guestActionError ||
       (!data.table.active
@@ -198,11 +195,11 @@ async function refreshGuestSession(generation = guestGeneration) {
     await applyGuestSession(await guestSessionApi(), generation);
   } catch (error) {
     if (generation !== guestGeneration) return;
-    if (!guestBrowseOnly) lockGuestMenu();
-    if (!guestBrowseOnly && (guestSessionStatus === "pending" || guestSessionStatus === "active")) {
+    lockGuestMenu();
+    if (guestSessionStatus === "pending" || guestSessionStatus === "active") {
       showScreen("screenWaiting");
       sessionRequestStatus.textContent = error.message + " Retrying automatically.";
-    } else if (!guestBrowseOnly) {
+    } else {
       showScreen("screenDineInStart");
       nameError.textContent = error.message;
     }
@@ -221,7 +218,6 @@ async function startDineInFlow() {
   state.order = null;
   state.orderStatusIndex = 0;
   guestSessionStatus = null;
-  guestBrowseOnly = false;
   guestGeneration++;
   clearSessionApprovalTimer();
   clearOrderStatusTimers();
@@ -270,18 +266,7 @@ function cancelSessionRequest() {
   if (window.confirm("Cancel your pending session request?"))
     changeGuestSession({ action: "cancel" });
 }
-async function browseDineMenu() {
-  try {
-    const data=await guestSessionApi(null,"browse-menu");
-    if(state.sessionApproved)return showScreen("screenMenu");
-    CUSTOMER_DATA.menuItems=data.items;
-    CUSTOMER_DATA.categories=["All",...new Set(data.items.map(item=>item.category))];
-    state.selectedCategory="All";guestBrowseOnly=true;
-    renderCategories();renderMenu();renderCart();showScreen("screenMenu");
-  } catch(error){showToast(error.message);}
-}
 function bindDineInEvents() {
-  document.getElementById("browseDineMenu").addEventListener("click",browseDineMenu);
   nameForm.addEventListener("submit", handleNameSubmit);
   cancelSessionRequestBtn.addEventListener("click", cancelSessionRequest);
 }

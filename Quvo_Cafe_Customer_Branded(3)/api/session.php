@@ -3,7 +3,6 @@ declare(strict_types=1);
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/guest.php";
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/orders.php";
 require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/menu.php";
-require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/ordering.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {
@@ -12,7 +11,6 @@ try {
     if (!in_array($method, ["GET", "POST"], true)) {
         quvo_json(["ok" => false, "error" => "Unsupported request."], 405);
     }
-    if($method==='GET'&&($_GET['view']??'')==='ordering') quvo_json(['ok'=>true,'ordering'=>ordering_status(quvo_db())]);
     $code = trim(is_string($_GET["table"] ?? null) ? $_GET["table"] : "");
     if (!preg_match("/\A[A-Za-z0-9-]{1,20}\z/", $code)) {
         throw new DiningError("Please scan a valid table QR code.");
@@ -65,9 +63,9 @@ try {
         }
     }
     $session = dining_guest_session($db, $id, $token);
-    if (in_array($_GET["view"] ?? "", ["menu","browse-menu"], true)) {
-        // Browse exposes only the catalog. Ordering and visit history still require approval.
-        if (!(bool) $table["is_active"] || (($_GET['view']??'')!=='browse-menu' && (!$session || $session['status']!=='active'))) {
+    if (($_GET["view"] ?? "") === "menu") {
+        // Protected customer data is returned only after the database confirms staff approval.
+        if (!(bool) $table["is_active"] || !$session || $session["status"] !== "active") {
             quvo_json(["ok" => false, "error" => "An approved session is required."], 403);
         }
         $items = $db

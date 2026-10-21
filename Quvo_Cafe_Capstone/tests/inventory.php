@@ -15,10 +15,9 @@ function mutate(array $input):array {global $db,$actor;return inventory_mutate($
 function menu(string $name,string $category='coffee'):int {global $db;$q=$db->prepare('INSERT dbo.menu_items(item_name,category,price,is_available) OUTPUT INSERTED.menu_item_id VALUES(?,?,10,1)');$q->execute([$name,$category]);$id=(int)$q->fetchColumn();$q->closeCursor();return $id;}
 function available(int $id):bool {global $db;$q=$db->prepare('SELECT CASE WHEN '.inventory_menu_condition().' THEN 1 ELSE 0 END FROM dbo.menu_items m WHERE menu_item_id=?');$q->execute([$id]);$result=$q->fetchColumn();$q->closeCursor();return (bool)$result;}
 function countchange(int $id,string $name,string $qty):array {global $db;return mutate(['action'=>'save_item','id'=>$id,'version'=>inventory_item($db,$id)['version'],'name'=>$name,'category'=>'Other','unit'=>'ml','current'=>$qty,'reorder'=>'0.500','note'=>'Test physical count']);}
-require_once __DIR__.'/ordering-fixture.php';
 $db=quvo_db();$before=(int)$db->query('SELECT COUNT(*) FROM dbo.inventory_movements')->fetchColumn();
 try {
-    $db->beginTransaction();ordering_test_open($db);inventory_lock($db);$tag=bin2hex(random_bytes(6));
+    $db->beginTransaction();inventory_lock($db);$tag=bin2hex(random_bytes(6));
     $actor=['staff_id'=>(int)$db->query("SELECT TOP 1 s.staff_id FROM dbo.staff_users s JOIN dbo.roles r ON r.role_id=s.role_id WHERE s.is_active=1 AND LOWER(r.role_name)='admin' ORDER BY s.staff_id")->fetchColumn(),'role'=>'admin'];
     check($actor['staff_id']>0,'active admin exists');
     rejected(fn()=>inventory_access(null,false),401,'anonymous inventory access denied');

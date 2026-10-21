@@ -125,15 +125,8 @@ async function refreshDineCartPrices() {
   renderCategories(); renderMenu(); renderCart();
 }
 async function submitDineOrder() {
-  if (dineOrders.busy) return;
+  if (dineOrders.busy || !state.sessionApproved) return;
   if (!state.cart.length && !dineOrders.pending) return;
-  if (!dineOrders.pending && window.QuvoOrdering && !(await window.QuvoOrdering.ensureOpen())) return;
-  if (!state.sessionApproved) {
-    showToast("Please request cashier approval for this table before placing an order.");
-    showScreen(guestSessionStatus === "pending" ? "screenWaiting" : "screenDineInStart");
-    return;
-  }
-  if (dineOrders.busy) return;
   dineOrders.busy = true;
   let accepted = false;
   try {
@@ -155,11 +148,7 @@ async function submitDineOrder() {
     if (result.order.payment_status === "unpaid") showCashierPaymentPopup(result.order);
     else showToast(result.replayed ? "Your saved order has been restored." : "Order submitted.");
   } catch (error) {
-    if (error.code === "ordering_closed") {
-      try { saveDinePending(null); } catch { dineOrders.pending=null; }
-      window.QuvoOrdering?.showClosed(error.message);
-      showToast(error.message);
-    } else if (["price_changed", "item_unavailable", "options_changed"].includes(error.code) || [400, 413, 422].includes(error.status)) {
+    if (["price_changed", "item_unavailable", "options_changed"].includes(error.code) || [400, 413, 422].includes(error.status)) {
       try { saveDinePending(null); } catch { dineOrders.pending = null; }
       if (["price_changed", "item_unavailable", "options_changed"].includes(error.code)) {
         try { await refreshDineCartPrices(); } catch { /* The existing cart is kept for review. */ }

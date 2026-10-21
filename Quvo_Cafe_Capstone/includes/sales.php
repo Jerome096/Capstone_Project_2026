@@ -42,7 +42,6 @@ function sales_close(PDO $db,int $actor,string $note,mixed $key,mixed $requested
     if($old){if(!hash_equals(strtolower($old['request_hash']),$hash))throw new OrderError('This EOD key was used for another closing note.',409);return ['record'=>sales_record($db,(int)$old['closure_id']),'closure_id'=>(string)$old['closure_id'],'completed_today'=>dashboard_completed_today($db),'replayed'=>true];}
     $date=sales_business_date($db);
     if($requestedDate!==null&&$requestedDate!==$date)throw new OrderError('The operation date changed. Reopen EOD to review today’s figures.',422);
-    ordering_pause($db,$actor,'eod');
     $closed=dashboard_close_completions($db,$actor,$note,$date);$id=(int)$closed['closure_id'];
     $db->prepare('UPDATE dbo.eod_closures SET request_key=?,request_hash=CONVERT(binary(32),?,2),business_date=? WHERE closure_id=?')->execute([$key,$hash,$date,$id]);
     $db->prepare('INSERT dbo.eod_sales_orders(order_id,closure_id,amount,payment_method,order_status,entry_type) SELECT s.order_id,?,s.amount,s.payment_method,s.order_status,s.entry_type FROM ('.sales_pending_sql($date).') s')->execute([$id]);

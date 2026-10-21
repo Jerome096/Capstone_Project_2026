@@ -10,10 +10,9 @@ function verify(bool $ok, string $label): void {
     echo 'PASS: ' . $label . PHP_EOL;
     $checks++;
 }
-require_once __DIR__.'/ordering-fixture.php';
 $db = quvo_db();
 try {
-    $db->beginTransaction();ordering_test_open($db);
+    $db->beginTransaction();
     $adminId = (int) $db->query("SELECT TOP 1 s.staff_id FROM dbo.staff_users s JOIN dbo.roles r
         ON r.role_id=s.role_id WHERE s.is_active=1 AND r.role_name='Admin'")->fetchColumn();
     if (!$adminId) throw new RuntimeException('An active Admin is required.');

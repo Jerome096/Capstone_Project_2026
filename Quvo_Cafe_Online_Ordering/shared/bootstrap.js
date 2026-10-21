@@ -14,7 +14,6 @@ async function initializeCustomerApp() {
   bindAccountEvents();
 
   document.getElementById("refreshOnlineMenu").addEventListener("click",()=>refreshOnlineMenu().catch(error=>showToast(error.message)));
-  window.QuvoOrdering?.start();
   startOnlineFlow();
   try {const result=await onlineApi();if(result.account)await enterOnlineAccount(result.account);}
   catch(error){loginError.textContent=error.message;}

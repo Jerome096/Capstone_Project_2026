@@ -27,10 +27,9 @@ function rejected(callable $action, int $status, string $label): void
     }
     throw new RuntimeException("FAIL: " . $label . " was accepted");
 }
-require_once __DIR__.'/ordering-fixture.php';
 $db = quvo_db();
 try {
-    $db->beginTransaction();ordering_test_open($db);
+    $db->beginTransaction();
     $adminId = $db->query("SELECT TOP 1 s.staff_id FROM dbo.staff_users s JOIN dbo.roles r
         ON r.role_id=s.role_id WHERE s.is_active=1 AND r.role_name='Admin' ORDER BY s.staff_id")->fetchColumn();
     if ($adminId === false) {
