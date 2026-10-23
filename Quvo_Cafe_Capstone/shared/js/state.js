@@ -35,7 +35,6 @@ let selectedPaymentMethod = null;
 let paymentOrderId = null;
 let pendingPaymentReview = null;
 let lastReceiptId = null;
-let selectedBaristaOrderId = null;
 let selectedDrinkOptions = {
   size: "Regular",
   sugar: "50% sugar",
@@ -139,11 +138,6 @@ const screenText = {
     eyebrow: "Kanban board",
     title: "Order Management",
     sub: "Track and advance order status across kitchen stages",
-  },
-  barista: {
-    eyebrow: "Beverage preparation",
-    title: "Barista Order Data",
-    sub: "Generate beverage tickets and monitor drink preparation details",
   },
   receipts: {
     eyebrow: "Transactions",

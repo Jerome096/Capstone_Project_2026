@@ -1308,26 +1308,6 @@ p {
 
 /* Inventory Monitoring Module V14 additions */
 
-/* Barista beverage data */
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-
-  #baristaTicketContent,
-  #baristaTicketContent * {
-    visibility: visible;
-  }
-
-  #baristaTicketContent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-}
-
 .report-stats {
   margin-bottom: 24px;
 }

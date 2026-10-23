@@ -20,7 +20,7 @@ function preparationReprintMarkup(order) {
 }
 function splitPreparationItems(order) {
   const drinks=getBeverageItems(order),food=getFoodItems(order);
-  return [{name:'BARISTA',items:drinks},{name:'KITCHEN',items:food}].filter(ticket=>ticket.items.length);
+  return [{name:'DRINKS',items:drinks},{name:'KITCHEN',items:food}].filter(ticket=>ticket.items.length);
 }
 function preparationTicketMarkup(order,ticket) {
   const e=escapeHtml,source=order.source==='manual'?'Walk-in / POS':order.source==='online'?'Online order':'Dine-in';

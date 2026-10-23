@@ -1,3 +1,5 @@
-# Barista workspace
+# Retired workspace
 
-Open `barista/index.html` through a local web server. This workspace is protected by the front-end session guard. Individual module `.html` files are protected routes; their actual markup is stored in the matching `.fragment.html` file.
+The Barista module has been removed. Cashier Orders handles drink preparation and prints DRINKS tickets. Kitchen continues to handle food; the cashier marks mixed orders Ready when all items are finished.
+
+Only redirects remain at the old entry URLs so bookmarks open `cashier/index.php?screen=orders`, which requires staff authentication. No order, account or payment data is deleted and no database migration is required.

@@ -3,7 +3,6 @@ const QUVO_SCREEN_FRAGMENTS = [
   "cashier/menu/menu.fragment.html",
   "cashier/sessions/sessions.fragment.html",
   "cashier/orders/orders.fragment.html",
-  "barista/dashboard/barista.fragment.html",
   "cashier/receipts/receipts.fragment.html",
   "admin/reports/reports.fragment.html",
   "admin/menu-management/menu-management.fragment.html",
@@ -24,7 +23,6 @@ const QUVO_MODAL_FRAGMENTS = [
   "cashier/orders/sql-payment-modal.html",
   "cashier/orders/online-order-details-modal.html",
   "cashier/orders/preparation-tickets.html",
-  "barista/dashboard/barista-ticket-modal.html",
   "cashier/receipts/payment-review-modal.html",
   "cashier/receipts/receipt-success-modal.html",
   "cashier/orders/edit-order-modal.html",
@@ -49,7 +47,6 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "cashier/orders/sql-orders.js",
   "shared/js/thermal-print.js",
   "cashier/orders/preparation-tickets.js",
-  "barista/dashboard/barista.js",
   "cashier/receipts/receipts.js",
   "cashier/alerts/alerts.js",
   "admin/reports/reports.js",
@@ -81,7 +78,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=home-about-editor-1";
+    script.src = quvoPath(path) + "?v=no-barista-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

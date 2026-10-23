@@ -21,7 +21,6 @@ The root `index.html` still opens the Login interface. Login verification is int
 
 - `admin/index.html`
 - `cashier/index.html`
-- `barista/index.html`
 
 These direct workspace routes run in **Frontend Preview** mode until PHP/MySQL authentication is implemented. Data entered while testing exists only in page memory and is not persisted after refresh.
 

@@ -2,13 +2,9 @@
 require_once __DIR__ . "/../includes/auth.php";
 $user = quvo_require_workspace(["admin"]);
 if (empty($_SESSION["admin_confirmed"])) {
-    $portal =
-        ($_SESSION["operations_portal"] ?? "") === "barista" ? "barista" : "cashier";
     $screen = is_string($_GET["screen"] ?? null) ? $_GET["screen"] : "reports";
     header(
-        "Location: ../" .
-            $portal .
-            "/index.php?admin=1&adminScreen=" .
+        "Location: ../cashier/index.php?admin=1&adminScreen=" .
             rawurlencode($screen),
     );
     exit();
@@ -21,9 +17,9 @@ if (empty($_SESSION["admin_confirmed"])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quvo Caf&eacute; | Admin Workspace</title>
   <link rel="icon" type="image/png" href="../shared/images/quvo-favicon.png" />
-  <link rel="stylesheet" href="../shared/css/styles.css" />
+  <link rel="stylesheet" href="../shared/css/styles.css?v=no-barista-1" />
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
-  <link rel="stylesheet" href="../shared/css/quvo-shell.css" />
+  <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=no-barista-1" />
   <link rel="stylesheet" href="../shared/css/portal.css" />
   <link rel="stylesheet" href="../cashier/dashboard/dashboard.css" />
   <link rel="stylesheet" href="../cashier/menu/menu.css" />
@@ -31,7 +27,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../cashier/orders/orders.css?v=food-ready-1" />
   <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
-  <link rel="stylesheet" href="../barista/dashboard/barista.css" />
   <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
   <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=menu-photos-options-1" />
   <link rel="stylesheet" href="../admin/website-content/website-content.css?v=home-about-editor-1" />
@@ -89,7 +84,6 @@ if (empty($_SESSION["admin_confirmed"])) {
 <div class="nav-divider"></div>
 <div class="nav-section-label">Other workspaces</div>
 <a class="nav-item portal-link" href="../cashier/index.php"><i data-lucide="monitor-dot"></i><span>Cashier</span><i class="portal-arrow" data-lucide="arrow-up-right"></i></a>
-<a class="nav-item portal-link" href="../barista/index.php"><i data-lucide="coffee"></i><span>Barista</span><i class="portal-arrow" data-lucide="arrow-up-right"></i></a>
 
       <div class="admin-mode-indicator" id="adminModeIndicator">Signed in</div>
     </nav>
@@ -113,6 +107,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=home-about-editor-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=no-barista-1"></script>
 </body>
 </html>

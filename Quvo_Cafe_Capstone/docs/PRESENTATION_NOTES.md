@@ -8,7 +8,7 @@
 4. Open Counter POS and create a manual order.
 5. Demonstrate payment review.
 6. Show the order in Order Management.
-7. Show beverage data in Barista Data.
+7. Show drink preparation tickets in Cashier Orders.
 8. Show Receipts and transaction records.
 9. Unlock Admin access.
 10. Show Reports, Menu Management, Inventory/BOM, Sales History, and System Records.
@@ -36,6 +36,6 @@
 - Shared customer/cashier/kitchen orders
 - Persistent payments and receipts
 - Persistent inventory/BOM transactions
-- Real-time Kitchen/Barista synchronization
+- Real-time Kitchen/Cashier synchronization
 - Audit logs stored in the database
 - Production EOD/report data

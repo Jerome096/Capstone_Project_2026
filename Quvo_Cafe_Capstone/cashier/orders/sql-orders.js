@@ -31,7 +31,6 @@ function sqlMapOrder(row) {
     paymentMethod: row.payment_method_label || row.payment_method, amountReceived: Number(row.amount_received || 0),
     change: Number(row.change_amount || 0), gcashReference: row.payment_reference || "",
     approvedBy: row.approved_by_name || "Cashier", approvedAt: sqlDate(row.paid_at),
-    baristaStatus: row.order_status === "ready" ? "ready" : row.order_status === "preparing" ? "preparing" : null,
     items: (row.items || []).map(item => ({
       name: item.item_name, category: item.category, qty: Number(item.quantity), price: Number(item.unit_price),
       note: [item.customization.size, item.customization.sugarLevel, item.customization.iceLevel, ...(item.customization.options||[]).map(option=>option.label+": "+option.value), item.notes]
@@ -50,7 +49,7 @@ function sqlReceipt(row) {
   };
 }
 function sqlRender() {
-  renderOrders(); renderBaristaTickets(); renderReceipts(); renderStats(); lucide.createIcons();
+  renderOrders(); renderReceipts(); renderStats(); lucide.createIcons();
   if (typeof refreshDashboardCompletion === "function") refreshDashboardCompletion();
 }
 function sqlUpdateReceipts() {

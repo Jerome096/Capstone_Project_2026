@@ -18,9 +18,6 @@ Quvo_Cafe_Frontend_Clean/
 │   ├── orders/
 │   ├── receipts/
 │   └── alerts/
-├── barista/
-│   ├── index.html                   # Barista workspace (frontend preview)
-│   └── dashboard/
 └── admin/
     ├── index.html                   # Admin workspace (frontend preview)
     ├── reports/

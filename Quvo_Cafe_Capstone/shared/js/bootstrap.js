@@ -10,7 +10,6 @@
   bindItemModal();
   bindCheckoutModal();
   bindOrderPaymentModal();
-  bindBaristaTicketModal();
   bindPaymentReviewModal();
   bindReceipts();
   bindReceiptSuccessModal();

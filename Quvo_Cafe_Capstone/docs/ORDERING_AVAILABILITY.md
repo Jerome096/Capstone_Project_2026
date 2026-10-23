@@ -1,7 +1,7 @@
 # Customer ordering availability
 
 Staff and admins control both dine-in and online customer ordering from the
-Customer orders card below the header in Cashier, Admin and Barista. Choose
+Customer orders card below the header in Cashier and Admin. Choose
 **Start accepting orders** when operations are ready. Choose **Pause orders** to
 stop new customer submissions immediately. Everyone sees the same SQL status.
 Signing in alone does not start ordering. A new installation starts paused.

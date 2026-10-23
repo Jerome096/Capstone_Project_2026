@@ -25,7 +25,7 @@ const context = vm.createContext({
   window:{confirm:()=>true,prompt:()=>"Customer requested cancellation",QUVO_CSRF:"test"},QUVO_AUTH:{getSession:()=>({role:staffRole})},
   state:{orders:[],receipts:[],accessMode:"dineIn",sessionApproved:true,cart:[]},
   quvoPath:p=>p, escapeHtml:escape,escapeCustomerHtml:escape,
-  renderOrders(){},renderBaristaTickets(){},renderReceipts(){},renderStats(){},renderCart(){},renderTracking(){},showToast(){},showScreen(){},
+  renderOrders(){},renderReceipts(){},renderStats(){},renderCart(){},renderTracking(){},showToast(){},showScreen(){},
   lucide:{createIcons(){}},setInterval(){},
   isOrderPaymentConfirmed:order=>order.paid===true||order.paymentStatus==='confirmed',
   getBeverageItems:order=>order.items.filter(item=>['coffee','non-coffee'].includes(item.category)),
@@ -94,7 +94,7 @@ run(read("Quvo_Cafe_Customer_Branded(3)/orders/dine-in-orders.js"));
   assert.deepEqual(requests[0],requests[1],"lost payment response retries identical payload");
   assert.equal(run("state.orders[0].stage"),"preparing");
   assert.equal(el('preparationTicketsModal').open,true,'payment success offers preparation printing');
-  assert.match(el('preparationTicketsPreview').innerHTML,/BARISTA TICKET/);
+  assert.match(el('preparationTicketsPreview').innerHTML,/DRINKS TICKET/);
   assert.doesNotMatch(el('preparationTicketsPreview').innerHTML,/KITCHEN TICKET/);
   assert.doesNotMatch(run("renderSqlOrderCard(state.orders[0])"), /Cancel order/, "paid orders have no cancellation action");
   assert.match(run("renderSqlReceipt(state.receipts[0])"),/19.50/);

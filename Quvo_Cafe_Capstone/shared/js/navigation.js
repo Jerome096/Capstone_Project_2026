@@ -62,10 +62,6 @@ function showScreen(screen) {
   if (screen === "inventory") loadInventory();
   if (screen === "menu" || screen === "menuAdmin") loadMenuItems();
 
-  if (screen === "barista") {
-    renderBaristaTickets();
-  }
-
   lucide.createIcons();
 }
 

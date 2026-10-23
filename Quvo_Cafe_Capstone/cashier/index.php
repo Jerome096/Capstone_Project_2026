@@ -11,9 +11,9 @@ $_SESSION["operations_portal"] = "cashier";
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quvo Caf&eacute; | Cashier Operations</title>
   <link rel="icon" type="image/png" href="../shared/images/quvo-favicon.png" />
-  <link rel="stylesheet" href="../shared/css/styles.css" />
+  <link rel="stylesheet" href="../shared/css/styles.css?v=no-barista-1" />
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
-  <link rel="stylesheet" href="../shared/css/quvo-shell.css" />
+  <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=no-barista-1" />
   <link rel="stylesheet" href="../shared/css/portal.css" />
   <link rel="stylesheet" href="../cashier/dashboard/dashboard.css" />
   <link rel="stylesheet" href="../cashier/menu/menu.css" />
@@ -21,7 +21,6 @@ $_SESSION["operations_portal"] = "cashier";
   <link rel="stylesheet" href="../cashier/orders/orders.css?v=food-ready-1" />
   <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
-  <link rel="stylesheet" href="../barista/dashboard/barista.css" />
   <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
   <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=menu-photos-options-1" />
   <link rel="stylesheet" href="../admin/records/records.css" />
@@ -74,7 +73,6 @@ $_SESSION["operations_portal"] = "cashier";
 <button class="nav-item" data-screen="alerts"><i data-lucide="bell"></i><span>Alerts</span><span class="nav-badge" id="sidebarAlertCount">0</span></button>
 <div class="nav-divider"></div>
 <div class="nav-section-label">Other workspaces</div>
-<a class="nav-item portal-link" href="../barista/index.php"><i data-lucide="coffee"></i><span>Barista</span><i class="portal-arrow" data-lucide="arrow-up-right"></i></a>
 <a class="nav-item portal-link" href="../admin/index.php"><i data-lucide="shield-check"></i><span>Admin</span><i class="portal-arrow" data-lucide="arrow-up-right"></i></a>
 
       <div class="admin-mode-indicator" id="adminModeIndicator" style="display:none">Locked</div>
@@ -99,6 +97,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=home-about-editor-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=no-barista-1"></script>
 </body>
 </html>

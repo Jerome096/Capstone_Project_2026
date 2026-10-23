@@ -189,7 +189,7 @@ server and use an existing Staff/Admin account (Kitchen role also accepted).
 Only paid Preparing/Ready food tickets are listed, across all order sources.
 Food-only Ready actions update the existing order to Ready; mixed tickets save
 food readiness separately and leave the full order Preparing for the existing
-cashier/barista workflow. The kitchen cannot collect payments, cancel or serve
+cashier workflow. The kitchen cannot collect payments, cancel or serve
 orders. Repeated Ready submissions are idempotent. All API actions require a
 server-checked staff session, and writes require CSRF. Verify with
 `C:\php85\php.exe tests/kitchen.php`; all test fixtures roll back.

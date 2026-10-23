@@ -723,8 +723,6 @@ body.admin-mode .admin-mode-indicator {
   border: 1px solid rgba(192, 156, 80, 0.16);
 }
 
-/* Brand the automatically generated receipt and barista ticket previews too. */
-
 @media (max-width: 960px) {
   .brand {
     min-height: 92px;

@@ -117,9 +117,6 @@ function confirmPaymentReview() {
     order.stage = "preparing";
     recordPreparationApproval(order);
     order.expanded = false;
-    if (getBeverageItems(order).length && !order.baristaStatus) {
-      order.baristaStatus = "queued";
-    }
 
     state.activities.unshift({
       tag: "Paid",
@@ -195,7 +192,7 @@ function buildPaymentReviewPaper(review) {
       </div>
 
       <div class="receipt-review-note">
-        Confirm only after the payment and customer change are correct. This will send the order to the Preparing section for the kitchen/barista workflow.
+        Confirm only after the payment and customer change are correct. This will send the order to the Preparing section for staff preparation.
       </div>
     </div>
   `;

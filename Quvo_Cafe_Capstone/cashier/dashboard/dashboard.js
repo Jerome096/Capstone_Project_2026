@@ -39,7 +39,6 @@ function renderAll() {
   renderCart();
   renderSessions();
   renderOrders();
-  renderBaristaTickets();
   renderReceipts();
   renderReports();
   renderAdminMenu();

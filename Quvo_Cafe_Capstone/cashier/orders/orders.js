@@ -147,22 +147,6 @@ function isOrderPaymentConfirmed(order) {
   return order?.paymentStatus === "confirmed" || order?.paid === true;
 }
 
-function getBaristaStatus(order) {
-  if (!isOrderPaymentConfirmed(order)) {
-    return { key: "pending", label: "Waiting for payment", className: "pending" };
-  }
-
-  if (order.baristaStatus === "preparing") {
-    return { key: "preparing", label: "Beverage preparing", className: "preparing" };
-  }
-
-  if (order.baristaStatus === "ready" || order.stage === "ready") {
-    return { key: "ready", label: "Beverage ready", className: "ready" };
-  }
-
-  return { key: "queued", label: "Queued for barista", className: "queued" };
-}
-
 function bindOrderPaymentModal() {
   document
     .getElementById("orderPaymentClose")
@@ -404,9 +388,6 @@ function startPreparing(id) {
   order.stage = "preparing";
   if (!order.approvedAt) recordPreparationApproval(order);
   order.expanded = false;
-  if (getBeverageItems(order).length && !order.baristaStatus) {
-    order.baristaStatus = "queued";
-  }
 
   state.activities.unshift({
     tag: "Order",

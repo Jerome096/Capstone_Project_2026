@@ -14,7 +14,7 @@ const order={id:'sql1',number:'QVO-1',paid:true,stage:'preparing',source:'online
 ctx.order=order;
 const split=run('splitPreparationItems(order)');assert.equal(split.length,2);assert.deepEqual(Array.from(split[0].items,item=>item.name),['<Coffee>','Juice']);assert.deepEqual(Array.from(split[1].items,item=>item.name),['Pasta','Cake']);
 const drinks=run('preparationTicketMarkup(order,splitPreparationItems(order)[0])'),food=run('preparationTicketMarkup(order,splitPreparationItems(order)[1])');
-assert.match(drinks,/&lt;Coffee&gt;/);assert.match(drinks,/50% sugar/);assert.doesNotMatch(drinks,/Pasta|Cake/);assert.match(food,/No sauce/);assert.doesNotMatch(food,/Juice|&lt;Coffee&gt;/);
+assert.match(drinks,/DRINKS TICKET/);assert.match(food,/KITCHEN TICKET/);assert.match(drinks,/&lt;Coffee&gt;/);assert.match(drinks,/50% sugar/);assert.doesNotMatch(drinks,/Pasta|Cake/);assert.match(food,/No sauce/);assert.doesNotMatch(food,/Juice|&lt;Coffee&gt;/);
 assert.match(run('buildPreparationTicketsDocument(order)'),/break-after:page/);
 assert.match(run('buildPreparationTicketsDocument(order)'),/size:58mm 200mm/);
 assert.match(run('buildPreparationTicketsDocument(order)'),/width:48mm/);

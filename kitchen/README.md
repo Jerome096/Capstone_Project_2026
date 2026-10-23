@@ -8,7 +8,7 @@ Run the existing PHP server from Quvo_Cafe_Capstone using router.php and open /k
 
 The queue refreshes every five seconds and includes only paid Preparing/Ready orders with food items, from dine-in, online and walk-in POS. It shows SQL item snapshots, quantities and notes. Delayed tickets and special food notes appear in preparation alerts. Search and category filtering work on the live queue.
 
-Mark as Ready saves the food ticket's readiness, time and staff member in SQL. Food-only orders also advance to Ready in cashier order management. For mixed orders, food readiness is separate: the full order stays Preparing until the existing cashier/barista action marks it Ready. Existing cashier payment and serving behavior is preserved. Served/cancelled orders disappear from this queue. Repeating Ready does not duplicate the record.
+Mark as Ready saves the food ticket's readiness, time and staff member in SQL. Food-only orders also advance to Ready in cashier order management. For mixed orders, food readiness is separate: the full order stays Preparing until the existing cashier action marks it Ready. Existing cashier payment and serving behavior is preserved. Served/cancelled orders disappear from this queue. Repeating Ready does not duplicate the record.
 
 Sign-in and changes use CSRF protection and server-checked roles. The kitchen sees no receipt images or private payment/contact details. When disconnected it retains the last queue and disables Ready until refreshed. Staff sessions are shared with the other staff workspaces, so signing out also signs out those tabs.
 
