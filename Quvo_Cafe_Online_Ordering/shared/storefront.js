@@ -53,7 +53,18 @@
     root.innerHTML=CUSTOMER_DATA.menuItems.length?CUSTOMER_DATA.menuItems.slice(0,4).map(card).join(''):'<div class="empty-card"><h3>Our menu will be here soon.</h3><p>Check the menu for the latest availability.</p><a class="text-link" href="#menu">Explore the menu '+icon('arrow')+'</a></div>';
     QuvoMenuOptions.bindPhotos(root);
   }
+  function renderEditableHeading(selector,headline,accent){
+    const target=$(selector);if(!target||typeof headline!=='string')return;
+    const ending=typeof accent==='string'?accent:(target.querySelector('em')?.textContent||'');
+    target.replaceChildren();headline.split(/\r?\n/).forEach((line,index)=>{if(index)target.append(document.createElement('br'));target.append(document.createTextNode(line));});
+    if(ending){const highlight=document.createElement('em');highlight.textContent=ending;target.append(document.createTextNode(' '),highlight);}
+  }
   function renderAbout(data){
+    renderEditableHeading('#home-headline',data?.home_headline,data?.home_accent);
+    renderEditableHeading('#about-story-heading',data?.story_headline,data?.story_accent);
+    if(typeof data?.home_eyebrow==='string'){$('#home-eyebrow-text').textContent=data.home_eyebrow;$('#home-eyebrow').hidden=!data.home_eyebrow.trim();}
+    if(typeof data?.home_intro==='string'){$('#home-introduction').textContent=data.home_intro;$('#home-introduction').hidden=!data.home_intro.trim();}
+
     const text=key=>typeof data?.[key]==='string'?data[key]:'';
     const heading=$('#about-headline');heading.replaceChildren(document.createTextNode(text('headline')));
     if(text('accent')){const accent=document.createElement('em');accent.textContent=text('accent');heading.append(document.createElement('br'),accent);}
@@ -102,7 +113,7 @@
     const route=Object.keys(publicScreens).find(key=>publicScreens[key]===screenId);
     if(route&&location.hash!=='#'+route)history.replaceState(null,'','#'+route);
     document.querySelectorAll('.storefront-account[open]').forEach(details=>details.removeAttribute('open'));
-    if(screenId==='screenAbout')loadAbout();
+    if(['screenHome','screenAbout'].includes(screenId))loadAbout();
   }
   function bind(){
     paintIcons();$('#storefrontYear').textContent=new Date().getFullYear();
@@ -113,7 +124,7 @@
     $('#headerSignOut').addEventListener('click',()=>logoutOnlineCustomer());
     document.addEventListener('click',event=>{const cardNode=event.target.closest('[data-card-item-id]');if(cardNode)openItemModal(cardNode.dataset.cardItemId);});
     window.addEventListener('hashchange',()=>{const next=publicScreens[location.hash.slice(1)];if(next)showScreen(next);});
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.currentScreen==='screenAbout')loadAbout();});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&['screenHome','screenAbout'].includes(state.currentScreen))loadAbout();});
     $('#menuSort').addEventListener('change',renderMenu);
     document.querySelectorAll('[data-auth-tab]').forEach(button=>button.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const tab=state.authMode==='login'?'register':'login';switchAuthTab(tab);document.getElementById(tab==='login'?'loginTabBtn':'registerTabBtn').focus();}}));
   }

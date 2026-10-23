@@ -12,10 +12,15 @@ try{
     $defaults=website_content_defaults();
     $check($defaults['address']===''&&$defaults['hours']===''&&$defaults['phone']===''&&$defaults['email']===''&&$defaults['social']==='','Do not invent cafe location or contacts.');
     $sample=$defaults+[];$sample['headline']='  Café 你好 ☕  ';$sample['story']="First paragraph.\r\n\r\n<strong>Keep as text.</strong>";$sample['address']="Test building\nTest town";$sample['hours']="Mon–Sun: test hours";$sample['email']='cafe@example.invalid';$sample['social']='https://example.invalid/quvo';
+    $newFields=['home_eyebrow','home_headline','home_accent','home_intro','story_headline','story_accent'];
+    $sample['home_eyebrow']='Your cafe, your words';$sample['home_headline']="A new café moment\nstarts";$sample['home_accent']='with you.';$sample['home_intro']='Your edited Home introduction.';$sample['story_headline']="Come for a conversation.\nStay for the";$sample['story_accent']='company.';
     $clean=website_content_validate($sample);
     $check($clean['headline']==='Café 你好 ☕','Headlines support Unicode and trim whitespace.');
     $check(str_contains($clean['story'],"\n\n"),'Story paragraphs normalize line breaks.');
     $check(str_contains($clean['story'],'<strong>'),'Content is plain text, not silently rewritten.');
+    $legacy=$defaults;foreach($newFields as$field)unset($legacy[$field]);
+    $check(website_content_validate($legacy)===$defaults,'Earlier content payloads get the original new-field defaults.');
+    foreach(['home_headline','story_headline']as$field){$invalid=$sample;$invalid[$field]=' ';$reject(fn()=>website_content_validate($invalid),422);}
     foreach(website_content_limits()as$field=>$limit){$invalid=$sample;$invalid[$field]=str_repeat('a',$limit+1);$reject(fn()=>website_content_validate($invalid),422);}
     foreach([[],null,'text',true]as$invalid)$reject(fn()=>website_content_validate($invalid),422);
     foreach(['javascript:alert(1)','data:text/html,hello','file:///C:/test','https://name:secret@example.invalid/']as$url){$invalid=$sample;$invalid['social']=$url;$reject(fn()=>website_content_validate($invalid),422);}
@@ -28,8 +33,13 @@ try{
     $adminId=$db->query("SELECT TOP 1 s.staff_id FROM dbo.staff_users s JOIN dbo.roles r ON r.role_id=s.role_id WHERE LOWER(r.role_name)='admin' AND s.is_active=1")->fetchColumn();
     $check($adminId!==false,'An admin fixture is available.');$admin=['staff_id'=>(int)$adminId,'role'=>'admin'];
     $db->beginTransaction();
+    $legacyRow=$before['content'];foreach($newFields as$field)unset($legacyRow[$field]);
+    $db->prepare('UPDATE dbo.website_content SET content_json=? WHERE content_id=1')->execute([json_encode($legacyRow,JSON_THROW_ON_ERROR)]);
+    $legacyRead=website_content_read($db);
+    foreach($newFields as$field)$check($legacyRead['content'][$field]===$defaults[$field],'Existing rows inherit a default for '.$field);
     $saved=website_content_save($db,$admin,$sample,$before['version']);
     $check($saved['content']===$clean,'Saved content round-trips through SQL.');
+    foreach($newFields as$field)$check($saved['content'][$field]===$clean[$field],'Admin edits persist for '.$field);
     $check($saved['version']!==$before['version'],'Each save has a fresh conflict version.');
     $read=website_content_read($db);$check($read===$saved,'Public readers see saved admin content.');
     $check(array_keys($read['content'])===array_keys($defaults),'Only public About fields are returned.');
@@ -40,6 +50,10 @@ try{
     $cleared=$clean;foreach(['address','hours','phone','email','social']as$field)$cleared[$field]='';
     $next=website_content_save($db,$admin,$cleared,$saved['version']);
     $check($next['content']['address']===''&&$next['content']['hours']===''&&$next['content']['social']==='','Admins can remove optional details.');
+    $oldTab=$next['content'];foreach($newFields as$field)unset($oldTab[$field]);$oldTab['intro']='An About edit from an older open tab.';
+    $legacySaved=website_content_save($db,$admin,$oldTab,$next['version']);
+    foreach($newFields as$field)$check($legacySaved['content'][$field]===$next['content'][$field],'An older admin tab preserves the saved '.$field);
+    $check($legacySaved['content']['intro']===$oldTab['intro'],'Older tabs can still edit their original fields.');$next=$legacySaved;
     $db->exec(file_get_contents(__DIR__.'/../database/20_website_content.sql'));
     $check(website_content_read($db)===$next,'Reapplying migration preserves existing About content.');
     $db->rollBack();

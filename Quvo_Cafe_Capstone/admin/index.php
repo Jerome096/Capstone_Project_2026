@@ -34,7 +34,7 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../barista/dashboard/barista.css" />
   <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
   <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=menu-photos-options-1" />
-  <link rel="stylesheet" href="../admin/website-content/website-content.css?v=public-storefront-1" />
+  <link rel="stylesheet" href="../admin/website-content/website-content.css?v=home-about-editor-1" />
   <link rel="stylesheet" href="../admin/records/records.css" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
@@ -113,6 +113,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=public-storefront-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=home-about-editor-1"></script>
 </body>
 </html>

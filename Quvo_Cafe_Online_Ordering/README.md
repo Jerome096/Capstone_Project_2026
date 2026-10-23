@@ -25,6 +25,8 @@ The approved public storefront includes Home, a searchable/filterable menu, and 
 
 Apply `Quvo_Cafe_Capstone/database/20_website_content.sql` after the existing migrations. Admin → Website content edits the About headline, introduction, story, address, opening hours, phone, email and social link. Admin confirmation and CSRF protection are required. Content is stored as plain text in SQL and shared across customer devices; empty contact fields remain hidden. A version check prevents concurrent admins from overwriting one another. Draft preview does not publish until Save website content is pressed.
 
+The same editor also controls the Home small heading, main headline, gold ending and description, plus the secondary About story heading and its gold ending. Headline textareas preserve line breaks. New fields use the original wording until edited; older stored content and older open admin tabs retain saved values. These fields use the existing JSON content row, so no additional SQL migration is required after migration 20.
+
 Connected to QuvoCafeDB through api/index.php and the shared PHP backend. Accounts use hashed passwords and a separate HttpOnly session cookie. Profiles, default addresses, menu, order lines, fulfillment, payment preferences, and history are stored in SQL. Status polls show cashier updates; there are no simulated timers or seeded records.
 
 Apply database/09_online_ordering.sql after migrations 00-08, then database/10_online_payment_images.sql and database/11_manage_online_payment_methods.sql. Existing browser-only prototype accounts are not imported; register an account in SQL. Delivery remains staff-coordinated.
