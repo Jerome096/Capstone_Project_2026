@@ -34,6 +34,7 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../barista/dashboard/barista.css" />
   <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
   <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=menu-photos-options-1" />
+  <link rel="stylesheet" href="../admin/website-content/website-content.css?v=public-storefront-1" />
   <link rel="stylesheet" href="../admin/records/records.css" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
@@ -50,7 +51,7 @@ if (empty($_SESSION["admin_confirmed"])) {
       base: "../",
       portal: "admin",
       initialScreen: "reports",
-      allowedScreens: ["reports", "menuAdmin", "records", "salesHistory", "accounts", "inventory"],
+      allowedScreens: ["reports", "menuAdmin", "websiteContent", "records", "salesHistory", "accounts", "inventory"],
       allowedRoles: ["admin"],
       roleLabel: "Administrator",
       loginUrl: "../login/login.php",
@@ -79,6 +80,7 @@ if (empty($_SESSION["admin_confirmed"])) {
 <div class="portal-badge"><strong>Staff workspace</strong></div>
 <button class="nav-item active" data-admin-screen="reports"><i data-lucide="bar-chart-3"></i><span>Reports</span></button>
 <button class="nav-item" data-admin-screen="menuAdmin"><i data-lucide="square-pen"></i><span>Menu edit</span></button>
+<button class="nav-item" data-admin-screen="websiteContent"><i data-lucide="notebook-pen"></i><span>Website content</span></button>
 <button class="nav-item" data-admin-screen="records"><i data-lucide="history"></i><span>Records</span></button>
 <button class="nav-item" data-admin-screen="salesHistory"><i data-lucide="calendar-days"></i><span>Sales history</span></button>
 <button class="nav-item" data-admin-screen="accounts"><i data-lucide="user-cog"></i><span>Accounts</span></button>
@@ -111,6 +113,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=customer-reminder-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=public-storefront-1"></script>
 </body>
 </html>

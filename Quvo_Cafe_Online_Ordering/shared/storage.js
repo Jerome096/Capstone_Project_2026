@@ -36,24 +36,27 @@ function restoreOnlinePending(){
   }
 }
 function onlineCartLocked(){return online.busy||Boolean(online.pending);}
-function resetOnlineView(){
+function resetOnlineView(target='screenHome'){
   window.QuvoReadyAlerts?.reset();
+  window.QuvoStorefront?.cancelSelection();
   checkoutPayment.request++;checkoutPayment.methods={};checkoutPayment.loading=false;checkoutPayment.qrLoaded=false;clearOnlinePaymentReceipt();renderOnlinePaymentOptions();
   online.generation++;clearTimeout(online.poll);online.poll=null;online.pending=null;online.selectedId=null;online.error="";online.nextOffset=null;
   state.onlineCustomer=null;state.customerName="";state.order=null;state.onlineOrders=[];state.cart=[];
-  CUSTOMER_DATA.menuItems=[];CUSTOMER_DATA.categories=["All"];state.selectedCategory="All";state.searchTerm="";
+  state.selectedCategory="All";state.searchTerm="";document.getElementById('menuSearch').value='';
   closeItemModal();renderCategories();renderMenu();renderCart();renderHistory();renderTracking();
-  showScreen("screenOnlineAuth");
+  document.getElementById('onlineAuthDialog')?.close();
+  showScreen(target);
 }
 async function enterOnlineAccount(account){
   online.generation++;state.onlineCustomer=account;state.customerName=account.name;
   restoreOnlinePending();configureMenuHeader();renderAccount();prefillDeliveryDetails(true);renderCart();
   showScreen("screenMenu");
   await Promise.all([refreshOnlineMenu().catch(error=>showToast(error.message)),refreshOnlineOrders(),refreshOnlinePayment()]);
+  const selectionHandled=await window.QuvoStorefront?.finishSignIn();
   startOrderStatusWatch();
+  return selectionHandled;
 }
 async function refreshOnlineMenu(reviewCart=false){
-  if(!state.onlineCustomer)return;
   const generation=online.generation;
   const data=await onlineApi(null,"menu");if(generation!==online.generation)return;
   CUSTOMER_DATA.menuItems=data.items;CUSTOMER_DATA.categories=["All",...new Set(data.items.map(item=>item.category))];

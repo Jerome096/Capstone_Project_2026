@@ -1,23 +1,9 @@
-<section class="screen" id="screenMenu">
-  <header class="app-header">
-    <div>
-      <p class="eyebrow">
-        <span id="accessModeLabel">Ordering</span> · <span id="menuCustomerName">Customer</span>
-      </p>
-      <h2 id="menuContextLabel">Menu</h2>
-    </div>
-  </header>
-  <button class="secondary-btn" id="refreshOnlineMenu" type="button">Refresh menu</button>
-  <div class="search-wrap">
-    <input id="menuSearch" placeholder="Search coffee, meals, pastries" type="search" />
-  </div>
-  <nav aria-label="Menu categories" class="category-tabs" id="categoryTabs"></nav>
-  <section class="section-title-row">
-    <div>
-      <p class="eyebrow">Quvo Café menu</p>
-      <h3>Available items</h3>
-    </div>
-    <span class="count-pill" id="menuCount">0 items</span>
-  </section>
-  <section class="menu-list" id="menuList"></section>
-</section>
+<section class="screen" id="screenMenu"><div class="wrap menu-page">
+ <div class="breadcrumb"><a href="#home">Home</a><span>/</span><span>Our menu</span></div>
+ <div class="menu-intro"><div><p class="eyebrow">SOMETHING GOOD IS WAITING</p><h1>The Quvo menu.</h1><p>Find your coffee, your comfort food, your new usual.</p></div><div class="browse-note"><span data-icon="eye"></span><p id="menuGuestNote">Have a look around.<br><strong>Sign in only when you order.</strong></p></div></div>
+ <div hidden><span id="accessModeLabel"></span><span id="menuCustomerName"></span><span id="menuContextLabel"></span></div>
+ <div class="menu-toolbar"><nav class="category-tabs" id="categoryTabs" aria-label="Menu categories"></nav><label class="search-field"><span data-icon="search"></span><input id="menuSearch" type="search" placeholder="Find something good…" aria-label="Search the menu"></label></div>
+ <div class="menu-results-head"><p id="menuCount" role="status" aria-live="polite"></p><div class="menu-tools"><button id="refreshOnlineMenu" type="button" class="refresh-menu">Refresh menu</button><label>Sort by <select id="menuSort" aria-label="Sort menu"><option value="menu">Menu order</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label></div></div>
+ <section class="menu-grid public-menu-grid" id="menuList" aria-label="Menu items"></section>
+ <p class="menu-footnote"><span data-icon="leaf"></span>Make it your own. Tap an item to see its options.</p>
+</div></section>

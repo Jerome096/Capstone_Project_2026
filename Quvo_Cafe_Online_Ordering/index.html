@@ -25,15 +25,19 @@
     <link rel="stylesheet" href="shared/css/ordering-status.css?v=ordering-availability-1" />
     <link rel="stylesheet" href="shared/css/order-ready-alerts.css?v=ready-alerts-1" />
     <link rel="stylesheet" href="shared/css/workspace-loading.css?v=centered-loading-1" />
+    <link rel="stylesheet" href="shared/css/storefront.css?v=public-storefront-1" />
   </head>
   <body class="workspace-loading" aria-busy="true">
     <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-live="polite">
       <span class="workspace-spinner" aria-hidden="true"></span>
       <p>Preparing online ordering</p>
     </div>
-    <main class="customer-shell">
+    <template data-fragment="shared/site-header.html"></template>
+    <main class="customer-shell" id="main" tabindex="-1">
       <section class="app-frame">
-        <template data-fragment="login/login.html"></template>
+        <template data-fragment="home/home.html"></template>
+        <template data-fragment="about/about.html"></template>
+        <dialog class="auth-dialog" id="onlineAuthDialog" aria-labelledby="onlineAuthTitle"><button class="close-button" id="closeOnlineAuth" type="button" aria-label="Close sign in"><span data-icon="close"></span></button><template data-fragment="login/login.html"></template></dialog>
         <template data-fragment="menu/menu.html"></template>
         <template data-fragment="cart/cart.html"></template>
         <template data-fragment="tracking/tracking.html"></template>
@@ -47,9 +51,10 @@
         <div class="toast" id="toast"></div>
       </section>
     </main>
+    <template data-fragment="shared/site-footer.html"></template>
 
     <noscript><style>.workspace-loading-screen { display: none; }</style>Please enable JavaScript to use customer ordering.</noscript>
     <script src="shared/viewport.js" defer></script>
-    <script src="shared/loader.js?v=ready-alert-recovery-1" defer></script>
+    <script src="shared/loader.js?v=public-storefront-1" defer></script>
   </body>
 </html>

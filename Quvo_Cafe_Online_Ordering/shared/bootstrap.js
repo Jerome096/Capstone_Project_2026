@@ -1,4 +1,6 @@
 async function initializeCustomerApp() {
+  const initialPublicScreen=QuvoStorefront.publicScreen();
+  QuvoStorefront.bind();
   renderCategories();
   renderMenu();
   renderCart();
@@ -17,6 +19,7 @@ async function initializeCustomerApp() {
   document.getElementById("refreshOnlineMenu").addEventListener("click",()=>refreshOnlineMenu().catch(error=>showToast(error.message)));
   window.QuvoOrdering?.start();
   startOnlineFlow();
-  try {const result=await onlineApi();if(result.account)await enterOnlineAccount(result.account);}
-  catch(error){loginError.textContent=error.message;}
+  const [session]=await Promise.allSettled([onlineApi(),refreshOnlineMenu(),QuvoStorefront.loadAbout()]);
+  if(session.status==='fulfilled'&&session.value.account){await enterOnlineAccount(session.value.account);if(initialPublicScreen!=='screenHome')showScreen(initialPublicScreen);}
+  else if(session.status==='rejected')showToast('Some account features could not connect. You can still explore the website.');
 }

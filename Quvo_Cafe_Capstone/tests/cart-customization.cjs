@@ -11,6 +11,8 @@ ctx.QuvoMenuOptions={
   valid:()=>true,summary:custom=>(custom.optionLabels||[]).map(option=>option.label+': '+option.value)
 };
 ctx.window=ctx;ctx.guestBrowseOnly=false;
+// Editing an online cart requires the signed-in customer flow.
+if(onlineMode){ctx.state.onlineCustomer={id:'fixture-customer'};ctx.state.accessMode='online';ctx.document.body={classList:{add(){},remove(){}}};ctx.document.activeElement=null;el('itemModal').querySelector=()=>null;}
 ctx.onlineCartLocked=()=>locked;ctx.online={busy:false,pending:null};ctx.renderOnlinePayment=()=>{};ctx.onlinePaymentReady=()=>true;ctx.updateFulfillmentDisplay=()=>{};
 ctx.document.querySelector=()=>({value:'GCash'});ctx.onlineApiUrl=value=>'api/index.php?action='+value;
 const run=code=>vm.runInContext(code,ctx),root=path.resolve(__dirname,onlineMode?'../../Quvo_Cafe_Online_Ordering':'../../Quvo_Cafe_Customer_Branded(3)');for(const file of ['cart/cart.js','menu/customization.js'])run(fs.readFileSync(path.join(root,file),'utf8'));

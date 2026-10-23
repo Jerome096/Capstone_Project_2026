@@ -13,6 +13,7 @@ const totalText = document.getElementById("totalText");
 function renderCart() {
   const cartCount = getCartCount();
   const subtotal = getCartSubtotal();
+  window.QuvoStorefront?.updateCart();
 
   cartBadge.textContent = cartCount;
   floatingCartCount.textContent = cartCount;

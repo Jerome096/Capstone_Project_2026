@@ -9,7 +9,7 @@ async function handleRegister(event){
     const result=await onlineApi({action:"register",name:document.getElementById("registerName").value.trim(),
       email:document.getElementById("registerEmail").value.trim(),contact:document.getElementById("registerContact").value.trim(),
       address:document.getElementById("registerAddress").value.trim(),password});
-    registerForm.reset();await enterOnlineAccount(result.account);showToast("Account created.");
+    registerForm.reset();const selectionHandled=await enterOnlineAccount(result.account);if(!selectionHandled)showToast("Account created.");
   });
 }
 function bindRegisterEvents(){registerForm.addEventListener("submit",handleRegister);}

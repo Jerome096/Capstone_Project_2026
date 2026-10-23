@@ -1,6 +1,6 @@
-<form class="form-card auth-panel" id="registerForm">
+<form class="form-card auth-panel" id="registerForm" role="tabpanel" aria-labelledby="registerTabBtn">
   <label for="registerName">Full name</label>
-  <input autocomplete="name" id="registerName" placeholder="Enter your full name" type="text" />
+  <input autocomplete="name" id="registerName" placeholder="Enter your full name" type="text" required maxlength="100" />
   <label for="registerContact">Contact number</label>
   <input
     autocomplete="tel"
@@ -14,6 +14,7 @@
     id="registerEmail"
     placeholder="Enter your email address"
     type="email"
+    required
   />
   <label for="registerAddress">Address or delivery notes</label>
   <textarea
@@ -26,12 +27,14 @@
       autocomplete="new-password"
       id="registerPassword"
       placeholder="At least 8 characters"
+      required minlength="8"
       type="password" /></label
   ><label for="registerPasswordConfirm"
     >Confirm password<input
       autocomplete="new-password"
       id="registerPasswordConfirm"
       placeholder="Re-enter your password"
+      required minlength="8"
       type="password"
   /></label>
   <p class="form-error" id="registerError"></p>

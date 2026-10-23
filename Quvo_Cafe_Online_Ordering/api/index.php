@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/online.php';
 require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/ordering.php';
+require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/website-content.php';
 if($_SERVER['REQUEST_METHOD']==='GET'&&($_GET['view']??'')==='menu-image'){try{menu_image_send(quvo_db(),$_GET['id']??null,$_GET['version']??null);}catch(Throwable $error){orders_error(null,$error);}}
 $csrf=online_start_session();$db=null;
 try {
@@ -14,10 +15,11 @@ try {
         if($view==='ordering') {ordering_assert_backend(true);quvo_json(['ok'=>true,'ordering'=>ordering_status($db)]);}
         if ($view==='payment-qr') payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null),'quvo-payment-qr',isset($_GET['download']));
         if($view==='session') quvo_json(['ok'=>true,'csrf'=>$csrf,'account'=>$account?online_public_account($db,$account):null]);
+        if($view==='menu') quvo_json(['ok'=>true,'csrf'=>$csrf,'items'=>online_menu($db)]);
+        if($view==='about') quvo_json(['ok'=>true,'content'=>website_content_read($db)['content']]);
         if(!$account) throw new OrderError('Please sign in first.',401);
         if ($view==='payments') quvo_json(['ok'=>true,'methods'=>payment_qr_methods($db)]);
         if ($view==='receipt') payment_send_image(payment_receipt_image($db,orders_id($_GET['id']??null),(int)$account['customer_account_id']),'payment-receipt');
-        if($view==='menu') quvo_json(['ok'=>true,'csrf'=>$csrf,'items'=>online_menu($db)]);
         if($view==='orders') {
             $result=isset($_GET['id'])?['order'=>online_order($db,(int)$account['customer_account_id'],orders_id($_GET['id']))]:online_orders($db,(int)$account['customer_account_id'],$_GET['offset']??0);
             quvo_json(['ok'=>true,'csrf'=>$csrf]+$result);

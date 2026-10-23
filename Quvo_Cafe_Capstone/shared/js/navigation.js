@@ -49,6 +49,8 @@ function showScreen(screen) {
   // Returning to Sessions refreshes decisions made on other staff devices.
   if (screen === "sessions") loadSessions();
 
+  if (screen === "websiteContent") window.QuvoWebsiteContent?.load();
+
   if (screen === "accounts") {
     renderAccountForm();
   }

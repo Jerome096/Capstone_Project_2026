@@ -1,111 +1,20 @@
-const categoryTabs = document.getElementById("categoryTabs");
-
-const menuList = document.getElementById("menuList");
-
-const menuSearch = document.getElementById("menuSearch");
-
-const menuCount = document.getElementById("menuCount");
-
-const accessModeLabel = document.getElementById("accessModeLabel");
-
-const menuCustomerName = document.getElementById("menuCustomerName");
-
-const menuContextLabel = document.getElementById("menuContextLabel");
-
-
-function configureMenuHeader() {
-  accessModeLabel.textContent = "Online order";
-  menuCustomerName.textContent = state.customerName || "Online customer";
-  menuContextLabel.textContent = "Pickup or delivery request";
-  paymentNote.textContent = "Your selected payment method will be confirmed by Quvo Café staff before preparation begins.";
-  fulfillmentCard.classList.remove("hidden");
+const categoryTabs=document.getElementById('categoryTabs'),menuList=document.getElementById('menuList'),menuSearch=document.getElementById('menuSearch'),menuCount=document.getElementById('menuCount');
+const accessModeLabel=document.getElementById('accessModeLabel'),menuCustomerName=document.getElementById('menuCustomerName'),menuContextLabel=document.getElementById('menuContextLabel');
+function configureMenuHeader(){
+ accessModeLabel.textContent='Online order';menuCustomerName.textContent=state.customerName||'Guest';menuContextLabel.textContent='Pickup or delivery request';
+ paymentNote.textContent='Your selected payment method will be confirmed by Quvo Café staff before preparation begins.';fulfillmentCard.classList.remove('hidden');
 }
-
-function renderCategories() {
-  categoryTabs.innerHTML = CUSTOMER_DATA.categories
-    .map((category) => {
-      const activeClass = category === state.selectedCategory ? "active" : "";
-      return `<button class="category-btn ${activeClass}" type="button" data-category="${escapeCustomerHtml(category)}">${escapeCustomerHtml(category)}</button>`;
-    })
-    .join("");
-
-  document.querySelectorAll(".category-btn").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.selectedCategory = button.dataset.category;
-      renderCategories();
-      renderMenu();
-    });
-  });
+function renderCategories(){
+ categoryTabs.innerHTML=CUSTOMER_DATA.categories.map(category=>'<button class="category category-btn '+(category===state.selectedCategory?'active':'')+'" type="button" data-category="'+escapeCustomerHtml(category)+'" aria-pressed="'+(category===state.selectedCategory)+'">'+escapeCustomerHtml(category==='All'?'All items':category.charAt(0).toUpperCase()+category.slice(1))+'</button>').join('');
+ categoryTabs.querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>{state.selectedCategory=button.dataset.category;renderCategories();renderMenu();}));
 }
-
-function getFilteredMenuItems() {
-  return CUSTOMER_DATA.menuItems.filter((item) => {
-    const matchesCategory =
-      state.selectedCategory === "All" || item.category === state.selectedCategory;
-    const matchesSearch =
-      item.name.toLowerCase().includes(state.searchTerm) ||
-      item.category.toLowerCase().includes(state.searchTerm) ||
-      item.description.toLowerCase().includes(state.searchTerm);
-
-    return matchesCategory && matchesSearch;
-  });
+function getFilteredMenuItems(){
+ const rows=CUSTOMER_DATA.menuItems.filter(item=>(state.selectedCategory==='All'||item.category===state.selectedCategory)&&[item.name,item.category,item.description||''].join(' ').toLowerCase().includes(state.searchTerm));
+ const sort=document.getElementById('menuSort').value;if(sort==='price-low')rows.sort((a,b)=>a.price-b.price);if(sort==='price-high')rows.sort((a,b)=>b.price-a.price);return rows;
 }
-
-function renderMenu() {
-  const items = getFilteredMenuItems();
-  menuCount.textContent = `${items.length} item${items.length === 1 ? "" : "s"}`;
-
-  if (!CUSTOMER_DATA.menuItems.length) {
-    menuList.innerHTML =
-      '<div class="empty-card"><h3>No menu items available</h3><p>Please check back later.</p></div>';
-    return;
-  }
-
-  if (!items.length) {
-    menuList.innerHTML = `
-      <div class="empty-card">
-        <h3>No items found</h3>
-        <p>Try another category or search term.</p>
-      </div>
-    `;
-    return;
-  }
-
-  menuList.innerHTML = items
-    .map((item) => {
-      return `
-        <article class="menu-card clickable-card" role="button" tabindex="0" data-card-item-id="${escapeCustomerHtml(item.id)}" aria-label="Customize ${escapeCustomerHtml(item.name)}">
-          <div class="item-icon">${QuvoMenuOptions.photoHTML(item)}</div>
-          <div>
-            <p class="eyebrow">${escapeCustomerHtml(item.category)}</p>
-            <h3>${escapeCustomerHtml(item.name)}</h3>
-            <p>${escapeCustomerHtml(item.description)}</p>
-            <div class="card-bottom">
-              <strong class="price">${formatCurrency(item.price)}</strong>
-              <span class="tap-hint">Tap to customize</span>
-            </div>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-
-  QuvoMenuOptions.bindPhotos(menuList);
-  document.querySelectorAll("[data-card-item-id]").forEach((card) => {
-    card.addEventListener("click", () => openItemModal(card.dataset.cardItemId));
-
-    card.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openItemModal(card.dataset.cardItemId);
-      }
-    });
-  });
+function renderMenu(){
+ const items=getFilteredMenuItems();menuCount.textContent=items.length+' item'+(items.length===1?'':'s')+' to explore';
+ menuList.innerHTML=items.length?items.map(QuvoStorefront.card).join(''):'<div class="empty-card"><h3>'+(!CUSTOMER_DATA.menuItems.length?'No menu items available':'No matching items')+'</h3><p>'+(!CUSTOMER_DATA.menuItems.length?'Please refresh the menu or check back shortly.':'Try another category or search term.')+'</p></div>';
+ QuvoMenuOptions.bindPhotos(menuList);QuvoStorefront.renderFeatured();
 }
-
-function bindMenuEvents() {
-  menuSearch.addEventListener("input", (event) => {
-    state.searchTerm = event.target.value.trim().toLowerCase();
-    renderMenu();
-  });
-}
+function bindMenuEvents(){menuSearch.addEventListener('input',event=>{state.searchTerm=event.target.value.trim().toLowerCase();renderMenu();});}

@@ -155,6 +155,7 @@ const screenText = {
     title: "Reports",
     sub: "Current shift performance summary",
   },
+  websiteContent: {eyebrow:"Admin access",title:"Website content",sub:"Edit your cafe story, address, opening hours and contact details"},
   menuAdmin: {
     eyebrow: "Admin access",
     title: "Menu customization",
@@ -190,6 +191,7 @@ const screenText = {
 const ADMIN_SCREENS = [
   "reports",
   "menuAdmin",
+  "websiteContent",
   "records",
   "salesHistory",
   "accounts",

@@ -1,0 +1,13 @@
+# Public online storefront and editable About page
+
+Online ordering now uses the approved cream, black and gold Home/Menu/About design. Guest browsing never creates an account or order. The real available menu, inventory filtering, uploaded photos and admin option definitions are used; the standalone preview's sample menu is not imported.
+
+Menu and About are public GET views. Account details, order history, payment proof and order submission retain their existing server authentication and ownership checks. A guest selecting Add to cart signs in or registers first. The selected item is restored after refreshing the current menu; changed price/option versions require review. Existing payment QR selection, proof upload, pickup/delivery, duplicate-safe retries and ready alerts remain active.
+
+Run `database/20_website_content.sql` before uploading the runtime update. It only adds `dbo.website_content` and an empty singleton row; reapplying it preserves already-saved content. It does not change menu items, accounts, orders, payments or operating status.
+
+Admin → Website content contains the approved About editor. A confirmed admin session and CSRF token are required. Preview draft renders unsaved text locally in a dialog. Save persists validated text to SQL and records an audit event. The version returned by GET must match the current SQL version; conflicting drafts remain in the form until the admin deliberately reloads. Address, hours, phone, email and social fields are optional and omitted from the customer page when empty. Only HTTP/HTTPS social links are accepted. Customer pages render story text safely and refresh About details on navigation/return to the tab.
+
+The layout supports small phones and tablet portrait/landscape. Form controls use touch targets and mobile inputs use a readable 16px size. The sign-in dialog and item editor scroll within the available viewport, including reduced keyboard space. The existing centered startup spinner is retained. Customer pages contain no navigation links to the staff, kitchen or admin portals.
+
+Validation covers rollback-only SQL content tests, anonymous requests against the real PHP APIs, account/checkout/menu SQL regressions, and browser flows for guest browsing, account gating, selected options, changed prices, checkout, content editing and concurrent saves. `tests/website-content.php` runs locally from the CLI and rolls back its test updates. Deployment bundles exclude tests, documentation, configuration and database scripts; the SQL migration is supplied separately.

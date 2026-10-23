@@ -1,0 +1,13 @@
+<header class="site-header">
+  <div class="header-inner wrap">
+    <a class="brand" href="#home" aria-label="Quvo Cafe home"><img src="assets/images/quvo-logo.jpg" width="52" height="52" alt=""><span>Quvo Café<small>A LITTLE PAUSE. A GOOD CUP.</small></span></a>
+    <nav class="desktop-nav" aria-label="Main navigation"><a href="#home" data-site-page="screenHome">Home</a><a href="#menu" data-site-page="screenMenu">Our menu</a><a href="#about" data-site-page="screenAbout">About Quvo</a></nav>
+    <div class="header-actions">
+      <button class="icon-button cart-trigger" data-nav="screenCart" aria-label="View your order"><span data-icon="bag"></span><span class="cart-number" id="headerCartCount" hidden>0</span></button>
+      <button class="button button-outline sign-in-trigger guest-only-nav" data-nav="screenOnlineAuth">Sign in <span data-icon="user"></span></button>
+      <button class="button button-dark header-order" data-nav="screenMenu">Explore menu <span data-icon="arrow"></span></button>
+      <button class="icon-button mobile-account guest-only-nav" data-nav="screenOnlineAuth" aria-label="Sign in to your account"><span data-icon="user"></span></button>
+      <details class="storefront-account account-only-nav"><summary class="button button-outline" aria-label="Customer account menu"><span data-icon="user"></span><span id="headerCustomerName">Account</span></summary><div class="account-dropdown"><button data-nav="screenCart">My order</button><button data-nav="screenTracking">Track order</button><button data-nav="screenHistory">Order history</button><button data-nav="screenAccount">My account</button><button id="headerSignOut">Sign out</button></div></details>
+    </div>
+  </div>
+</header>
