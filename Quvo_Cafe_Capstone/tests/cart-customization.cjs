@@ -10,7 +10,7 @@ ctx.QuvoMenuOptions={
   read(root,item){if(item.category!=='coffee')return {options:{},optionLabels:[]};return {options:{'sugar-level':el('sugarLevel').value,'ice-level':el('iceLevel').value},optionLabels:[{label:'Sugar level',value:el('sugarLevel').value.replace('sugar-','')+'%'},{label:'Ice level',value:el('iceLevel').value}]};},
   valid:()=>true,summary:custom=>(custom.optionLabels||[]).map(option=>option.label+': '+option.value)
 };
-ctx.window=ctx;ctx.guestBrowseOnly=false;
+ctx.window=ctx;
 // Editing an online cart requires the signed-in customer flow.
 if(onlineMode){ctx.state.onlineCustomer={id:'fixture-customer'};ctx.state.accessMode='online';ctx.document.body={classList:{add(){},remove(){}}};ctx.document.activeElement=null;el('itemModal').querySelector=()=>null;}
 ctx.onlineCartLocked=()=>locked;ctx.online={busy:false,pending:null};ctx.renderOnlinePayment=()=>{};ctx.onlinePaymentReady=()=>true;ctx.updateFulfillmentDisplay=()=>{};

@@ -1,24 +1,37 @@
 <section class="screen" id="screenMenu">
-  <header class="app-header">
-    <div>
-      <p class="eyebrow">
-        <span id="accessModeLabel">Ordering</span> · <span id="menuCustomerName">Customer</span>
-      </p>
-      <h2 id="menuContextLabel">Menu</h2>
+  <header class="app-header dine-site-header">
+    <div class="dine-brand">
+      <img src="assets/images/quvo-logo.jpg" alt="Quvo Café logo" width="48" height="48" />
+      <div><span>Quvo Café</span><small>TABLE QR ORDERING</small></div>
     </div>
-    <button class="assist-btn" id="staffBtnHeader" type="button">Call Staff</button>
+    <div class="dine-session-summary">
+      <div class="dine-session-copy">
+        <p class="eyebrow"><span id="accessModeLabel">Dine-in QR</span> · <span id="menuCustomerName">Customer</span></p>
+        <h2 id="menuContextLabel">Your table</h2>
+      </div>
+      <button class="assist-btn" id="staffBtnHeader" type="button">Call Staff</button>
+    </div>
   </header>
   <p class="session-timeout-notice" id="dineSessionTimeout" hidden></p>
-  <div class="search-wrap">
-    <input id="menuSearch" placeholder="Search coffee, meals, pastries" type="search" />
-  </div>
-  <nav aria-label="Menu categories" class="category-tabs" id="categoryTabs"></nav>
-  <section class="section-title-row">
+  <div class="dine-menu-intro">
     <div>
-      <p class="eyebrow">Quvo Café menu</p>
-      <h3>Available items</h3>
+      <p class="eyebrow">SOMETHING GOOD IS WAITING</p>
+      <h1>The Quvo menu.</h1>
+      <p class="dine-menu-description">Find your coffee, your comfort food, your new usual.</p>
     </div>
-    <span class="count-pill" id="menuCount">0 items</span>
-  </section>
-  <section class="menu-list" id="menuList"></section>
+    <p class="dine-table-note">Made for your table.<br><strong>Order here, pay at the cashier.</strong></p>
+  </div>
+  <div class="dine-menu-toolbar">
+    <nav aria-label="Menu categories" class="category-tabs" id="categoryTabs"></nav>
+    <label class="search-wrap dine-menu-search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>
+      <input id="menuSearch" placeholder="Find something good…" type="search" aria-label="Search the menu" />
+    </label>
+  </div>
+  <div class="dine-menu-results">
+    <span id="menuCount" role="status" aria-live="polite">0 items</span>
+    <span>Prepared fresh, just for you.</span>
+  </div>
+  <section class="menu-list dine-menu-grid" id="menuList" aria-label="Available menu items"></section>
+  <p class="dine-menu-footnote">Make it your own. Tap an item to see its options.</p>
 </section>

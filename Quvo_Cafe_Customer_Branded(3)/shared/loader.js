@@ -25,7 +25,7 @@
       const placeholders = [...document.querySelectorAll("template[data-fragment]")];
       await Promise.all(
         placeholders.map(async (placeholder) => {
-          const response = await fetch(placeholder.dataset.fragment);
+          const response = await fetch(placeholder.dataset.fragment, {cache: "no-store"});
           if (!response.ok) throw new Error("Unable to load " + placeholder.dataset.fragment);
           const fragment = document.createElement("template");
           fragment.innerHTML = await response.text();
@@ -36,7 +36,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=ready-alert-recovery-1";
+        script.src = src + "?v=dine-storefront-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

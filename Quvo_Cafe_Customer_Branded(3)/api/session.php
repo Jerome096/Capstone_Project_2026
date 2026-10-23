@@ -66,8 +66,8 @@ try {
     }
     $session = dining_guest_session($db, $id, $token);
     if (in_array($_GET["view"] ?? "", ["menu","browse-menu"], true)) {
-        // Browse exposes only the catalog. Ordering and visit history still require approval.
-        if (!(bool) $table["is_active"] || (($_GET['view']??'')!=='browse-menu' && (!$session || $session['status']!=='active'))) {
+        // Old browse links must respect the same cashier approval as the menu.
+        if (!(bool) $table["is_active"] || !$session || $session['status'] !== 'active') {
             quvo_json(["ok" => false, "error" => "An approved session is required."], 403);
         }
         $items = $db

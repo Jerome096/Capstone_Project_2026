@@ -27,7 +27,7 @@ function renderCategories() {
   categoryTabs.innerHTML = CUSTOMER_DATA.categories
     .map((category) => {
       const activeClass = category === state.selectedCategory ? "active" : "";
-      return `<button class="category-btn ${activeClass}" type="button" data-category="${escapeCustomerHtml(category)}">${escapeCustomerHtml(category)}</button>`;
+      return `<button class="category-btn ${activeClass}" type="button" data-category="${escapeCustomerHtml(category)}" aria-pressed="${category === state.selectedCategory}">${escapeCustomerHtml(category === "All" ? "All items" : category)}</button>`;
     })
     .join("");
 
@@ -53,6 +53,18 @@ function getFilteredMenuItems() {
   });
 }
 
+// Presentation only: reuse the online menu's artwork when an item has no uploaded photo.
+function dineMenuArt(item) {
+  if (/food|meal|pastr/i.test(item.category)) return "food-plate";
+  if (/matcha/i.test(item.name)) return "matcha";
+  return /hot|espresso|cappuccino/i.test(item.name) ? "hot-coffee" : "iced-coffee";
+}
+
+function dineMenuPhoto(item) {
+  if (item.imageUrl) return QuvoMenuOptions.photoHTML(item);
+  return `<img class="dine-menu-art" src="assets/menu-art/${dineMenuArt(item)}.svg" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
+}
+
 function renderMenu() {
   const items = getFilteredMenuItems();
   menuCount.textContent = `${items.length} item${items.length === 1 ? "" : "s"}`;
@@ -76,15 +88,15 @@ function renderMenu() {
   menuList.innerHTML = items
     .map((item) => {
       return `
-        <article class="menu-card clickable-card" role="button" tabindex="0" data-card-item-id="${escapeCustomerHtml(item.id)}" aria-label="Customize ${escapeCustomerHtml(item.name)}">
-          <div class="item-icon">${QuvoMenuOptions.photoHTML(item)}</div>
-          <div>
+        <article class="menu-card clickable-card dine-menu-card" role="button" tabindex="0" data-card-item-id="${escapeCustomerHtml(item.id)}" aria-label="Customize ${escapeCustomerHtml(item.name)}">
+          <div class="item-icon dine-product-image dine-art-${dineMenuArt(item)}">${dineMenuPhoto(item)}</div>
+          <div class="dine-product-info">
             <p class="eyebrow">${escapeCustomerHtml(item.category)}</p>
             <h3>${escapeCustomerHtml(item.name)}</h3>
-            <p>${escapeCustomerHtml(item.description)}</p>
+            <p class="dine-product-description">${escapeCustomerHtml(item.description || "Make it your own. View available options.")}</p>
             <div class="card-bottom">
               <strong class="price">${formatCurrency(item.price)}</strong>
-              <span class="tap-hint">Tap to customize</span>
+              <span class="dine-add-item" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
             </div>
           </div>
         </article>
