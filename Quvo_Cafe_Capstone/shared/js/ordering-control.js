@@ -23,7 +23,7 @@
     panel.dataset.orderingState=status?.acceptingOrders?'open':status?'paused':'unknown';
     label.textContent=status?.acceptingOrders?'Accepting customer orders':status?'Customer orders paused':message?'Customer ordering unavailable':'Checking customer ordering';
     detail.textContent=message||(status?.acceptingOrders?'Dine-in and online orders are open. Use Pause orders to stop new orders.':
-      status?.state==='offline'?'Ordering paused after the last operations logout. Start accepting orders when you are ready.':
+      status?.state==='offline'?'Ordering paused after the 10-minute logout timer. Existing orders stay saved. Start accepting orders when you are ready.':
       status?'Customers can still browse. Start accepting orders when staff are ready.':'Ordering status is unavailable until this workspace reconnects.');
     button.textContent=busy?(pendingAction==='start'?'Starting orders…':pendingAction==='pause'?'Pausing orders…':'Checking…'):status?.acceptingOrders?'Pause orders':'Start accepting orders';
     button.disabled=busy;

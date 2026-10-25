@@ -18,7 +18,7 @@ function renderAdminMenu() {
     <div class="admin-menu-row">
       <span class="admin-menu-item-name">${item.imageUrl?'<span class="admin-menu-thumbnail">'+QuvoMenuOptions.photoHTML(item)+'</span>':''}${escapeHtml(item.name)}</span>
       <span>${formatCategory(item.category)}</span>
-      <span>₱${item.price}</span>
+      <span>${QuvoMenuOptions.priceLabel(item)}</span>
       <span class="menu-status ${item.available ? "" : "off"}">${item.available ? "Available" : "Unavailable"}</span>
       <button class="btn light" onclick="selectAdminMenuItem(${item.id})">Edit</button>
     </div>
@@ -74,12 +74,17 @@ function renderAdminEditPanel(itemId) {
         </select>
       </label>
 
-      <label>
-        Price
+      <section id="adminPricingSection" class="admin-pricing-section" aria-labelledby="adminPricingHeading">
+      <h3 id="adminPricingHeading">Pricing</h3>
+      <label id="adminSinglePriceField">
+        <span id="adminSinglePriceLabel">Item price (₱)</span>
         <input id="adminItemPrice" type="number" required
        min="0" max="99999999.99" step="0.01"
        value="${item.price}" />
       </label>
+      <div id="adminSizePricing" class="admin-size-pricing"></div>
+      <p id="adminPriceHelp" class="helper-text">Set one item price, or enable size prices.</p>
+      </section>
 
       <label>
         Availability
@@ -91,7 +96,7 @@ function renderAdminEditPanel(itemId) {
 
       <input id="adminItemAvailable" type="hidden" value="${(item.manualAvailable ?? item.available) ? "true" : "false"}" />
 
-      ${item.inventoryBlocked ? '<p class="helper-text">Stock is insufficient for this item’s recipe. Restock its ingredients in Inventory to make it available.</p>' : ''}
+      ${item.stockWarning ? '<p class="helper-text">Recorded ingredients are low. Ordering stays available unless you mark this item Unavailable.</p>' : ''}
 
       <button class="btn dark" type="submit">Save changes</button>
       <button class="btn light" type="button" onclick="removeAdminMenuItem(${item.id}, this)">
@@ -127,7 +132,7 @@ async function saveAdminMenuItem(event, itemId) {
     ...editorPayload,
     name: document.getElementById("adminItemName").value.trim(),
     category: document.getElementById("adminItemCategory").value,
-    price: document.getElementById("adminItemPrice").value,
+    price: editorPayload.price ?? document.getElementById("adminItemPrice").value,
     available: document.getElementById("adminItemAvailable").value === "true",
   };
 

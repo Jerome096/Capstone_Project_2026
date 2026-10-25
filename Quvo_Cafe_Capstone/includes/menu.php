@@ -30,7 +30,7 @@ function menu_rows(PDO $db,?int $id=null):array {
     $sql='SELECT m.menu_item_id,m.item_name,m.category,m.price,m.is_available,m.option_groups_json,CONVERT(varchar(36),i.image_version) image_version,CASE WHEN '.inventory_menu_condition().' THEN 1 ELSE 0 END effective_available,CASE WHEN '.inventory_stock_condition().' THEN 1 ELSE 0 END stock_available FROM dbo.menu_items m LEFT JOIN dbo.menu_item_images i ON i.menu_item_id=m.menu_item_id';
     $q=$db->prepare($sql.($id===null?' ORDER BY m.menu_item_id DESC':' WHERE m.menu_item_id=?'));$q->execute($id===null?[]:[$id]);$rows=$q->fetchAll();$q->closeCursor();
     return array_map(fn($row)=>['id'=>(int)$row['menu_item_id'],'name'=>$row['item_name'],'category'=>$row['category'],'price'=>(float)$row['price'],
-        'manualAvailable'=>(bool)$row['is_available'],'inventoryBlocked'=>!(bool)$row['stock_available'],'available'=>(bool)$row['effective_available']]+menu_metadata($row,'../api/menu-image/index.php?'),$rows);
+        'manualAvailable'=>(bool)$row['is_available'],'inventoryBlocked'=>false,'stockWarning'=>!(bool)$row['stock_available'],'available'=>(bool)$row['effective_available']]+menu_metadata($row,'../api/menu-image/index.php?'),$rows);
 }
 // The caller owns the transaction; menu settings and its image change together.
 function menu_save(PDO $db,array $input):array {
@@ -41,8 +41,18 @@ function menu_save(PDO $db,array $input):array {
     $hasImage=array_key_exists('image',$input);$image=$hasImage?menu_image_input($input['image']):null;
     inventory_lock($db);
     if($id!==null){
-        $q=$db->prepare('SELECT option_groups_json FROM dbo.menu_items WITH(UPDLOCK,HOLDLOCK) WHERE menu_item_id=?');$q->execute([$id]);$old=$q->fetch();$q->closeCursor();
+        $q=$db->prepare('SELECT option_groups_json,category FROM dbo.menu_items WITH(UPDLOCK,HOLDLOCK) WHERE menu_item_id=?');$q->execute([$id]);$old=$q->fetch();$q->closeCursor();
         if(!$old)throw new OrderError('This menu item was removed. Refresh the menu.',404);
+        $oldGroups=menu_groups($old);$hasCheckbox=in_array('checkbox',array_column($oldGroups,'type'),true);
+        if($hasGroups&&(array_key_exists('optionVersion',$input)||menu_has_pricing($oldGroups)||$hasCheckbox)){
+            if(!is_string($input['optionVersion']??null)||!hash_equals(menu_options_version($old),$input['optionVersion']))throw new OrderError('Menu options or prices changed. Reload this item before saving; your draft has not been published.',409,'options_changed');
+        }
+        if($hasGroups&&$hasCheckbox&&($input['checkboxOptionsSupported']??false)!==true){
+            foreach($oldGroups as $oldGroup)if($oldGroup['type']==='checkbox'){
+                $matching=array_values(array_filter($groups,fn($group)=>$group['id']===$oldGroup['id']&&$group['type']==='checkbox'));
+                if($matching===[])throw new OrderError('Reload the admin page before changing checkbox add-ons. Your draft has not been published.',409,'options_changed');
+            }
+        }
     }
     $json=$hasGroups?json_encode($groups,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):($old['option_groups_json']??null);
     if($id===null){

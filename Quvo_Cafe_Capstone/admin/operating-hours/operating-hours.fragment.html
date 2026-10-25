@@ -1,0 +1,23 @@
+<section class="screen" id="operatingHours">
+  <div class="admin-page-note"><i data-lucide="clock-3"></i><span>Operating hours define the business dates used in Reports, Sales history and end-of-day closing.</span></div>
+  <div class="operating-hours-layout">
+    <section class="operating-hours-card">
+      <div class="eyebrow">Store schedule</div><h2>Opening and closing hours</h2>
+      <p class="operating-hours-copy">The day the store opens is the business date, including sales after midnight. Hour changes apply to future business days; earlier saved history is preserved.</p>
+      <p id="operatingHoursStatus" class="helper-text" role="status">Loading operating hours...</p>
+      <p id="operatingHoursError" class="inventory-form-error" role="alert"></p>
+      <form id="operatingHoursForm" autocomplete="off">
+        <div class="operating-hours-fields">
+          <label for="storeOpeningTime">Opening time<input id="storeOpeningTime" type="time" value="15:00" required /></label>
+          <label for="storeClosingTime">Closing time<input id="storeClosingTime" type="time" value="02:00" required /></label>
+          <label class="operating-hours-full" for="storeHoursEffectiveDate">Apply from business date<input id="storeHoursEffectiveDate" type="date" required /><span>Choose a future opening. This keeps earlier sales and closed records unchanged.</span></label>
+        </div>
+        <div class="operating-hours-example" aria-live="polite"><b id="storeHoursPreviewTitle">Business-day example</b><p id="storeHoursPreviewWindow"></p><p id="storeHoursPreviewExample"></p></div>
+        <p class="operating-hours-copy">All approved sales remain included. Payments recorded after the scheduled closing time stay with the opening day until the next opening and are identified in the daily report.</p>
+        <div class="operating-hours-actions"><button type="button" class="btn light" id="reloadOperatingHours">Reload saved hours</button><button type="submit" class="btn dark" id="saveOperatingHours">Save future hours</button></div>
+      </form>
+    </section>
+    <aside class="operating-hours-card"><div class="eyebrow">Current reporting day</div><h2 id="currentOperatingDay">—</h2><p id="currentOperatingWindow" class="operating-hours-copy"></p><p class="operating-hours-copy">Times use Philippine time. Staff use Start/Pause orders to control whether customers can place orders.</p></aside>
+  </div>
+  <section class="operating-hours-card operating-hours-history"><div class="eyebrow">Saved schedules</div><h2>Operating-hour changes</h2><div class="operating-hours-table-wrap"><table><thead><tr><th>Starting business date</th><th>Opening</th><th>Closing</th><th>Status</th></tr></thead><tbody id="operatingHoursScheduleRows"></tbody></table></div></section>
+</section>

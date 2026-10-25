@@ -1,4 +1,22 @@
 const dashboardCompletion = { count: 0, loading: false, closing: false, revision: 0 };
+const dashboardStock = { items: [], loaded: false, error: "" };
+
+function renderDashboardStockAlerts() {
+  const list = document.getElementById("dashboardStockAlerts");
+  if (!list) return;
+  document.getElementById("dashboardStockRefresh").disabled = dashboardCompletion.loading || dashboardCompletion.closing;
+  document.getElementById("dashboardStockCount").textContent = dashboardStock.items.length;
+  document.getElementById("dashboardStockStatus").textContent = dashboardStock.error || (!dashboardStock.loaded
+    ? "Checking stock levels..." : dashboardStock.items.length
+      ? dashboardStock.items.length + " stock " + (dashboardStock.items.length === 1 ? "item needs" : "items need") + " review. Ordering stays available."
+      : "No stock reminders. Recorded materials are above their reminder levels.");
+  const e = value => escapeHtml(value), qty = value => new Intl.NumberFormat("en-PH", { maximumFractionDigits: 3 }).format(Number(value));
+  list.innerHTML = dashboardStock.items.map(item => `<article class="dashboard-stock-alert ${item.status === "out" ? "out" : "low"}">
+    <div class="dashboard-stock-item-header"><b>${e(item.name)}</b><span>${item.status === "out" ? "Out of stock" : "Low stock"}</span></div>
+    <p>Recorded: <strong>${qty(item.current)} ${e(item.unit)}</strong> · Reorder level: ${qty(item.reorder)} ${e(item.unit)}</p>
+    ${item.menus?.length ? `<p>Used by: ${item.menus.map(e).join(", ")}</p>` : ""}
+  </article>`).join("");
+}
 
 async function dashboardApi(input, query = "") {
   const response = await fetch(quvoPath("api/dashboard/index.php") + query, {
@@ -17,23 +35,31 @@ async function dashboardApi(input, query = "") {
 async function refreshDashboardCompletion() {
   if (dashboardCompletion.loading || dashboardCompletion.closing) return;
   dashboardCompletion.loading = true;
+  renderDashboardStockAlerts();
   const revision = dashboardCompletion.revision;
   try {
     const data = await dashboardApi();
     if (revision !== dashboardCompletion.revision) return;
     dashboardCompletion.count = Number(data.completed_today);
+    if (Array.isArray(data.stock_alerts)) {
+      dashboardStock.items = data.stock_alerts;
+      dashboardStock.loaded = true;
+      dashboardStock.error = "";
+    } else dashboardStock.error = "Stock reminders are unavailable. Use Refresh stock alerts to try again.";
     renderStats();
   } catch (error) {
     console.error("Dashboard completion refresh failed:", error.message);
+    dashboardStock.error = "Could not refresh stock reminders." + (dashboardStock.loaded ? " Showing the last recorded alerts." : " Use Refresh stock alerts to try again.");
   } finally {
     dashboardCompletion.loading = false;
+    renderDashboardStockAlerts();
   }
 }
 
 function renderAll() {
   syncTableOrdersFromOrders();
   renderStats();
-  renderTableMap();
+  renderDashboardStockAlerts();
   renderActivities();
   renderMenu();
   renderCart();
@@ -79,65 +105,6 @@ function renderStats() {
   document.getElementById("completedTodayStat").textContent = completedToday;
 }
 
-function renderTableMap() {
-  const map = document.getElementById("tableMap");
-
-  if (!state.insideTables.length && !state.outsideTables.length) {
-    map.innerHTML = `<div class="helper-text">No table data loaded. Table records will be populated from the database.</div>`;
-    return;
-  }
-
-  const insideTables = state.insideTables
-    .map((table) => {
-      const hasOrder = table.orders > 0;
-      return `
-      <article class="table-box ${hasOrder ? "has-order" : "no-order"}">
-        <div class="table-type">${table.type}</div>
-        <div class="table-number">${table.id}</div>
-        <div class="table-orders">${hasOrder ? `${table.orders} ${pluralize(table.orders, "order")}` : "No orders"}</div>
-      </article>
-    `;
-    })
-    .join("");
-
-  const outsideTables = state.outsideTables
-    .map((table) => {
-      const hasOrder = table.orders > 0;
-      return `
-      <article class="table-box ${hasOrder ? "has-order" : "no-order"}">
-        <div class="table-type">${table.type}</div>
-        <div class="table-number">${table.id}</div>
-        <div class="table-orders">${hasOrder ? `${table.orders} ${pluralize(table.orders, "order")}` : "No orders"}</div>
-      </article>
-    `;
-    })
-    .join("");
-
-  map.innerHTML = `
-    <section class="floor-subsection floor-area inside-area">
-      <div class="floor-subtitle-row">
-        <h3 class="floor-subtitle">Inside</h3>
-        <span class="area-chip indoor-chip">Indoor area</span>
-      </div>
-      <div class="table-map-grid">
-        ${insideTables}
-      </div>
-    </section>
-
-    <section class="floor-subsection floor-area outside-area">
-      <div class="floor-subtitle-row">
-        <h3 class="floor-subtitle">Outside</h3>
-        <span class="area-chip outdoor-chip">Outdoor area</span>
-      </div>
-      <div class="outside-grid">
-        ${outsideTables}
-      </div>
-    </section>
-
-    <p class="table-map-note">Table indicators reflect active order data only.</p>
-  `;
-}
-
 function renderActivities() {
   const list = document.getElementById("activityList");
   list.innerHTML = state.activities.length
@@ -157,6 +124,7 @@ function renderActivities() {
 }
 
 function bindEodModal() {
+  document.getElementById("dashboardStockRefresh")?.addEventListener("click", refreshDashboardCompletion);
   document.getElementById("openEodBtn")?.addEventListener("click", openEodModal);
 
   document.getElementById("eodClose")?.addEventListener("click", closeEodModal);
@@ -194,7 +162,7 @@ function updateEodControls(){
 function renderEodSummary(){
   const grid=document.getElementById('eodSummary');
   if(!eodSql.totals){grid.innerHTML='<p class="helper-text">'+(eodSql.loading?'Loading closing figures from SQL…':'Closing figures are unavailable. Reopen this popup to retry.')+'</p>';return;}
-  document.getElementById('eodOperationDate').textContent='Operation date: '+eodSql.totals.businessDate+' (Philippine time)';
+  document.getElementById('eodOperationDate').textContent='Business date: '+eodSql.totals.businessDate+' (opening day, Philippine time)';
   const t=eodSql.totals,money=value=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(value));
   grid.innerHTML=[['Total sales',money(t.totalSales)],['Cash',money(t.cashSales)],['GCash',money(t.gcashSales)],['PayMaya',money(t.paymayaSales)],['Other digital',money(t.otherSales)],['Paid orders',t.totalOrders],['Today’s paid orders served',t.servedOrders],['Voided orders',t.voidedOrders],['Average order',money(t.averageOrderValue)],['Active orders (all dates)',t.activeOrders]].map(([label,value])=>'<div class="eod-metric"><span>'+label+'</span><b>'+value+'</b></div>').join('');
 }

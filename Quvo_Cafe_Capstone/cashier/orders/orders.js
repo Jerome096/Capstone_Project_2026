@@ -704,6 +704,7 @@ function bindAdminModal() {
       const screens = [
         "reports",
         "menuAdmin",
+        "operatingHours",
         "records",
         "salesHistory",
         "accounts",

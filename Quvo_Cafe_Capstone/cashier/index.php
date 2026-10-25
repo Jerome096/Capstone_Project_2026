@@ -15,21 +15,23 @@ $_SESSION["operations_portal"] = "cashier";
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
   <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=no-barista-1" />
   <link rel="stylesheet" href="../shared/css/portal.css" />
-  <link rel="stylesheet" href="../cashier/dashboard/dashboard.css" />
+  <link rel="stylesheet" href="../cashier/dashboard/dashboard.css?v=dashboard-cleanup-1" />
   <link rel="stylesheet" href="../cashier/menu/menu.css" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css" />
   <link rel="stylesheet" href="../cashier/orders/orders.css?v=food-ready-1" />
-  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-buttons-2" />
-  <link rel="stylesheet" href="../cashier/alerts/alerts.css" />
+  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=online-receipt-uploads-1" />
+  <link rel="stylesheet" href="../cashier/receipts/uploaded-receipts.css?v=online-receipt-uploads-1" />
+  <link rel="stylesheet" href="../cashier/alerts/alerts.css?v=staff-alerts-1" />
   <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
-  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=menu-photos-options-1" />
+  <link rel="stylesheet" href="../admin/operating-hours/operating-hours.css?v=logout-grace-1" />
+  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=clear-item-pricing-1" />
   <link rel="stylesheet" href="../admin/records/records.css" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
-  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-save-2" />
+  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-actions-1" />
   <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
   <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
-  <link rel="stylesheet" href="../shared/css/menu-options.css?v=menu-photos-options-1" />
+  <link rel="stylesheet" href="../shared/css/menu-options.css?v=sizes-checkbox-addons-1" />
   <link rel="stylesheet" href="../shared/css/ordering-control.css?v=ordering-confirmation-1" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
@@ -97,6 +99,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=no-barista-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=dashboard-cleanup-1"></script>
 </body>
 </html>

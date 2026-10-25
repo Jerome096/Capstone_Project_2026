@@ -7,6 +7,7 @@ const QUVO_SCREEN_FRAGMENTS = [
   "admin/reports/reports.fragment.html",
   "admin/menu-management/menu-management.fragment.html",
   "admin/website-content/website-content.fragment.html",
+  "admin/operating-hours/operating-hours.fragment.html",
   "admin/records/records.fragment.html",
   "admin/sales-history/sales-history.fragment.html",
   "admin/accounts/accounts.fragment.html",
@@ -38,6 +39,7 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "admin/menu-management/menu-editor.js",
   "shared/js/workspace-layout.js",
   "shared/js/state.js",
+  "shared/js/business-day.js",
   "shared/js/navigation.js",
   "cashier/dashboard/dashboard.js",
   "cashier/menu/menu.js",
@@ -48,10 +50,12 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "shared/js/thermal-print.js",
   "cashier/orders/preparation-tickets.js",
   "cashier/receipts/receipts.js",
+  "cashier/receipts/uploaded-receipts.js",
   "cashier/alerts/alerts.js",
   "admin/reports/reports.js",
   "admin/menu-management/menu-management.js",
   "admin/website-content/website-content.js",
+  "admin/operating-hours/operating-hours.js",
   "admin/records/records.js",
   "login/login.js",
   "admin/sales-history/sales-history.js",
@@ -78,7 +82,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=no-barista-1";
+    script.src = quvoPath(path) + "?v=dashboard-cleanup-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);
@@ -91,6 +95,7 @@ function loadQuvoScript(path) {
     await appendQuvoFragments(QUVO_MODAL_FRAGMENTS, "modal-fragment-root");
 
     for (const script of QUVO_WORKSPACE_SCRIPTS) {
+      if (script === "shared/js/bootstrap.js") await window.QuvoBusinessDay?.load();
       await loadQuvoScript(script);
     }
     window.QuvoOrderingStaff?.start();

@@ -1,5 +1,26 @@
 /* Styles for dashboard; shared controls remain in shared/css. */
 
+.dashboard-side-column { display: grid; gap: 20px; min-width: 0; }
+.dashboard-stock-panel { padding: 18px; border: 1px solid var(--q-border); border-radius: var(--q-radius-lg); background: var(--q-surface); }
+.dashboard-stock-header, .dashboard-stock-item-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dashboard-stock-header h2 { display: flex; align-items: center; gap: 8px; }
+.dashboard-stock-header .btn { min-height: 44px; }
+.dashboard-stock-count { display: inline-grid; place-items: center; min-width: 26px; min-height: 26px; padding: 3px 7px; border-radius: 999px; background: var(--q-surface-muted); font-size: var(--q-text-sm); }
+.dashboard-stock-copy, .dashboard-stock-status { margin-top: 10px; color: var(--q-ink-500); font-size: var(--q-text-sm); line-height: 1.5; }
+.dashboard-stock-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.dashboard-stock-list:empty { display: none; }
+.dashboard-stock-alert { min-width: 0; padding: 12px; border: 1px solid #e3c68e; border-radius: var(--q-radius-md); background: #fff9eb; overflow-wrap: anywhere; }
+.dashboard-stock-alert.out { background: #fff2ee; border-color: #e8b8a9; }
+.dashboard-stock-alert p { margin-top: 6px; font-size: var(--q-text-sm); line-height: 1.5; }
+.dashboard-stock-item-header { align-items: start; }
+.dashboard-stock-item-header span { flex-shrink: 0; border-radius: 999px; padding: 4px 8px; background: #f6e9cc; color: #80571f; font-size: var(--q-text-xs); font-weight: 700; }
+.dashboard-stock-alert.out .dashboard-stock-item-header span { background: #f9dbd2; color: #943f2a; }
+@media (max-width: 700px) {
+  .dashboard-stock-list { grid-template-columns: 1fr; }
+  .dashboard-stock-header { align-items: stretch; flex-direction: column; }
+  .dashboard-stock-header .btn { width: 100%; }
+}
+
 .eod-note {
   display: grid;
   gap: 6px;
@@ -94,7 +115,7 @@
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1fr 440px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -400,7 +421,7 @@
 }
 
 .dashboard-layout {
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.38fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 

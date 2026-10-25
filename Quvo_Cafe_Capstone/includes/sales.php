@@ -18,17 +18,17 @@ function sales_public(array $row):array {
     return $row;
 }
 function sales_business_date(PDO $db):string {
-    return (string)$db->query("SELECT CONVERT(char(10),DATEADD(hour,8,SYSUTCDATETIME()),23)")->fetchColumn();
+    return operating_business_date(operating_hours_context($db));
 }
-function sales_pending_sql(string $date):string {
+function sales_pending_sql(string $date,?array $window=null):string {
     if(!preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/',$date))throw new OrderError('Invalid operation date.');
-    $start="DATEADD(hour,-8,CAST('$date' AS datetime2))";$end="DATEADD(day,1,$start)";
+    $start=$window?"CAST('".$window['startUtc']."' AS datetime2)":"DATEADD(hour,-8,CAST('$date' AS datetime2))";$end=$window?"CAST('".$window['endUtc']."' AS datetime2)":"DATEADD(day,1,$start)";
     return "SELECT o.order_id,p.amount_applied amount,p.payment_method,o.order_status,'payment' entry_type FROM dbo.payments p JOIN dbo.orders o ON o.order_id=p.order_id WHERE p.paid_at >= $start AND p.paid_at < $end AND NOT EXISTS(SELECT 1 FROM dbo.eod_sales_orders e WHERE e.order_id=o.order_id)
         UNION ALL SELECT o.order_id,CAST(0 AS decimal(12,2)),NULL,o.order_status,'void' FROM dbo.orders o WHERE o.order_status='cancelled' AND COALESCE(o.cancelled_at,o.updated_at) >= $start AND COALESCE(o.cancelled_at,o.updated_at) < $end AND NOT EXISTS(SELECT 1 FROM dbo.eod_sales_orders e WHERE e.order_id=o.order_id) AND NOT EXISTS(SELECT 1 FROM dbo.payments p WHERE p.order_id=o.order_id)";
 }
 function sales_preview(PDO $db):array {
-    $date=sales_business_date($db);$row=$db->query('SELECT '.sales_fields().' FROM ('.sales_pending_sql($date).') s')->fetch();
-    $row=sales_public($row);$row['businessDate']=$date;$row['activeOrders']=(int)$db->query("SELECT COUNT(*) FROM dbo.orders WHERE order_status IN ('received','preparing','ready')")->fetchColumn();return $row;
+    $hours=operating_hours_context($db);$date=operating_business_date($hours);$window=operating_day_bounds($hours,$date);$row=$db->query('SELECT '.sales_fields().' FROM ('.sales_pending_sql($date,$window).') s')->fetch();
+    $row=sales_public($row);$row['businessDate']=$date;$row['operatingHours']=operating_hours_public($hours);$row['activeOrders']=(int)$db->query("SELECT COUNT(*) FROM dbo.orders WHERE order_status IN ('received','preparing','ready')")->fetchColumn();return $row;
 }
 function sales_record(PDO $db,int $id):array {
     $q=$db->prepare("SELECT c.closure_id id,CONVERT(char(10),COALESCE(c.business_date,CAST(DATEADD(hour,8,c.closed_at) AS date)),23) date,c.closed_at closedAt,c.note,u.full_name closedBy,".sales_fields()." FROM dbo.eod_closures c JOIN dbo.staff_users u ON u.staff_id=c.closed_by_staff_id LEFT JOIN dbo.eod_sales_orders s ON s.closure_id=c.closure_id WHERE c.closure_id=? GROUP BY c.closure_id,c.closed_at,c.business_date,c.note,u.full_name");$q->execute([$id]);$row=$q->fetch();$q->closeCursor();if(!$row)throw new OrderError('EOD record not found.',404);$row['id']=(string)$row['id'];return sales_public($row);
@@ -40,12 +40,12 @@ function sales_close(PDO $db,int $actor,string $note,mixed $key,mixed $requested
     $q=$db->query("DECLARE @r int;EXEC @r=sys.sp_getapplock @Resource='QuvoDashboardEod',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=5000;SELECT @r");$lock=(int)$q->fetchColumn();$q->closeCursor();if($lock<0)throw new OrderError('Another EOD is being saved. Retry this confirmation.',409);
     $q=$db->prepare('SELECT closure_id,CONVERT(varchar(64),request_hash,2) request_hash FROM dbo.eod_closures WHERE closed_by_staff_id=? AND request_key=?');$q->execute([$actor,$key]);$old=$q->fetch();$q->closeCursor();
     if($old){if(!hash_equals(strtolower($old['request_hash']),$hash))throw new OrderError('This EOD key was used for another closing note.',409);return ['record'=>sales_record($db,(int)$old['closure_id']),'closure_id'=>(string)$old['closure_id'],'completed_today'=>dashboard_completed_today($db),'replayed'=>true];}
-    $date=sales_business_date($db);
+    $hours=operating_hours_context($db);$date=operating_business_date($hours);$window=operating_day_bounds($hours,$date);
     if($requestedDate!==null&&$requestedDate!==$date)throw new OrderError('The operation date changed. Reopen EOD to review today’s figures.',422);
     ordering_pause($db,$actor,'eod');
     $closed=dashboard_close_completions($db,$actor,$note,$date);$id=(int)$closed['closure_id'];
     $db->prepare('UPDATE dbo.eod_closures SET request_key=?,request_hash=CONVERT(binary(32),?,2),business_date=? WHERE closure_id=?')->execute([$key,$hash,$date,$id]);
-    $db->prepare('INSERT dbo.eod_sales_orders(order_id,closure_id,amount,payment_method,order_status,entry_type) SELECT s.order_id,?,s.amount,s.payment_method,s.order_status,s.entry_type FROM ('.sales_pending_sql($date).') s')->execute([$id]);
+    $db->prepare('INSERT dbo.eod_sales_orders(order_id,closure_id,amount,payment_method,order_status,entry_type) SELECT s.order_id,?,s.amount,s.payment_method,s.order_status,s.entry_type FROM ('.sales_pending_sql($date,$window).') s')->execute([$id]);
     return $closed+['record'=>sales_record($db,$id),'replayed'=>false];
 }
 function sales_history(PDO $db,mixed $view='daily',mixed $offset=0):array {
@@ -54,8 +54,8 @@ function sales_history(PDO $db,mixed $view='daily',mixed $offset=0):array {
     $length=$view==='daily'?10:($view==='monthly'?7:4);$period="LEFT(CONVERT(char(10),COALESCE(c.business_date,CAST(DATEADD(hour,8,c.closed_at) AS date)),23),$length)";
     $q=$db->prepare("SELECT $period period,COUNT(DISTINCT c.closure_id) eodCount,".sales_fields()." FROM dbo.eod_closures c LEFT JOIN dbo.eod_sales_orders s ON s.closure_id=c.closure_id GROUP BY $period ORDER BY period DESC OFFSET ? ROWS FETCH NEXT 51 ROWS ONLY");$q->bindValue(1,$offset,PDO::PARAM_INT);$q->execute();$rows=$q->fetchAll();$q->closeCursor();$more=count($rows)>50;$rows=array_map('sales_public',array_slice($rows,0,50));
     // Header cards show actual approved payments, including sales not yet closed by EOD.
-    $date="CAST(DATEADD(hour,8,p.paid_at) AS date)";$today="CAST(DATEADD(hour,8,SYSUTCDATETIME()) AS date)";
-    $summary=$db->query("SELECT COALESCE(SUM(CASE WHEN $date=$today THEN p.amount_applied ELSE 0 END),0) today,COALESCE(SUM(CASE WHEN YEAR($date)=YEAR($today) AND MONTH($date)=MONTH($today) THEN p.amount_applied ELSE 0 END),0) month,COALESCE(SUM(CASE WHEN YEAR($date)=YEAR($today) THEN p.amount_applied ELSE 0 END),0) year FROM dbo.payments p")->fetch();
+    $hours=operating_hours_context($db);$businessDate=operating_business_date($hours);$expression=operating_date_sql($hours,'p.paid_at');$date=$expression['date'];$today="CAST('$businessDate' AS date)";
+    $summary=$db->query("SELECT COALESCE(SUM(CASE WHEN $date=$today THEN p.amount_applied ELSE 0 END),0) today,COALESCE(SUM(CASE WHEN YEAR($date)=YEAR($today) AND MONTH($date)=MONTH($today) THEN p.amount_applied ELSE 0 END),0) month,COALESCE(SUM(CASE WHEN YEAR($date)=YEAR($today) THEN p.amount_applied ELSE 0 END),0) year FROM dbo.payments p ".$expression['apply'])->fetch();
     foreach($summary as &$value)$value=orders_money(orders_cents($value));unset($value);$summary['eodCount']=(int)$db->query('SELECT COUNT(*) FROM dbo.eod_closures')->fetchColumn();
-    return ['rows'=>$rows,'summary'=>$summary,'next_offset'=>$more?$offset+50:null,'view'=>$view];
+    return ['rows'=>$rows,'summary'=>$summary,'next_offset'=>$more?$offset+50:null,'view'=>$view,'businessDate'=>$businessDate,'operatingHours'=>operating_hours_public($hours)];
 }

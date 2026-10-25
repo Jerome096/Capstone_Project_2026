@@ -18,7 +18,7 @@ const ctx=vm.createContext({console,Date,Intl,Number,String,Object,URLSearchPara
   state:{receipts:[{total:999999}],orders:[{total:999999}]},receiptDay:()=> '2026-10-20',receiptDateLabel:v=>v,
   escapeHtml:v=>String(v).replaceAll('<','&lt;').replaceAll('>','&gt;'),quvoPath:v=>v,
   async fetch(url){urls.push(url);if(fail)throw Error('Reports SQL unavailable');if(delay){delay=false;return new Promise(resolve=>oldResponse=resolve);}
-    const query=new URL(url,'http://test/').searchParams;return {ok:true,json:async()=>({ok:true,report:report(query.get('period'),query.get('date'))})};
+    const query=new URL(url,'http://test/').searchParams,period=query.get('period'),date=query.get('date')||({daily:'2026-10-20',monthly:'2026-10',yearly:'2026'}[period]);return {ok:true,json:async()=>({ok:true,report:report(period,date)})};
   }});
 const run=code=>vm.runInContext(code,ctx);
 run(fs.readFileSync(path.join(__dirname,'../admin/reports/reports.js'),'utf8'));
@@ -26,7 +26,7 @@ async function settled(){for(let i=0;i<50;i++){if(!run('reportsSql.loading'))ret
 (async()=>{
   run('bindReports()');await settled();
   assert.equal(el('reportDate').value,'2026-10-20');assert.equal(el('reportMonth').value,'2026-10');assert.equal(el('reportYear').value,'2026');
-  assert.match(urls.at(-1),/period=daily&date=2026-10-20/);
+  assert.match(urls.at(-1),/period=daily$/); // The server selects the current opening day.
   assert.match(el('reportSummaryRows').innerHTML,/\u20b110\.25/);assert.doesNotMatch(el('reportSummaryRows').innerHTML,/999/);
   assert.match(el('hourlyOrderRows').innerHTML,/12:00\u201312:59/);assert.doesNotMatch(el('hourlyOrderRows').innerHTML,/23:00/);
   assert.match(el('topItemRows').innerHTML,/&lt;Coffee&gt;/);assert.match(el('paymentSummaryRows').innerHTML,/\u20b110\.25/);

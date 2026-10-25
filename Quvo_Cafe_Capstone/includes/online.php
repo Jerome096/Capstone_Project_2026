@@ -196,7 +196,7 @@ function online_submit(PDO $db,int $customerId,array $input): array
     $q=$db->prepare('INSERT dbo.order_items(order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes) VALUES(?,?,?,?,?,?,?,?,?)');
     foreach($lines as $index=>$line) {
         $menu=$catalog[$line['menu_item_id']];
-        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$menu['price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
+        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$line['unit_price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
     }
     $db->prepare('INSERT dbo.order_fulfillments(order_id,fulfillment_type,recipient_name,contact_snapshot,address_snapshot) VALUES(?,?,?,?,?)')->execute([$id,$fulfillment,$account['full_name'],$contact,$address]);
     $db->prepare("INSERT dbo.order_status_history(order_id,to_status) VALUES(?,'received')")->execute([$id]);

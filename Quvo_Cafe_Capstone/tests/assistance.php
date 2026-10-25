@@ -24,7 +24,7 @@ try {
     catch(OrderError $error) {assert_assistance($error->status===403,'another browser cannot create a request');}
     $first=assistance_request($db,$table,$token,'<script>alert(1)</script> Please bring water.');
     $id=(int)$first['request_id'];
-    assert_assistance($first['status']==='pending' && (int)$first['remaining_seconds']>=59,'request starts with a one-minute lifetime');
+    assert_assistance($first['status']==='pending' && (int)$first['remaining_seconds']>=59,'customer call starts a one-minute cooldown');
     assert_assistance(str_contains($first['concern'],'Please bring water'),'concern is stored');
     assert_assistance(in_array((string)$id,array_map('strval',array_column(assistance_list($db),'request_id')),true),'staff list includes the active request');
     $again=assistance_request($db,$table,$token,'Different concern');
@@ -37,20 +37,38 @@ try {
     $second=assistance_request($db,$table,$token,''); $secondId=(int)$second['request_id'];
     assert_assistance($secondId!==$id && $second['concern']==='Staff assistance requested.','new call after a minute allows an optional concern');
     $db->prepare('UPDATE dbo.staff_assistance_requests SET requested_at=DATEADD(second,-61,requested_at) WHERE request_id=?')->execute([$secondId]);
-    assert_assistance(!in_array((string)$secondId,array_map('strval',array_column(assistance_list($db),'request_id')),true),'deadline alone removes expired calls from active alerts');
+    assert_assistance(in_array((string)$secondId,array_map('strval',array_column(assistance_list($db),'request_id')),true),'staff alert remains after the customer cooldown ends');
     assistance_expire($db,(int)$visit['session_id']);
-    assert_assistance(assistance_latest($db,(int)$visit['session_id'])['status']==='expired','expired status is recorded');
-    assert_assistance(!assistance_resolve($db,$actor,$secondId),'expired calls do not report a successful resolution');
-    assert_assistance(assistance_latest($db,(int)$visit['session_id'])['status']==='expired','late resolution cannot revive an expired call');
+    assert_assistance(assistance_latest($db,(int)$visit['session_id'])['status']==='pending','background expiry does not clear pending staff alerts');
+    assert_assistance((int)assistance_latest($db,(int)$visit['session_id'])['remaining_seconds']===0,'customer cooldown reaches zero while staff alert remains pending');
+    assert_assistance(assistance_resolve($db,$actor,$secondId),'staff can resolve a call after the customer minute has ended');
+    assert_assistance(!assistance_resolve($db,$actor,$secondId),'repeated resolution cannot report a second success');
+    assert_assistance(assistance_latest($db,(int)$visit['session_id'])['status']==='resolved','late resolution is saved permanently');
     try {assistance_request($db,$table,$token,str_repeat('x',501));throw new RuntimeException('Oversized concern accepted');}
     catch(OrderError $error) {assert_assistance($error->status===422,'concern length is limited to 500 characters');}
     $third=assistance_request($db,$table,$token,'Utensils');
-    assert_assistance((int)$third['request_id']!==$secondId,'customer can call again after automatic expiry');
+    $thirdId=(int)$third['request_id'];
+    assert_assistance($thirdId!==$secondId,'customer can create another call after a resolved cooldown');
+    $db->prepare('UPDATE dbo.staff_assistance_requests SET requested_at=DATEADD(second,-61,requested_at) WHERE request_id=?')->execute([$thirdId]);
+    $reminder=assistance_request($db,$table,$token,'Please bring water as well.');
+    assert_assistance((int)$reminder['request_id']===$thirdId&&$reminder['concern']==='Please bring water as well.','reminder updates the same unresolved staff alert');
+    assert_assistance((int)$reminder['remaining_seconds']>=59,'reminder starts a new customer cooldown');
+    assert_assistance((int)assistance_request($db,$table,$token,'Double click')['request_id']===$thirdId&&assistance_latest($db,(int)$visit['session_id'])['concern']===$reminder['concern'],'repeated reminder during cooldown preserves the saved concern');
+    $q=$db->prepare("SELECT COUNT(*) FROM dbo.staff_assistance_requests WHERE session_id=? AND status='pending'");$q->execute([$visit['session_id']]);
+    assert_assistance((int)$q->fetchColumn()===1,'reminders never duplicate the pending staff card');$q->closeCursor();
     dining_change_session($db,$actor,(int)$visit['session_id'],'close');
     assistance_expire($db,(int)$visit['session_id']);
-    assert_assistance(assistance_latest($db,(int)$visit['session_id'])['status']==='expired','ending the visit also ends its assistance request');
+    assert_assistance(assistance_latest($db,(int)$visit['session_id'])['status']==='pending','ending a visit does not silently remove its unresolved staff alert');
+    assert_assistance(in_array((string)$thirdId,array_map('strval',array_column(assistance_list($db),'request_id')),true),'staff list retains unresolved alerts from closed visits');
     try {assistance_request($db,$table,$token,'Water');throw new RuntimeException('Closed visit accepted');}
     catch(OrderError $error) {assert_assistance($error->status===403,'closed visits cannot call staff');}
+    [$nextVisit,$nextToken]=dining_guest_request($db,$table,'Next assistance guest',null);
+    dining_change_session($db,$actor,(int)$nextVisit['session_id'],'approve');
+    $next=assistance_request($db,$table,$nextToken,'New guest concern');
+    $ids=array_map('strval',array_column(assistance_list($db),'request_id'));
+    assert_assistance(in_array((string)$thirdId,$ids,true)&&in_array((string)$next['request_id'],$ids,true),'new table visit does not replace the previous guest alert');
+    assert_assistance(assistance_resolve($db,$actor,$thirdId),'staff can resolve a request after its visit closes');
+    assert_assistance(in_array((string)$next['request_id'],array_map('strval',array_column(assistance_list($db),'request_id')),true),'resolving old visit leaves new guest alert intact');
     $q=$db->prepare('SELECT COUNT(*) FROM dbo.staff_assistance_requests WHERE session_id=?');$q->execute([$visit['session_id']]);
     assert_assistance((int)$q->fetchColumn()===3,'all assistance history is retained');
     echo "$checks assistance checks passed.".PHP_EOL;

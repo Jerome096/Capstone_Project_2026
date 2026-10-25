@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . "/../../includes/auth.php";
+require_once __DIR__ . "/../../includes/orders.php";
 quvo_require_post();
 $input = json_decode(file_get_contents("php://input"), true);
 if (
@@ -25,7 +26,8 @@ if (
     quvo_json(["ok" => false, "error" => "Enter a valid username and password."], 400);
 }
 try {
-    $query = quvo_db()->prepare(
+    $db=quvo_db();
+    $query = $db->prepare(
         "SELECT s.staff_id, s.username, s.full_name, s.password_hash, s.is_active, r.role_name FROM dbo.staff_users s JOIN dbo.roles r ON r.role_id = s.role_id WHERE s.username = ?",
     );
     $query->execute([$username]);
@@ -68,6 +70,10 @@ try {
             403,
         );
     }
+    $query->closeCursor();
+    $db->beginTransaction();
+    ordering_staff_return($db,quvo_public_user($row));
+    $db->commit();
     session_regenerate_id(true);
     $_SESSION = [
         "staff_id" => (int) $row["staff_id"],
@@ -77,6 +83,7 @@ try {
     ];
     quvo_json(["ok" => true, "redirect" => "../../" . $home]);
 } catch (Throwable $error) {
+    if(isset($db)&&$db->inTransaction())$db->rollBack();
     error_log("Quvo login failed: " . $error->getMessage());
     quvo_json(
         [

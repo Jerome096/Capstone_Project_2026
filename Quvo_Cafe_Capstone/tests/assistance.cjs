@@ -9,10 +9,14 @@ context.requestStaffAssistance();assert.equal(el('staffAssistanceDialog').open,t
 context.applyGuestAssistance({request_id:'1',status:'pending',remaining_seconds:60});
 assert.equal(el('staffBtnHeader').disabled,true);assert.match(el('staffAssistanceStatus').textContent,/60s/);
 now+=60000;context.renderGuestAssistance();assert.equal(el('staffBtnHeader').disabled,false);
+assert.match(el('staffAssistanceStatus').textContent,/still with staff/);
 context.resetGuestAssistance();assert.equal(el('staffAssistanceDialog').open,false);
 vm.runInContext(fs.readFileSync(path.resolve(__dirname,'../cashier/alerts/alerts.js'),'utf8'),context);
 context.installAssistanceAlerts([{request_id:'1',table_name:'<Table>',guest_name:'<Guest>',concern:'<script>bad</script>',remaining_seconds:60}]);
 assert.match(el('alertsList').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(el('alertsList').innerHTML,/<script>/);
 assert.equal(el('sidebarAlertCount').textContent,1);
-now+=60000;context.renderAlerts();assert.equal(el('sidebarAlertCount').textContent,0);assert.equal(el('alertsList').innerHTML,'');
-console.log('PASS: customer popup, cooldown, reset on session end, escaped concerns and exact-minute alert removal.');
+assert.doesNotMatch(el('alertsList').innerHTML,/Ends in|clock-3|alert-time/);
+now+=60000;context.renderAlerts();assert.equal(el('sidebarAlertCount').textContent,1);assert.match(el('alertsList').innerHTML,/Resolve/);
+now+=86400000;context.renderAlerts();assert.equal(el('sidebarAlertCount').textContent,1);
+context.installAssistanceAlerts([]);assert.equal(el('sidebarAlertCount').textContent,0);assert.equal(el('alertsList').innerHTML,'');
+console.log('PASS: customer popup/cooldown, persistent staff alerts without a countdown, escaped concerns and server-controlled removal.');

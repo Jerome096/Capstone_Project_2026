@@ -61,7 +61,7 @@ async function refreshOnlineMenu(reviewCart=false){
   const data=await onlineApi(null,"menu");if(generation!==online.generation)return;
   CUSTOMER_DATA.menuItems=data.items;CUSTOMER_DATA.categories=["All",...new Set(data.items.map(item=>item.category))];
   if(!CUSTOMER_DATA.categories.includes(state.selectedCategory))state.selectedCategory="All";
-  if(reviewCart)state.cart=state.cart.flatMap(item=>{const current=data.items.find(entry=>entry.id===item.itemId);return current?[{...item,name:current.name,category:current.category,unitPrice:current.price}]:[];});
+  if(reviewCart)state.cart=state.cart.flatMap(item=>{const current=data.items.find(entry=>entry.id===item.itemId);return current?[{...item,name:current.name,category:current.category,unitPrice:QuvoMenuOptions.price(current,QuvoMenuOptions.savedSelections(current,item.customization)),pricedOptions:QuvoMenuOptions.hasPricing(current)}]:[];});
   renderCategories();renderMenu();renderCart();
 }
 async function onlineForm(form,errorElement,action){

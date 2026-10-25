@@ -309,7 +309,7 @@
   margin: 0 auto 10px;
   border: 1px solid rgba(192, 156, 80, 0.28);
   border-radius: 14px;
-  background: #10100f url("../images/quvo-logo.jpg") center / cover no-repeat;
+  background: #10100f url("../../shared/images/quvo-logo.jpg") center / cover no-repeat;
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }

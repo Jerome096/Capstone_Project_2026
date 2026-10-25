@@ -70,6 +70,45 @@ function payment_receipt_image(PDO $db, int $orderId, ?int $customerId=null): ar
     return $q->fetch() ?: throw new OrderError('Receipt image not found.',404);
 }
 
+// Staff history of customer uploads. Image bytes remain behind the protected image endpoint.
+function payment_receipt_records(PDO $db,mixed $date,mixed $status='all',mixed $offset=0,mixed $search=''):array
+{
+    if(!is_string($date)||!preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/',$date))throw new OrderError('Choose a valid receipt date.');
+    $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date,new DateTimeZone('Asia/Manila'));
+    if(!$day||$day->format('Y-m-d')!==$date)throw new OrderError('Choose a valid receipt date.');
+    if(!is_string($status)||!in_array($status,['all','pending','paid','served','cancelled'],true))throw new OrderError('Choose a valid upload status.');
+    $offset=filter_var($offset,FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>1000000]]);
+    if($offset===false)throw new OrderError('Invalid upload list offset.');
+    $search=orders_text($search,100);
+    $event="CASE WHEN o.order_status='cancelled' THEN COALESCE(o.cancelled_at,o.updated_at) ELSE COALESCE(p.paid_at,r.uploaded_at) END";
+    $uploadStatus="CASE WHEN o.order_status='cancelled' THEN 'cancelled' WHEN o.order_status='served' THEN 'served' WHEN p.payment_id IS NOT NULL THEN 'paid' ELSE 'pending' END";
+    $where=["o.order_source='online'","$event >= ?","$event < ?"];
+    $params=[$day->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),$day->modify('+1 day')->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s')];
+    if($status!=='all'){$where[]="$uploadStatus = ?";$params[]=$status;}
+    if($search!==''){
+        $where[]="LOWER(CONCAT(o.order_number,' ',o.customer_name,' ',r.payment_method,' ',m.display_name)) LIKE LOWER(?)";
+        $params[]='%'.str_replace(['[','%','_'],['[[]','[%]','[_]'],$search).'%';
+    }
+    $sql="SELECT o.order_id,o.order_number,o.customer_name,o.total_amount,o.order_status,o.cancellation_reason,
+        o.cancelled_at,o.created_at,r.uploaded_at,r.payment_method,COALESCE(m.display_name,r.payment_method) payment_method_label,p.paid_at,
+        CASE WHEN p.payment_id IS NOT NULL THEN 'paid' ELSE 'unpaid' END payment_status,
+        $uploadStatus upload_status,$event record_at,
+        CASE WHEN o.order_status='cancelled' THEN 'cancellation' WHEN p.paid_at IS NOT NULL THEN 'payment' ELSE 'upload' END date_basis
+        FROM dbo.online_payment_receipts r JOIN dbo.orders o ON o.order_id=r.order_id
+        LEFT JOIN dbo.payments p ON p.order_id=o.order_id
+        LEFT JOIN dbo.online_payment_methods m ON m.payment_method=r.payment_method
+        WHERE ".implode(' AND ',$where)." ORDER BY $event DESC,o.order_id DESC OFFSET ? ROWS FETCH NEXT 51 ROWS ONLY";
+    $q=$db->prepare($sql);
+    foreach($params as $index=>$value)$q->bindValue($index+1,$value,PDO::PARAM_STR);
+    $q->bindValue(count($params)+1,$offset,PDO::PARAM_INT);$q->execute();$rows=$q->fetchAll();$q->closeCursor();
+    $more=count($rows)>50;$rows=array_slice($rows,0,50);
+    foreach($rows as &$row){
+        $row['order_id']=(string)$row['order_id'];$row['total_amount']=orders_money(orders_cents($row['total_amount']));
+        $row['record_date']=(new DateTimeImmutable($row['record_at'],new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('Asia/Manila'))->format('Y-m-d');
+    }unset($row);
+    return ['uploads'=>$rows,'next_offset'=>$more?$offset+50:null];
+}
+
 function payment_active_method(PDO $db, mixed $method): array
 {
     if (!is_string($method) || strlen($method)>10) throw new OrderError('Choose a valid payment method.');

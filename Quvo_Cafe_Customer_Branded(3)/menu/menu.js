@@ -95,7 +95,7 @@ function renderMenu() {
             <h3>${escapeCustomerHtml(item.name)}</h3>
             <p class="dine-product-description">${escapeCustomerHtml(item.description || "Make it your own. View available options.")}</p>
             <div class="card-bottom">
-              <strong class="price">${formatCurrency(item.price)}</strong>
+              <strong class="price">${QuvoMenuOptions.priceLabel(item)}</strong>
               <span class="dine-add-item" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
             </div>
           </div>

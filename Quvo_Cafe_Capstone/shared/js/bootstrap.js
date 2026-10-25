@@ -15,6 +15,7 @@
   bindReceiptSuccessModal();
   bindAdminMenu();
   window.QuvoWebsiteContent?.bind();
+  window.QuvoOperatingHours?.bind();
   bindEodModal();
   bindSalesHistory();
   bindReports();

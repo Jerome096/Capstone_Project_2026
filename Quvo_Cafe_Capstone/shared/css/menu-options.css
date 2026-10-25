@@ -11,3 +11,8 @@
 #itemCustomOptions { display:grid; gap:4px; margin-block:16px; }
 #itemCustomOptions[hidden] { display:none; }
 .item-icon:has(.menu-photo), #modalItemIcon:has(.menu-photo) { overflow:hidden; }
+
+.menu-option-price { margin:6px 0 0; padding:10px 12px; border-radius:8px; background:#f2ede2; color:#30291f; font-size:14px; font-weight:600; line-height:1.5; }
+
+.menu-checkbox-choices label { max-width:100%; min-width:0; overflow-wrap:anywhere; }
+.menu-checkbox-choices input[type=checkbox] { flex:0 0 18px; width:18px; height:18px; min-height:0; margin:0; accent-color:#97732d; }

@@ -39,7 +39,7 @@ quvo_start_session();
 
   <link
     rel="stylesheet"
-    href="login.css"
+    href="login.css?v=background-logout-1"
   />
 
   <script src="https://unpkg.com/lucide@latest"></script>

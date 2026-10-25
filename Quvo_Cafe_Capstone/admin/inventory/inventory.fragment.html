@@ -44,7 +44,7 @@
       <div class="stat-icon pink-soft"><i data-lucide="circle-x"></i></div>
     </article>
     <article class="stat-card">
-      <div class="stat-label">Menu affected</div>
+      <div class="stat-label">Menu stock reminders</div>
       <div
         class="stat-value"
         id="inventoryAffectedStat"
@@ -62,14 +62,23 @@
           <h2>Stock items</h2>
         </div>
         <div class="inventory-actions">
-          <div class="search-box inventory-search">
+          <form class="search-box inventory-search" id="inventorySearchForm" role="search" autocomplete="off">
             <i data-lucide="search"></i>
             <input
               id="inventorySearch"
+              name="quvo-stock-filter"
+              aria-label="Search stock items"
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-bwignore="true"
+              readonly
               placeholder="Search stock item, category, or menu link..."
               type="search"
             />
-          </div>
+          </form>
           <button
             class="btn dark"
             id="addInventoryItemBtn"
@@ -122,8 +131,8 @@
       </div>
     </section>
     <aside class="inventory-side-card">
-      <div class="eyebrow">Menu impact</div>
-      <h2>Affected menu items</h2>
+      <div class="eyebrow">Stock reminders</div>
+      <h2>Menus to review</h2>
       <div
         class="inventory-impact-list"
         id="inventoryImpactList"

@@ -46,6 +46,9 @@ function renderOnlinePayment() {
   const receipt=online.pending?.payload.receipt_image || checkoutPayment.receipt;
   const preview=document.getElementById("paymentReceiptPreview");
   preview.hidden=!receipt;if(receipt)preview.src=receipt;else preview.removeAttribute("src");
+  const remove=document.getElementById("removePaymentReceipt");
+  remove.hidden=!receipt;
+  remove.disabled=onlineCartLocked() || checkoutPayment.receiptBusy;
   document.getElementById("onlinePaymentReceipt").disabled=orderingPaused || onlineCartLocked() || !entry?.available || checkoutPayment.loading || checkoutPayment.receiptBusy;
   document.getElementById("paymentReceiptButtonText").textContent=receipt?"Replace receipt image":"Choose receipt image";
   document.getElementById("paymentReceiptStatus").textContent=checkoutPayment.receiptBusy?"Checking receipt…":receipt?"Receipt attached. Ready for cashier review.":
@@ -91,6 +94,13 @@ async function chooseOnlineReceipt(event) {
   finally {checkoutPayment.receiptBusy=false;renderCart();}
 }
 function bindOnlinePayment() {
+  document.getElementById("removePaymentReceipt").addEventListener("click",()=>{
+    if(onlineCartLocked() || checkoutPayment.receiptBusy)return;
+    clearOnlinePaymentReceipt();
+    renderCart();
+    const input=document.getElementById("onlinePaymentReceipt");
+    if(!input.disabled)input.focus();
+  });
   document.getElementById('onlinePaymentOptions').addEventListener("change",event=>{
     if(event.target.name!=='paymentMethod')return;
     if(onlineCartLocked())return;

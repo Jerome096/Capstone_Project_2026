@@ -31,18 +31,27 @@ function inventory_item(PDO $db,int $id):array {
 function inventory_stock_condition(string $alias='m'):string {
     return "NOT EXISTS(SELECT 1 FROM dbo.menu_recipes mr JOIN dbo.recipe_ingredients ri ON ri.recipe_id=mr.recipe_id JOIN dbo.inventory_items ii ON ii.inventory_item_id=ri.inventory_item_id WHERE mr.menu_item_id=$alias.menu_item_id AND mr.is_active=1 AND (ii.is_active=0 OR COALESCE((SELECT SUM(im.quantity_delta) FROM dbo.inventory_movements im WHERE im.inventory_item_id=ii.inventory_item_id),0)<ri.quantity_required))";
 }
-function inventory_menu_condition(string $alias='m'):string {return "$alias.is_available=1 AND ".inventory_stock_condition($alias);}
+// Stock is advisory. The cafe's manual availability setting controls every ordering channel.
+function inventory_menu_condition(string $alias='m'):string {return "$alias.is_available=1";}
 function inventory_requirements(PDO $db,array $lines):array {
     $q=$db->prepare('SELECT ri.recipe_ingredient_id,ri.inventory_item_id,ri.quantity_required FROM dbo.menu_recipes mr JOIN dbo.recipe_ingredients ri ON ri.recipe_id=mr.recipe_id WHERE mr.menu_item_id=? AND mr.is_active=1 ORDER BY ri.inventory_item_id');$parts=[];
     foreach($lines as $line){$q->execute([$line['menu_item_id']]);$ingredients=$q->fetchAll();$q->closeCursor();foreach($ingredients as $ingredient)$parts[]=['item_id'=>(int)$ingredient['inventory_item_id'],'ingredient_id'=>(int)$ingredient['recipe_ingredient_id'],'quantity'=>inventory_quantity($ingredient['quantity_required'])*(int)$line['quantity'],'order_item_id'=>$line['order_item_id']??null];}
-    $needs=[];foreach($parts as $part)$needs[$part['item_id']]=($needs[$part['item_id']]??0)+$part['quantity'];ksort($needs,SORT_NUMERIC);
-    foreach($needs as $id=>$amount){$item=inventory_item($db,$id);if(inventory_balance($db,$id)<$amount)throw new OrderError('Insufficient stock for '.$item['item_name'].'. Restock or revise the order before confirming payment.',409,'stock_unavailable');}
     return $parts;
 }
 function inventory_consume_order(PDO $db,int $id,int $actor):void {
     $q=$db->prepare("SELECT i.order_item_id,i.menu_item_id,i.quantity FROM dbo.order_items i WHERE i.order_id=? AND NOT EXISTS(SELECT 1 FROM dbo.inventory_movements m WHERE m.order_item_id=i.order_item_id AND m.movement_type='consumption') ORDER BY i.line_number");$q->execute([$id]);$lines=$q->fetchAll();$q->closeCursor();$parts=inventory_requirements($db,$lines);
     $q=$db->prepare("INSERT dbo.inventory_movements(inventory_item_id,movement_type,quantity_delta,order_item_id,recipe_ingredient_id,recorded_by_staff_id,reason) VALUES(?,'consumption',?,?,?,?,?)");
     foreach($parts as $part){$q->execute([$part['item_id'],inventory_decimal(-$part['quantity']),$part['order_item_id'],$part['ingredient_id'],$actor,'Deducted after cashier payment approval']);$db->prepare('UPDATE dbo.inventory_items SET updated_at=SYSUTCDATETIME() WHERE inventory_item_id=?')->execute([$part['item_id']]);}
+}
+// Replace only the active recipe. Historical ingredient IDs remain available to paid orders.
+function inventory_replace_recipe(PDO $db,int $menu,int $actor,array $lines):?int {
+    $db->prepare('UPDATE dbo.menu_recipes SET is_active=0 WHERE menu_item_id=? AND is_active=1')->execute([$menu]);
+    if(!$lines)return null;
+    $q=$db->prepare('INSERT dbo.menu_recipes(menu_item_id,version_number,created_by_staff_id) OUTPUT INSERTED.recipe_id SELECT ?,COALESCE(MAX(version_number),0)+1,? FROM dbo.menu_recipes WHERE menu_item_id=?');
+    $q->execute([$menu,$actor,$menu]);$recipe=(int)$q->fetchColumn();$q->closeCursor();
+    $q=$db->prepare('INSERT dbo.recipe_ingredients(recipe_id,inventory_item_id,quantity_required) VALUES(?,?,?)');
+    foreach($lines as [$stock,$quantity])$q->execute([$recipe,$stock,inventory_decimal($quantity)]);
+    return $recipe;
 }
 function inventory_mutate(PDO $db,int $actor,array $input):array {
     inventory_lock($db);$key=$input['submission_key']??null;
@@ -70,19 +79,49 @@ function inventory_mutate(PDO $db,int $actor,array $input):array {
         $delta=$current-$previous;if($delta!==0){$type=$delta>0?'restock':'adjustment';if($delta<0&&$note==='')throw new OrderError('Enter a reason for reducing the stock count.',422,'stock_note');$db->prepare('INSERT dbo.inventory_movements(inventory_item_id,movement_type,quantity_delta,recorded_by_staff_id,reason) VALUES(?,?,?,?,?)')->execute([$id,$type,inventory_decimal($delta),$actor,$note?:'Opening stock / count update']);}
         $result=['item_id'=>(string)$id,'message'=>'Stock item saved.'];
     }elseif($action==='movement'){
-        $id=orders_id($input['id']??null);$item=inventory_item($db,$id);$type=$input['type']??'';$amount=inventory_quantity($input['quantity']??null,true);$note=orders_text($input['note']??'',500,true);
+        $id=orders_id($input['id']??null);$item=inventory_item($db,$id);$type=$input['type']??'';$amount=inventory_quantity($input['quantity']??null,true);$note=orders_text($input['note']??'',500,$type!=='restock');
         if(!in_array($type,['restock','waste','adjustment'],true)||$amount===0||($type==='restock'&&$amount<0)||($type==='waste'&&$amount>0))throw new OrderError('Restock must be positive; waste must be negative; adjustment must be nonzero.');
-        $balance=inventory_balance($db,$id)+$amount;if($balance<0||$balance>999999999999)throw new OrderError('The movement would make stock negative or exceed its limit.');
-        $db->prepare('INSERT dbo.inventory_movements(inventory_item_id,movement_type,quantity_delta,recorded_by_staff_id,reason) VALUES(?,?,?,?,?)')->execute([$id,$type,inventory_decimal($amount),$actor,$note]);$db->prepare('UPDATE dbo.inventory_items SET updated_at=SYSUTCDATETIME() WHERE inventory_item_id=?')->execute([$id]);$result=['item_id'=>(string)$id,'message'=>'Stock movement saved.'];
+        $balance=inventory_balance($db,$id)+$amount;if(($balance<0&&$amount<0)||$balance>999999999999)throw new OrderError('The movement would reduce stock below zero or exceed its limit.');
+        $db->prepare('INSERT dbo.inventory_movements(inventory_item_id,movement_type,quantity_delta,recorded_by_staff_id,reason) VALUES(?,?,?,?,?)')->execute([$id,$type,inventory_decimal($amount),$actor,$note?:'Stock received']);$db->prepare('UPDATE dbo.inventory_items SET updated_at=SYSUTCDATETIME() WHERE inventory_item_id=?')->execute([$id]);$result=['item_id'=>(string)$id,'message'=>$type==='restock'?'Stock added.':'Stock movement saved.'];
+    }elseif($action==='remove_item'){
+        $id=orders_id($input['id']??null);$item=inventory_item($db,$id);
+        if(!is_string($input['version']??null)||strtoupper($input['version'])!==strtoupper($item['version']))throw new OrderError('This stock item changed. Refresh and review it before removing.',409,'stock_changed');
+        $q=$db->prepare('SELECT DISTINCT mr.recipe_id,mr.menu_item_id FROM dbo.menu_recipes mr JOIN dbo.recipe_ingredients ri ON ri.recipe_id=mr.recipe_id WHERE mr.is_active=1 AND ri.inventory_item_id=?');
+        $q->execute([$id]);$recipes=$q->fetchAll();$q->closeCursor();
+        $remaining=$db->prepare('SELECT inventory_item_id,quantity_required FROM dbo.recipe_ingredients WHERE recipe_id=? AND inventory_item_id<>? ORDER BY inventory_item_id');
+        foreach($recipes as $recipe){
+            $remaining->execute([$recipe['recipe_id'],$id]);$rows=$remaining->fetchAll();$remaining->closeCursor();
+            $lines=array_map(fn($row)=>[(int)$row['inventory_item_id'],inventory_quantity($row['quantity_required'])],$rows);
+            inventory_replace_recipe($db,(int)$recipe['menu_item_id'],$actor,$lines);
+        }
+        $db->prepare('UPDATE dbo.inventory_items SET is_active=0,updated_at=SYSUTCDATETIME() WHERE inventory_item_id=?')->execute([$id]);
+        $result=['item_id'=>(string)$id,'removed_recipe_links'=>count($recipes),'message'=>'Stock item removed.'];
     }elseif($action==='save_recipe'){
         $menu=orders_id($input['menu_id']??null);$q=$db->prepare('SELECT menu_item_id FROM dbo.menu_items WHERE menu_item_id=?');$q->execute([$menu]);$exists=$q->fetchColumn();$q->closeCursor();if(!$exists)throw new OrderError('Menu item not found.',404);
         $q=$db->prepare('SELECT recipe_id FROM dbo.menu_recipes WHERE menu_item_id=? AND is_active=1');$q->execute([$menu]);$oldId=$q->fetchColumn();$q->closeCursor();if((string)($input['recipe_id']??'')!==(string)($oldId?:''))throw new OrderError('This recipe changed. Refresh before saving.',409,'recipe_changed');
         $ingredients=$input['ingredients']??null;if(!is_array($ingredients)||!array_is_list($ingredients)||count($ingredients)<1||count($ingredients)>50)throw new OrderError('Use between 1 and 50 ingredient lines.');$seen=[];$lines=[];
         foreach($ingredients as $ingredient){if(!is_array($ingredient))throw new OrderError('Invalid ingredient line.');$stock=orders_id($ingredient['item_id']??null);inventory_item($db,$stock);$quantity=inventory_quantity($ingredient['quantity']??null);if($quantity<1||isset($seen[$stock]))throw new OrderError('Each ingredient must appear once with a positive quantity.');$seen[$stock]=true;$lines[]=[$stock,$quantity];}
-        $db->prepare('UPDATE dbo.menu_recipes SET is_active=0 WHERE menu_item_id=? AND is_active=1')->execute([$menu]);$q=$db->prepare('INSERT dbo.menu_recipes(menu_item_id,version_number,created_by_staff_id) OUTPUT INSERTED.recipe_id SELECT ?,COALESCE(MAX(version_number),0)+1,? FROM dbo.menu_recipes WHERE menu_item_id=?');$q->execute([$menu,$actor,$menu]);$recipe=(int)$q->fetchColumn();$q->closeCursor();
-        $q=$db->prepare('INSERT dbo.recipe_ingredients(recipe_id,inventory_item_id,quantity_required) VALUES(?,?,?)');foreach($lines as [$stock,$quantity])$q->execute([$recipe,$stock,inventory_decimal($quantity)]);$result=['recipe_id'=>(string)$recipe,'message'=>'Bill of Materials saved.'];
+        $recipe=inventory_replace_recipe($db,$menu,$actor,$lines);$result=['recipe_id'=>(string)$recipe,'message'=>'Bill of Materials saved.'];
     }else throw new OrderError('Unknown inventory action.');
     $db->prepare('INSERT dbo.inventory_requests(staff_id,request_key,request_hash,result_json) VALUES(?,?,CONVERT(binary(32),?,2),?)')->execute([$actor,$key,$hash,json_encode($result,JSON_THROW_ON_ERROR)]);return $result+['replayed'=>false];
+}
+// Staff may read these reminders without access to the admin-only inventory editor.
+function inventory_stock_alerts(PDO $db):array {
+    $rows=$db->query("SELECT i.inventory_item_id id,i.item_name name,u.unit_code unit,
+        COALESCE(b.quantity,0) [current],i.reorder_level reorder
+        FROM dbo.inventory_items i JOIN dbo.inventory_units u ON u.unit_id=i.unit_id
+        LEFT JOIN (SELECT inventory_item_id,SUM(quantity_delta) quantity FROM dbo.inventory_movements GROUP BY inventory_item_id) b ON b.inventory_item_id=i.inventory_item_id
+        WHERE i.is_active=1 AND (COALESCE(b.quantity,0)<=i.reorder_level OR EXISTS(
+            SELECT 1 FROM dbo.recipe_ingredients ri JOIN dbo.menu_recipes mr ON mr.recipe_id=ri.recipe_id
+            WHERE ri.inventory_item_id=i.inventory_item_id AND mr.is_active=1 AND COALESCE(b.quantity,0)<ri.quantity_required))
+        ORDER BY CASE WHEN COALESCE(b.quantity,0)<=0 THEN 0 ELSE 1 END,i.item_name")->fetchAll();
+    if(!$rows)return [];
+    $menus=[];
+    foreach($db->query('SELECT DISTINCT ri.inventory_item_id,m.item_name FROM dbo.recipe_ingredients ri JOIN dbo.menu_recipes mr ON mr.recipe_id=ri.recipe_id JOIN dbo.menu_items m ON m.menu_item_id=mr.menu_item_id WHERE mr.is_active=1 ORDER BY m.item_name')->fetchAll() as $link)$menus[(string)$link['inventory_item_id']][]=$link['item_name'];
+    return array_map(function($row)use($menus){
+        $current=inventory_quantity($row['current'],true);
+        return ['id'=>(string)$row['id'],'name'=>$row['name'],'unit'=>$row['unit'],'current'=>inventory_decimal($current),'reorder'=>inventory_decimal(inventory_quantity($row['reorder'])),'status'=>$current<=0?'out':'low','menus'=>$menus[(string)$row['id']]??[]];
+    },$rows);
 }
 function inventory_snapshot(PDO $db,int $offset=0):array {
     if($offset<0||$offset>1000000)throw new OrderError('Invalid movement page.');

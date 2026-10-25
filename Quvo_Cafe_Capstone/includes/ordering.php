@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 // Loaded by orders.php. Staff explicitly start and pause customer ordering.
-// Presence leases track connected workspaces without automatically closing orders.
+// Presence leases track connected workspaces. Only an explicit last logout starts
+// a ten-minute grace period; a disconnected browser does not start a timer.
 function ordering_access(?array $actor): void
 {
     if (!$actor) throw new OrderError('Please sign in again.', 401);
@@ -39,6 +40,11 @@ function ordering_row(PDO $db): array
     ordering_assert_backend();
     try {
     $query = $db->query("SELECT s.*,
+        CONVERT(varchar(19),SYSUTCDATETIME(),126) AS server_time,
+        CASE WHEN s.accepting_orders=1 AND s.change_reason='offline'
+             THEN CONVERT(varchar(19),DATEADD(second,600,s.changed_at),126) END AS logout_pause_at,
+        CASE WHEN s.accepting_orders=1 AND s.change_reason='offline'
+                  AND DATEADD(second,600,s.changed_at)<=SYSUTCDATETIME() THEN 1 ELSE 0 END AS logout_expired,
         (SELECT COUNT(*) FROM dbo.ordering_workspaces w
          JOIN dbo.staff_users u ON u.staff_id=w.staff_id JOIN dbo.roles r ON r.role_id=u.role_id
          WHERE w.service_version=s.service_version AND w.lease_expires_at>SYSUTCDATETIME()
@@ -52,7 +58,11 @@ function ordering_row(PDO $db): array
         }
         throw $error;
     }
-    return $row ?: throw new OrderError('Customer ordering is unavailable. Please ask a staff member.',503,'ordering_setup_required');
+    if (!$row) throw new OrderError('Customer ordering is unavailable. Please ask a staff member.',503,'ordering_setup_required');
+    // This deadline is enforced by every read and order submission, even with no
+    // operations browser running. No scheduled task or browser timer is required.
+    if ((bool)$row['logout_expired']) $row['accepting_orders']=0;
+    return $row;
 }
 
 function ordering_status(PDO $db, bool $staff = false): array
@@ -61,7 +71,9 @@ function ordering_status(PDO $db, bool $staff = false): array
     $open = (bool)$row['accepting_orders'];
     $offline = $row['change_reason'] === 'offline';
     $status = ['acceptingOrders'=>$open, 'state'=>$open?'open':($offline?'offline':'paused'),
-        'message'=>$open?'We are accepting orders.':'We are not accepting orders right now. You can still browse the menu. Please try again when ordering reopens.'];
+        'message'=>$open?'We are accepting orders.':'We are not accepting orders right now. You can still browse the menu. Please try again when ordering reopens.',
+        'autoPauseAt'=>$open&&$row['logout_pause_at']!==null?$row['logout_pause_at'].'Z':null,
+        'serverTime'=>$row['server_time'].'Z'];
     if ($staff) $status += ['revision'=>strtolower($row['service_version']), 'onlineWorkspaces'=>(int)$row['online_workspaces']];
     return $status;
 }
@@ -91,6 +103,17 @@ function ordering_lease(PDO $db, int $actor, string $workspace, string $sessionH
     }
 }
 
+// Called after a successful login or a valid workspace heartbeat. The SQL clock
+// condition prevents a late return from silently reopening an expired timer.
+function ordering_staff_return(PDO $db, array $actor): void
+{
+    ordering_access($actor);ordering_lock($db);
+    $db->prepare("UPDATE dbo.ordering_settings SET change_reason='manual',changed_by_staff_id=?,changed_at=SYSUTCDATETIME()
+        WHERE settings_id=1 AND accepting_orders=1 AND change_reason='offline'
+          AND DATEADD(second,600,changed_at)>SYSUTCDATETIME()")
+        ->execute([(int)$actor['staff_id']]);
+}
+
 function ordering_change(PDO $db, ?array $actor, array $input, string $sessionHash, string $stamp): array
 {
     ordering_access($actor);
@@ -108,7 +131,10 @@ function ordering_change(PDO $db, ?array $actor, array $input, string $sessionHa
     elseif ($action==='start') {
         $db->prepare("UPDATE dbo.ordering_settings SET accepting_orders=1,service_version=NEWID(),change_reason='manual',changed_by_staff_id=?,changed_at=SYSUTCDATETIME() WHERE settings_id=1")->execute([$actorId]);
         ordering_lease($db,$actorId,$workspace,$sessionHash,$stamp);
-    } elseif ((bool)$row['accepting_orders']) ordering_lease($db,$actorId,$workspace,$sessionHash,$stamp);
+    } elseif ((bool)$row['accepting_orders']) {
+        ordering_lease($db,$actorId,$workspace,$sessionHash,$stamp);
+        ordering_staff_return($db,$actor);
+    }
     return ordering_status($db,true);
 }
 
@@ -117,7 +143,11 @@ function ordering_release_session(PDO $db, string $sessionHash): void
     ordering_lock($db);
     $db->prepare('DELETE dbo.ordering_workspaces WHERE staff_session_hash=CONVERT(binary(32),?,2)')->execute([$sessionHash]);
     $row=ordering_row($db);
-    if ((bool)$row['accepting_orders'] && (int)$row['online_workspaces']===0) ordering_pause($db,null,'offline');
+    if ((bool)$row['accepting_orders'] && (int)$row['online_workspaces']===0 && $row['change_reason']!=='offline') {
+        // Keep the revision and existing leases stable during the grace period.
+        // Repeated logout requests must not extend the original deadline.
+        $db->exec("UPDATE dbo.ordering_settings SET change_reason='offline',changed_by_staff_id=NULL,changed_at=SYSUTCDATETIME() WHERE settings_id=1");
+    }
 }
 
 function ordering_require_open(PDO $db): void

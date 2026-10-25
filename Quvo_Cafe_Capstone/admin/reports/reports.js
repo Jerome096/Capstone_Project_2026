@@ -6,7 +6,7 @@ const reportPeriods = {
 };
 
 function currentReportDate(period) {
-  const today = receiptDay();
+  const today = window.QuvoBusinessDay?.date() || receiptDay();
   return period === 'yearly' ? today.slice(0,4) : period === 'monthly' ? today.slice(0,7) : today;
 }
 
@@ -31,13 +31,13 @@ function bindReports() {
   }
   document.getElementById('reportsToday').addEventListener('click', () => {
     document.getElementById(reportPeriods[reportsSql.period].input).value = currentReportDate(reportsSql.period);
-    loadReports();
+    loadReports(true);
   });
   document.getElementById('reportsRefresh').addEventListener('click', () => loadReports());
-  if (window.QUVO_CONFIG.allowedScreens.includes('reports')) loadReports();
+  if (window.QUVO_CONFIG.allowedScreens.includes('reports')) loadReports(true);
 }
 
-async function loadReports() {
+async function loadReports(current = false) {
   if (!window.QUVO_CONFIG.allowedScreens.includes('reports')) return;
   const period = reportsSql.period;
   const input = document.getElementById(reportPeriods[period].input);
@@ -49,16 +49,16 @@ async function loadReports() {
     return;
   }
   const date = period === 'yearly' ? String(Number(input.value)).padStart(4, '0') : input.value;
-  if (reportsSql.loading && reportsSql.date === date && reportsSql.requestPeriod === period) return;
+  if (!current && reportsSql.loading && reportsSql.date === date && reportsSql.requestPeriod === period) return;
   const request = ++reportsSql.request;
   Object.assign(reportsSql, {date, requestPeriod:period, loading:true, error:'', data:null});
   renderReports();
   try {
-    const query = new URLSearchParams({period, date});
+    const query = new URLSearchParams(current ? {period} : {period, date});
     const response = await fetch(quvoPath('api/reports/index.php') + '?' + query, {credentials:'same-origin', cache:'no-store', signal:AbortSignal.timeout(15000)});
     const result = await response.json();
     if (!response.ok || !result.ok) throw new Error(result.error || 'Could not load reports.');
-    if (request === reportsSql.request) reportsSql.data = result.report;
+    if (request === reportsSql.request) { reportsSql.data = result.report; reportsSql.date = result.report.date; input.value = result.report.date; }
   } catch (error) {
     if (request === reportsSql.request) reportsSql.error = error.message;
   } finally {
@@ -81,7 +81,9 @@ function renderReports() {
   document.getElementById('reportActivityEyebrow').textContent = settings.eyebrow;
   document.getElementById('reportActivityTitle').textContent = settings.title;
   document.getElementById('reportActivityHeading').textContent = settings.heading;
-  document.getElementById('reportsStatus').textContent = r.error || (r.loading ? 'Loading transactions...' : data ? 'Report period: ' + reportPeriodLabel(data.date, r.period) + ' \u00b7 Philippine time \u00b7 Includes transactions already closed by EOD.' : 'Choose a period to load reports.');
+  const hours = data?.operatingHours;
+  const windowLabel = hours ? ' · Window: ' + [hours.windowStart, hours.windowEnd].map(value => new Date(value.replace(' ', 'T') + 'Z').toLocaleString('en-PH', {timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})).join(' to ') : '';
+  document.getElementById('reportsStatus').textContent = r.error || (r.loading ? 'Loading transactions...' : data ? 'Business period: ' + reportPeriodLabel(data.date, r.period) + windowLabel + ' · Philippine time · Includes transactions already closed by EOD.' + (hours?.setupRequired ? ' Install the operating-hours SQL setup to enable store schedules.' : '') : 'Choose a period to load reports.');
   document.getElementById('reportsRefresh').disabled = r.loading;
   if (document.getElementById('reports').classList.contains('active-screen')) document.getElementById('screenSub').textContent = r.date ? reportPeriodLabel(r.date, r.period) + ' \u00b7 Transaction report' : 'Select a report period';
   if (!data) {
@@ -100,11 +102,12 @@ function renderReports() {
     ['Voided orders', s.voidedOrders, 'Orders cancelled ' + scope + '; not revenue.'],
     ['Unpaid orders', s.unpaidOrders, 'Orders created ' + scope + ' that are currently unpaid.'],
   ];
+  if (r.period === 'daily' && hours && !hours.legacy) metrics.push(['After scheduled closing', s.outsideHoursOrders || 0, 'Already included in revenue for this opening day; recorded before the next opening.']);
   summary.innerHTML = metrics.map(([label, value, note]) => '<tr><td>' + e(label) + '</td><td class="numeric-cell">' + e(value) + '</td><td>' + e(note) + '</td></tr>').join('');
   const activeBuckets = data.activity.filter(row => Number(row.orders) > 0);
   document.getElementById('hourlyOrderRows').innerHTML = activeBuckets.length ? activeBuckets.map(row => {
     const bucket = Number(row.bucket);
-    const label = r.period === 'daily' ? String(bucket).padStart(2, '0') + ':00\u2013' + String(bucket).padStart(2, '0') + ':59'
+    const label = r.period === 'daily' ? row.label || String(bucket).padStart(2, '0') + ':00\u2013' + String(bucket).padStart(2, '0') + ':59'
       : r.period === 'monthly' ? receiptDateLabel(data.date + '-' + String(bucket).padStart(2, '0'))
       : reportPeriodLabel(data.date + '-' + String(bucket).padStart(2, '0'), 'monthly');
     return '<tr><td>' + e(label) + '</td><td class="numeric-cell">' + Number(row.orders) + '</td><td class="numeric-cell">' + money(row.revenue) + '</td></tr>';

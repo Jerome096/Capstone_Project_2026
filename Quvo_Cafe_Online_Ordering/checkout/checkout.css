@@ -99,5 +99,6 @@
 .payment-receipt-upload:has(input:disabled) { background: #f6f3ed; border-color: #e2d9c9; color: #a49885; cursor: not-allowed; }
 .payment-receipt-upload input:disabled { cursor: not-allowed; }
 .payment-receipt-status { text-align: center; }
+.payment-receipt-remove { align-self: center; min-height: 44px; padding: 10px 16px; }
 .payment-verification-note { padding: 14px 2px 0; }
 @media (max-width: 600px) { .payment-steps { grid-template-columns: 1fr; } .payment-step { padding: 16px; } }

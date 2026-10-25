@@ -10,9 +10,8 @@ async function assistanceAlertApi(input) {
   return data;
 }
 function installAssistanceAlerts(rows) {
-  const now=Date.now();
   state.alerts=rows.map(row=>({id:String(row.request_id),table:row.table_name,customer:row.guest_name,
-    concern:row.concern,deadline:now+Number(row.remaining_seconds)*1000}));
+    concern:row.concern}));
   renderAlerts(); lucide.createIcons();
 }
 async function loadAssistanceAlerts() {
@@ -30,10 +29,8 @@ async function loadAssistanceAlerts() {
 function bindAssistanceAlerts() {
   loadAssistanceAlerts();
   setInterval(loadAssistanceAlerts,5000);
-  setInterval(()=>{renderAlerts();lucide.createIcons();},1000);
 }
 function renderAlerts() {
-  state.alerts=state.alerts.filter(alert=>alert.deadline>Date.now());
   const list = document.getElementById("alertsList");
   const banner = document.getElementById("alertBanner");
   const empty = document.getElementById("emptyAlerts");
@@ -68,7 +65,6 @@ function renderAlerts() {
           <div class="alert-table">${escapeHtml(alert.table)}</div>
           <div class="alert-name">${escapeHtml(alert.customer)}</div>
           <p class="alert-concern">${escapeHtml(alert.concern)}</p>
-          <div class="alert-time"><i data-lucide="clock-3"></i>Ends in ${Math.max(0,Math.ceil((alert.deadline-Date.now())/1000))}s</div>
         </div>
       </div>
       <button class="btn dark" ${assistanceAlerts.changing ? "disabled" : ""} onclick="resolveAlert('${alert.id}')">
@@ -99,7 +95,7 @@ async function resolveAlert(id) {
     });
     }
     renderActivities();
-    if(!data.resolved) showToast("This assistance request has already ended.");
+    if(!data.resolved) showToast("This assistance request is no longer pending.");
   } catch(error) {showToast(error.message);}
   finally {assistanceAlerts.changing=false;renderAlerts();lucide.createIcons();}
 }

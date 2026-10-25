@@ -2,7 +2,11 @@
   class="screen"
   id="receipts"
 >
-  <div class="receipts-layout">
+  <div class="receipt-section-tabs" role="tablist" aria-label="Receipt sections">
+    <button type="button" class="receipt-section-tab active" id="receiptRecordsTab" role="tab" aria-selected="true" aria-controls="receiptRecordsPanel" data-receipt-view="records">Sales receipts</button>
+    <button type="button" class="receipt-section-tab" id="receiptUploadsTab" role="tab" aria-selected="false" aria-controls="receiptUploadsPanel" tabindex="-1" data-receipt-view="uploads">Customer uploads</button>
+  </div>
+  <div class="receipts-layout receipt-view-panel" id="receiptRecordsPanel" role="tabpanel" aria-labelledby="receiptRecordsTab">
     <section class="receipts-list-card">
       <div class="receipts-toolbar">
         <div>
@@ -67,6 +71,36 @@
           items.
         </p>
       </div>
+    </aside>
+  </div>
+  <div class="receipts-layout receipt-view-panel uploaded-receipts-layout" id="receiptUploadsPanel" role="tabpanel" aria-labelledby="receiptUploadsTab" hidden>
+    <section class="receipts-list-card">
+      <div class="receipts-toolbar">
+        <div><div class="eyebrow">Online ordering</div><h2>Customer payment uploads</h2></div>
+        <button type="button" class="btn light" id="uploadedReceiptsRefresh">Refresh uploads</button>
+      </div>
+      <p class="uploaded-receipts-help">View the original payment image uploaded with an online order. Canceled orders appear on their cancellation date.</p>
+      <div class="receipt-date-picker">
+        <label for="uploadedReceiptDate">Operation date</label>
+        <div><input id="uploadedReceiptDate" type="date" /><button type="button" class="btn light" id="uploadedReceiptToday">Today</button></div>
+      </div>
+      <form class="search-box uploaded-receipt-search" id="uploadedReceiptSearchForm" role="search" autocomplete="off">
+        <i data-lucide="search"></i>
+        <input id="uploadedReceiptSearch" name="quvo-uploaded-receipt-filter" type="search" maxlength="100" placeholder="Search order, customer, or payment method..." aria-label="Search customer receipt uploads" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" readonly />
+      </form>
+      <div class="receipt-filters uploaded-receipt-filters" aria-label="Filter uploaded receipts">
+        <button type="button" class="uploaded-receipt-filter active" data-upload-status="all" aria-pressed="true">All</button>
+        <button type="button" class="uploaded-receipt-filter" data-upload-status="pending" aria-pressed="false">Pending</button>
+        <button type="button" class="uploaded-receipt-filter" data-upload-status="paid" aria-pressed="false">Paid</button>
+        <button type="button" class="uploaded-receipt-filter" data-upload-status="served" aria-pressed="false">Served</button>
+        <button type="button" class="uploaded-receipt-filter" data-upload-status="cancelled" aria-pressed="false">Canceled</button>
+      </div>
+      <p id="uploadedReceiptNotice" class="helper-text" role="status"></p>
+      <div id="uploadedReceiptList" class="receipt-list"></div>
+      <button type="button" class="btn light" id="uploadedReceiptsMore" hidden>Load more uploads for this date</button>
+    </section>
+    <aside class="uploaded-receipt-preview" id="uploadedReceiptPreview" aria-label="Customer uploaded payment receipt">
+      <div class="receipt-empty-preview"><i data-lucide="image"></i><h2>Select an uploaded receipt</h2><p>Choose an online order to view the image submitted by the customer.</p></div>
     </aside>
   </div>
 </section>

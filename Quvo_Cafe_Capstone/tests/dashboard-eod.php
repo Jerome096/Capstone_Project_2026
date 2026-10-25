@@ -10,9 +10,10 @@ function verify_eod(bool $ok, string $label): void {
     echo 'PASS: ' . $label . PHP_EOL; $checks++;
 }
 require_once __DIR__.'/ordering-fixture.php';
+require_once __DIR__.'/operating-hours-fixture.php';
 $db = quvo_db();
 try {
-    $db->beginTransaction();ordering_test_open($db);
+    $db->beginTransaction();operating_test_calendar($db);ordering_test_open($db);
     $baseline = dashboard_completed_today($db);
     $initialOrders = (int)$db->query('SELECT COUNT(*) FROM dbo.orders')->fetchColumn();
     $actor = (int)$db->query('SELECT TOP 1 staff_id FROM dbo.staff_users WHERE is_active=1')->fetchColumn();

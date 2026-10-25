@@ -1,4 +1,4 @@
-const salesHistorySql={loading:false,request:0,view:null,rows:[],summary:null,nextOffset:null,error:''};
+const salesHistorySql={loading:false,request:0,view:null,rows:[],summary:null,nextOffset:null,error:'',hours:null,businessDate:null};
 function bindSalesHistory(){
   document.querySelectorAll('[data-sales-view]').forEach(button=>button.addEventListener('click',()=>{
     document.querySelectorAll('[data-sales-view]').forEach(entry=>entry.classList.remove('active'));button.classList.add('active');state.activeSalesView=button.dataset.salesView;loadSalesHistory();
@@ -16,7 +16,7 @@ async function loadSalesHistory(append=false){
   try{
     const response=await fetch(quvoPath('api/sales-history/index.php')+'?view='+view+'&offset='+offset,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
     const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||'Could not load sales history.');if(request!==salesHistorySql.request)return;
-    salesHistorySql.rows=append?[...salesHistorySql.rows,...data.rows]:data.rows;salesHistorySql.summary=data.summary;salesHistorySql.nextOffset=data.next_offset;
+    salesHistorySql.rows=append?[...salesHistorySql.rows,...data.rows]:data.rows;salesHistorySql.summary=data.summary;salesHistorySql.nextOffset=data.next_offset;salesHistorySql.hours=data.operatingHours||null;salesHistorySql.businessDate=data.businessDate||null;
   }catch(error){if(request===salesHistorySql.request)salesHistorySql.error=error.message;}
   finally{if(request===salesHistorySql.request){salesHistorySql.loading=false;renderSalesHistory();}}
 }
@@ -29,7 +29,7 @@ function renderSalesHistory(){
   const data=salesHistorySql,money=value=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(value||0));
   for(const [id,key] of [['salesTodayStat','today'],['salesMonthStat','month'],['salesYearStat','year']])document.getElementById(id).textContent=data.summary?money(data.summary[key]):'—';
   document.getElementById('eodRecordCount').textContent=data.summary?.eodCount??'—';
-  document.getElementById('salesHistoryStatus').textContent=data.error||(data.loading?'Loading from SQL…':'Sales cards show approved payments. The list shows saved EOD totals by closing date.');
+  document.getElementById('salesHistoryStatus').textContent=data.error||(data.loading?'Loading from SQL…':'Sales cards follow opening-day business dates. The list preserves saved EOD business dates.'+(data.businessDate?' Current business day: '+salesPeriodLabel(data.businessDate,'daily')+'.':''));
   document.getElementById('salesHistoryMore').hidden=data.nextOffset===null||!data.rows.length;document.getElementById('salesHistoryMore').disabled=data.loading;document.getElementById('salesHistoryRefresh').disabled=data.loading;
   if(!data.rows.length){list.innerHTML='<p class="helper-text">'+(data.loading?'Loading saved EOD records…':data.error?'Use Refresh to try again.':'No saved EOD records yet.')+'</p>';return;}
   const view=data.view||'daily',label=view==='monthly'?'Month':view==='yearly'?'Year':'Date';

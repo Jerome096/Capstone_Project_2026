@@ -87,10 +87,10 @@ function orders_lines(mixed $items): array
         if (!is_array($custom) || ($custom !== [] && array_is_list($custom))) {
             throw new OrderError("Invalid item options.");
         }
-        // Sizes and paid add-ons have no configured catalog and cannot be ordered yet.
+        // Priced sizes and add-ons use catalog option IDs, never arbitrary legacy fields.
         if (!in_array($custom["size"] ?? "Not applicable", ["", "Not applicable"], true)
             || ($custom["addons"] ?? []) !== []) {
-            throw new OrderError("Sizes and add-ons are not available for ordering.");
+            throw new OrderError("Choose sizes and add-ons from the menu options.");
         }
         $sugar = $custom["sugarLevel"] ?? "Not applicable";
         $ice = $custom["iceLevel"] ?? "Not applicable";
@@ -271,7 +271,7 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     foreach ($lines as $index => $line) {
         $menu = $catalog[$line["menu_item_id"]];
         $itemQuery->execute([$id, $index + 1, $line["menu_item_id"], $menu["item_name"],
-            $menu["category"], $menu["price"], $line["quantity"],
+            $menu["category"], $line["unit_price"], $line["quantity"],
             menu_custom_json($line["customization"]), $line["notes"]]);
     }
     return ["order" => orders_get($db, $id, $sessionId), "replayed" => false];
@@ -303,7 +303,8 @@ function orders_catalog(PDO $db, array &$lines, int $expectedTotal): array
         }
         $line["customization"] = menu_selected_customization($menu,$line["customization"]);
         menu_custom_json($line["customization"]);
-        $total += orders_cents($menu["price"]) * $line["quantity"];
+        $line['unit_price']=$line['customization']['pricing']['unitPrice']??orders_money(orders_cents($menu['price']));
+        $total += orders_cents($line['unit_price']) * $line["quantity"];
         if ($total > 999999999999) {
             throw new OrderError("Order total exceeds the supported amount.");
         }
@@ -312,7 +313,6 @@ function orders_catalog(PDO $db, array &$lines, int $expectedTotal): array
     if ($total !== $expectedTotal) {
         throw new OrderError("Menu prices have changed. Refresh the menu and review your total.", 409, "price_changed");
     }
-    inventory_requirements($db,$lines);
     return [$catalog, $total];
 }
 

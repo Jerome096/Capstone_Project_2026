@@ -44,7 +44,7 @@ function renderMenu() {
       ${item.imageUrl?'<div class="menu-card-photo">'+QuvoMenuOptions.photoHTML(item)+'</div>':''}
       <div class="menu-title">${escapeHtml(item.name)}</div>
       <div class="menu-bottom">
-        <span class="price">₱${item.price}</span>
+        <span class="price">${QuvoMenuOptions.priceLabel(item)}</span>
         <span class="menu-status ${item.available ? "" : "off"}">${item.available ? "Available" : "Unavailable"}</span>
       </div>
     </button>
@@ -82,12 +82,14 @@ function openItemModal(itemId) {
   const customRoot=document.getElementById("itemCustomOptions");
   customRoot.hidden=!configured||!QuvoMenuOptions.groups(item).length;
   if(configured)QuvoMenuOptions.render(customRoot,item);else customRoot.replaceChildren();
+  updateItemOptionPrice();
 
   document.getElementById("itemModal").classList.remove("hidden");
   lucide.createIcons();
 }
 
 function bindItemModal() {
+  document.getElementById('itemCustomOptions').addEventListener('change',updateItemOptionPrice);
   document.getElementById("itemModalClose").addEventListener("click", closeItemModal);
   document.getElementById("cancelItemBtn").addEventListener("click", closeItemModal);
 
@@ -108,11 +110,13 @@ function bindItemModal() {
   document.getElementById("qtyMinus").addEventListener("click", () => {
     selectedItemQty = Math.max(1, selectedItemQty - 1);
     document.getElementById("itemQty").textContent = selectedItemQty;
+    updateItemOptionPrice();
   });
 
   document.getElementById("qtyPlus").addEventListener("click", () => {
     selectedItemQty += 1;
     document.getElementById("itemQty").textContent = selectedItemQty;
+    updateItemOptionPrice();
   });
 
   document.getElementById("addItemBtn").addEventListener("click", () => {
@@ -140,7 +144,7 @@ function bindItemModal() {
       menuId: selectedMenuItem.id,
       category: selectedMenuItem.category,
       name: selectedMenuItem.name,
-      price: selectedMenuItem.price,
+      price: QuvoMenuOptions.price(selectedMenuItem,configured?custom.options:{}),
       qty: selectedItemQty,
       note,
       customizations: [...drinkCustomizations, ...noteCustomizations],
@@ -154,6 +158,14 @@ function bindItemModal() {
     window.QUVO_WORKSPACE?.revealPanel("#menu .pos-cart");
     showToast(`${addedItemName} added to manual order.`);
   });
+}
+
+function updateItemOptionPrice() {
+  if(!selectedMenuItem)return;
+  const selected=selectedMenuItem.customOptionsConfigured?QuvoMenuOptions.values(document.getElementById('itemCustomOptions')):{};
+  const unit=QuvoMenuOptions.price(selectedMenuItem,selected);
+  document.getElementById('itemModalPrice').textContent=QuvoMenuOptions.formatPrice(unit)+' each';
+  document.getElementById('addItemBtn').textContent='Add to order · '+QuvoMenuOptions.formatPrice(unit*selectedItemQty);
 }
 
 function closeItemModal() {

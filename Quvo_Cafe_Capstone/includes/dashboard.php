@@ -1,14 +1,16 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/orders.php';
+require_once __DIR__ . '/operating-hours.php';
 
 function dashboard_completed_today(PDO $db): int
 {
-    // The cafe uses Philippine local dates. Count the full database, not one receipt page.
+    $hours=operating_hours_context($db);$window=operating_day_bounds($hours,operating_business_date($hours));
+    // Count the full opening-day window, including service after midnight.
     return (int)$db->query("SELECT COUNT(*) FROM dbo.orders o
         WHERE o.order_status='served'
         AND EXISTS (SELECT 1 FROM dbo.payments p WHERE p.order_id=o.order_id)
-        AND CAST(DATEADD(hour,8,o.updated_at) AS date)=CAST(DATEADD(hour,8,SYSUTCDATETIME()) AS date)
+        AND o.updated_at>=CAST('".$window['startUtc']."' AS datetime2) AND o.updated_at<CAST('".$window['endUtc']."' AS datetime2)
         AND NOT EXISTS (SELECT 1 FROM dbo.eod_completed_orders c WHERE c.order_id=o.order_id)")
         ->fetchColumn();
 }
@@ -27,11 +29,12 @@ function dashboard_close_completions(PDO $db, int $actor, string $note, ?string 
     $q = $db->prepare('INSERT dbo.eod_closures(closed_by_staff_id,note) OUTPUT INSERTED.closure_id VALUES(?,?)');
     $q->execute([$actor, $note]);
     $id = (int)$q->fetchColumn(); $q->closeCursor();
+    $window=$businessDate!==null?operating_day_bounds(operating_hours_context($db),$businessDate):null;
     $q = $db->prepare("INSERT dbo.eod_completed_orders(order_id,closure_id)
         SELECT o.order_id,? FROM dbo.orders o WHERE o.order_status='served'
         AND EXISTS (SELECT 1 FROM dbo.payments p WHERE p.order_id=o.order_id)
         AND NOT EXISTS (SELECT 1 FROM dbo.eod_completed_orders c WHERE c.order_id=o.order_id)".
-        ($businessDate!==null?" AND CAST(DATEADD(hour,8,o.updated_at) AS date)=CAST(? AS date)":""));
-    $q->execute($businessDate!==null?[$id,$businessDate]:[$id]);
+        ($window!==null?" AND o.updated_at>=? AND o.updated_at<?":""));
+    $q->execute($window!==null?[$id,$window['startUtc'],$window['endUtc']]:[$id]);
     return ['closure_id'=>(string)$id, 'completed_today'=>dashboard_completed_today($db)];
 }

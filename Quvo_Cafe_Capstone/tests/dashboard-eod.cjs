@@ -4,10 +4,10 @@ function el(id) {
   if (!elements.has(id)) elements.set(id,{textContent:'',value:'',disabled:false,classList:{add(){},remove(){}}});
   return elements.get(id);
 }
-let count = 4, failEod = false, saved = 0, toast = '', delayedRead;
+let count = 4, failEod = false, saved = 0, toast = '', delayedRead, stockAlerts=[{id:'1',name:'Milk <safe>',unit:'L',current:'-0.180',reorder:'1.000',status:'out',menus:['Latte <safe>']}];
 const receipts = [{persisted:true,status:'served',total:10,paymentMethod:'Cash'},
   {persisted:false,status:'completed',total:20,paymentMethod:'Cash'}];
-const context = vm.createContext({console,Date,Number,AbortSignal,
+const context = vm.createContext({console,Date,Number,Intl,AbortSignal,escapeHtml:value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'),
   document:{getElementById:el},window:{QUVO_CSRF:'test',QUVO_SESSION:{staff_id:17}},quvoPath:p=>p,
   crypto:require('node:crypto').webcrypto,Uint8Array,
   sessionStorage:{store:new Map(),setItem(k,v){this.store.set(k,v)},getItem(k){return this.store.get(k)||null},removeItem(k){this.store.delete(k)}},
@@ -21,13 +21,15 @@ const context = vm.createContext({console,Date,Number,AbortSignal,
       return {ok:true,json:async()=>({ok:true,closure_id:String(saved),completed_today:0,record:{totalSales:'10.00'}})};
     }
     if(delayedRead) return delayedRead;
-    return {ok:true,json:async()=>({ok:true,completed_today:count})};
+    return {ok:true,json:async()=>({ok:true,completed_today:count,stock_alerts:stockAlerts})};
   }
 });
 vm.runInContext(fs.readFileSync(path.resolve(__dirname,'../cashier/dashboard/dashboard.js'),'utf8'),context);
 (async()=>{
   await context.refreshDashboardCompletion();
   assert.equal(el('completedTodayStat').textContent,5,'SQL count plus manual completions');
+  assert.equal(el('dashboardStockCount').textContent,1);assert.match(el('dashboardStockAlerts').innerHTML,/Milk &lt;safe&gt;/);assert.match(el('dashboardStockAlerts').innerHTML,/Latte &lt;safe&gt;/);assert.match(el('dashboardStockAlerts').innerHTML,/-0.18/);assert.match(el('dashboardStockStatus').textContent,/Ordering stays available/);
+  stockAlerts=[];await context.refreshDashboardCompletion();assert.equal(el('dashboardStockCount').textContent,0);assert.equal(el('dashboardStockAlerts').innerHTML,'');assert.match(el('dashboardStockStatus').textContent,/No stock reminders/);
   await context.confirmEod();
   assert.equal(el('completedTodayStat').textContent,0);
   assert.equal(receipts.length,2,'receipt history stays intact');

@@ -1,0 +1,19 @@
+.operating-hours-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.7fr); gap: 20px; align-items: start; }
+.operating-hours-card { min-width: 0; padding: 18px; border: 1px solid var(--q-border); border-radius: var(--q-radius-lg); background: var(--q-surface); box-shadow: var(--q-shadow-xs); }
+.operating-hours-copy { margin-top: 12px; color: var(--q-ink-500); line-height: 1.6; font-size: var(--q-text-sm); }
+.operating-hours-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.operating-hours-fields label { display: grid; gap: 7px; font-size: var(--q-text-sm); font-weight: 700; min-width: 0; }
+.operating-hours-fields input { width: 100%; min-width: 0; min-height: 46px; border: 1px solid var(--q-border); border-radius: var(--q-radius-md); padding: 10px 12px; font: inherit; color: var(--q-ink-950); background: var(--q-surface); }
+.operating-hours-fields span { font-size: var(--q-text-xs); font-weight: 400; line-height: 1.5; color: var(--q-ink-500); }
+.operating-hours-full { grid-column: 1 / -1; }
+.operating-hours-example { margin-top: 18px; padding: 14px; border-radius: var(--q-radius-md); background: var(--q-surface-muted); line-height: 1.6; }
+.operating-hours-example p { margin-top: 8px; font-size: var(--q-text-sm); }
+.operating-hours-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.operating-hours-actions .btn { min-height: 46px; }
+.operating-hours-history { margin-top: 20px; }
+.operating-hours-table-wrap { overflow-x: auto; margin-top: 14px; }
+.operating-hours-table-wrap table { width: 100%; border-collapse: collapse; font-size: var(--q-text-sm); }
+.operating-hours-table-wrap th, .operating-hours-table-wrap td { padding: 12px; text-align: left; border-bottom: 1px solid var(--q-border); line-height: 1.5; }
+.operating-hours-table-wrap th { background: var(--q-surface-muted); white-space: nowrap; }
+@media (max-width: 1100px) { .operating-hours-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .operating-hours-fields { grid-template-columns: minmax(0, 1fr); } .operating-hours-actions .btn { width: 100%; } }

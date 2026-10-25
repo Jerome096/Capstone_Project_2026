@@ -121,7 +121,7 @@ async function refreshDineCartPrices() {
   CUSTOMER_DATA.categories = ["All", ...new Set(menu.items.map(item => item.category))];
   state.cart = state.cart.flatMap(item => {
     const current = menu.items.find(entry => entry.id === item.itemId);
-    return current ? [{ ...item, name: current.name, category: current.category, unitPrice: current.price }] : [];
+    return current ? [{ ...item, name: current.name, category: current.category, unitPrice: QuvoMenuOptions.price(current,QuvoMenuOptions.savedSelections(current,item.customization)), pricedOptions: QuvoMenuOptions.hasPricing(current) }] : [];
   });
   state.selectedCategory = "All";
   renderCategories(); renderMenu(); renderCart();

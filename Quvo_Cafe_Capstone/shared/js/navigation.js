@@ -50,6 +50,7 @@ function showScreen(screen) {
   if (screen === "sessions") loadSessions();
 
   if (screen === "websiteContent") window.QuvoWebsiteContent?.load();
+  if (screen === "operatingHours") window.QuvoOperatingHours?.load();
 
   if (screen === "accounts") {
     renderAccountForm();

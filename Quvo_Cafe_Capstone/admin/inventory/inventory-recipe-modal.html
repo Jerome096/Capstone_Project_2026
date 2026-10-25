@@ -18,29 +18,24 @@
     <div class="eyebrow">Bill of Materials</div>
     <h2 id="inventoryRecipeTitle">Recipe-based ingredient link</h2>
     <p class="modal-sub">
-      Set the stock items and quantities deducted when payment is confirmed.
+      Enter the material quantities used for one menu item. Stock is deducted when payment is confirmed.
     </p>
     <div class="inventory-form-grid">
       <label class="full">
         Menu item
         <select id="inventoryRecipeMenu"></select>
       </label>
-      <label class="full">
-        Ingredient deduction lines
-        <textarea
-          id="inventoryRecipeLines"
-          placeholder="Example:
-Fresh milk | 0.18
-Ingredient name | quantity"
-          rows="8"
-        ></textarea>
-      </label>
+      <fieldset class="full inventory-recipe-materials" aria-describedby="inventoryRecipeHelp">
+        <legend>Inventory materials</legend>
+        <p class="inventory-copy" id="inventoryRecipeHelp">
+          Saved stock items appear automatically. Enter the quantity used for one
+          menu item and choose its unit. Amounts convert automatically to the stock
+          unit when saved. Leave blank or enter 0 for materials not used.
+        </p>
+        <div id="inventoryRecipeMaterials" class="inventory-recipe-material-list"></div>
+      </fieldset>
     </div>
-    <p class="inventory-copy">
-      Format: ingredient name | quantity. Use the same ingredient names listed in Stock
-      Items. The unit is taken from the stock record.
-    </p>
-    <p id="inventoryRecipeError" class="helper-text" role="alert"></p>
+    <p id="inventoryRecipeError" class="inventory-form-error" role="alert"></p>
     <div class="modal-actions">
       <button
         class="btn light"

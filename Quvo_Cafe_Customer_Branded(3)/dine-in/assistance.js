@@ -36,7 +36,8 @@ function renderGuestAssistance() {
     (remaining>0 ? (guestAssistance.request?.status==="resolved"
       ? `Staff marked your request resolved. You can call again in ${remaining}s.`
       : `Request sent to staff. You can call again in ${remaining}s.`)
-      : guestAssistance.request ? "The minute has ended. You can send another request." : "");
+      : guestAssistance.request?.status==="pending" ? "Your request is still with staff. You can send a reminder or update your concern."
+      : guestAssistance.request ? "You can call staff again." : "");
 }
 function requestStaffAssistance() {
   if(state.accessMode!=="dineIn" || !state.sessionApproved) return;

@@ -28,6 +28,7 @@ function formatDrinkOptions(options) {
 }
 
 function bindReceipts() {
+  window.QuvoUploadedReceipts?.bind();
   const dateInput=document.getElementById('receiptDate');
   dateInput.value=receiptDay();
   dateInput.addEventListener('change',()=>{
@@ -305,6 +306,7 @@ function renderReceipts() {
 }
 
 function showReceipt(receiptId) {
+  window.QuvoUploadedReceipts?.showRecords();
   const receipt=state.receipts.find(entry=>entry.id===receiptId);
   if(receipt?.date && receipt.date!==receiptSelectedDate()) {
     document.getElementById('receiptDate').value=receipt.date;

@@ -162,3 +162,15 @@
 .admin-option-editor .helper-text,.admin-photo-editor .helper-text { text-transform:none; letter-spacing:normal; }
 
 .admin-photo-editor p,.admin-option-editor p,.admin-photo-editor h3,.admin-option-editor h3 { margin:0; }
+.admin-option-choice .admin-choice-price { grid-column:1/-1; display:grid; gap:6px; margin:0 0 8px; font-size:12px; text-transform:none; letter-spacing:normal; }
+.admin-choice-price input { min-height:44px; font-size:16px; }
+.admin-option-card [data-group-pricing] { font-size:13px; }
+.admin-size-pricing { display:grid; gap:10px; min-width:0; }
+.admin-pricing-section { display:grid; gap:12px; min-width:0; }
+.admin-pricing-section h3,.admin-pricing-section > .helper-text { margin:0; }
+#adminSinglePriceField[hidden] { display:none!important; }
+.admin-size-pricing > .helper-text { margin:0; }
+.admin-size-pricing .admin-size-toggle { margin:0; font-weight:600; }
+.admin-size-card { margin:0; }
+.admin-size-card [data-choice-label], .admin-size-card [data-choice-price] { font-size:16px; }
+@media(max-width:700px) { .admin-option-card [data-group-pricing], .admin-option-card [data-group-type] { font-size:16px; } }

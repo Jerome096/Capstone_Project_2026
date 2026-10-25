@@ -13,7 +13,7 @@ try {
     $db = quvo_db();
     if ($method === 'GET') {
         if (($_GET['action'] ?? '') === 'eod-preview') quvo_json(['ok'=>true,'totals'=>sales_preview($db)]);
-        quvo_json(['ok'=>true,'completed_today'=>dashboard_completed_today($db)]);
+        quvo_json(['ok'=>true,'completed_today'=>dashboard_completed_today($db),'stock_alerts'=>inventory_stock_alerts($db)]);
     }
     $input = orders_input();
     if (($input['action'] ?? '') !== 'eod') throw new OrderError('Unknown dashboard action.');

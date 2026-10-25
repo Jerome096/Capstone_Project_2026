@@ -115,7 +115,7 @@ function updateInventoryLinkedMenus() {
   });
 }
 
-// Availability and deductions are computed by SQL, including payment retries.
+// Menu availability is set by the cafe. SQL records stock deductions, including payment retries.
 function updateMenuAvailabilityFromInventory() {}
 function deductInventoryForOrder() { return []; }
 const screenText = {
@@ -150,6 +150,7 @@ const screenText = {
     sub: "Current shift performance summary",
   },
   websiteContent: {eyebrow:"Admin access",title:"Website content",sub:"Edit your cafe story, address, opening hours and contact details"},
+  operatingHours: {eyebrow:"Admin access",title:"Operating hours",sub:"Set store hours and future business-day schedules for sales and reports"},
   menuAdmin: {
     eyebrow: "Admin access",
     title: "Menu customization",
@@ -186,6 +187,7 @@ const ADMIN_SCREENS = [
   "reports",
   "menuAdmin",
   "websiteContent",
+  "operatingHours",
   "records",
   "salesHistory",
   "accounts",

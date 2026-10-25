@@ -44,7 +44,7 @@ function pos_submit(PDO $db,array $actor,array $input): array
     $q=$db->prepare('INSERT dbo.order_items(order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes) VALUES(?,?,?,?,?,?,?,?,?)');
     foreach($lines as $index=>$line) {
         $menu=$catalog[$line['menu_item_id']];
-        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$menu['price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
+        $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$line['unit_price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
     }
     $paid=orders_pay($db,(int)$actor['staff_id'],$id,['payment_method'=>$method,'amount_received'=>orders_money($received),'payment_reference'=>$reference]);
     return ['order'=>$paid['order'],'replayed'=>false];

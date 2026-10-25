@@ -34,7 +34,7 @@
       <div class="stat-icon blue-soft"><i data-lucide="clipboard-check"></i></div>
     </article>
     <article class="stat-card">
-      <div class="stat-label">Completed today</div>
+      <div class="stat-label">Completed this business day</div>
       <div
         class="stat-value"
         id="completedTodayStat"
@@ -45,29 +45,27 @@
     </article>
   </div>
   <div class="dashboard-layout">
-    <section>
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">Floor plan</div>
-          <h2>Table map</h2>
+    <div class="dashboard-side-column">
+      <section class="activity-panel">
+        <div class="eyebrow">Live feed</div>
+        <h2>Recent activity</h2>
+        <div
+          class="activity-list"
+          id="activityList"
+        ></div>
+      </section>
+      <section class="dashboard-stock-panel" aria-labelledby="dashboardStockTitle">
+        <div class="dashboard-stock-header">
+          <div>
+            <div class="eyebrow">Inventory reminders</div>
+            <h2 id="dashboardStockTitle">Stock alerts <span id="dashboardStockCount" class="dashboard-stock-count">0</span></h2>
+          </div>
+          <button type="button" class="btn light" id="dashboardStockRefresh">Refresh stock alerts</button>
         </div>
-        <div class="legend">
-          <span><b class="dot active-dot"></b>Active order</span>
-          <span><b class="dot inactive-dot"></b>No active order</span>
-        </div>
-      </div>
-      <div
-        class="table-map"
-        id="tableMap"
-      ></div>
-    </section>
-    <section class="activity-panel">
-      <div class="eyebrow">Live feed</div>
-      <h2>Recent activity</h2>
-      <div
-        class="activity-list"
-        id="activityList"
-      ></div>
-    </section>
+        <p class="dashboard-stock-copy">Low or zero recorded stock does not stop ordering. Review these materials and mark menu items unavailable when needed.</p>
+        <p id="dashboardStockStatus" class="dashboard-stock-status" role="status">Checking stock levels...</p>
+        <div id="dashboardStockAlerts" class="dashboard-stock-list"></div>
+      </section>
+    </div>
   </div>
 </section>

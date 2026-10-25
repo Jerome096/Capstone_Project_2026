@@ -77,19 +77,6 @@
   font-weight: 700;
 }
 
-.alert-time {
-  margin-top: 4px;
-  color: var(--red);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.alert-time svg {
-  width: 11px;
-  height: 11px;
-}
-
 .empty-alerts {
   max-width: 360px;
   margin-top: 35px;
