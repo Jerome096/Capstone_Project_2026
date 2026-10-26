@@ -16,11 +16,11 @@ function renderRecords() {
             (record) => `
       <article class="record-item">
         <div class="record-item-top">
-          <b>${record.title}</b>
-          <span class="receipt-status ${record.type === "Void" ? "voided" : "served"}">${record.type}</span>
+          <b>${escapeHtml(record.title)}</b>
+          <span class="receipt-status ${record.type === "Void" ? "voided" : "served"}">${escapeHtml(record.type)}</span>
         </div>
-        <p>${record.detail}</p>
-        <p>${record.time}</p>
+        <p>${escapeHtml(record.detail)}</p>
+        <p>${escapeHtml(record.time)}</p>
       </article>
     `,
           )
@@ -42,6 +42,8 @@ function renderRecords() {
     const paymaya = state.receipts.filter(
       (receipt) => receipt.paymentMethod === "PayMaya",
     ).length;
+    const otherMethods=new Map();
+    for(const receipt of state.receipts)if(['paid','served'].includes(receipt.status)&&receipt.paymentMethod&&!['Cash','GCash','PayMaya'].includes(receipt.paymentMethod))otherMethods.set(receipt.paymentMethod,(otherMethods.get(receipt.paymentMethod)||0)+1);
 
     summary.innerHTML = `
       <div class="record-summary-card"><span>Served receipts</span><b>${served}</b></div>
@@ -50,6 +52,7 @@ function renderRecords() {
       <div class="record-summary-card"><span>Cash payments</span><b>${cash}</b></div>
       <div class="record-summary-card"><span>GCash payments</span><b>${gcash}</b></div>
       <div class="record-summary-card"><span>PayMaya payments</span><b>${paymaya}</b></div>
+      ${Array.from(otherMethods,([label,count])=>'<div class="record-summary-card"><span>'+escapeHtml(label)+' payments</span><b>'+count+'</b></div>').join('')}
     `;
   }
 

@@ -20,6 +20,11 @@ try {
     $db = quvo_db();
     dining_expire_sessions($db);
     if ($method === "GET") {
+        if (($_GET['view'] ?? '') === 'stock-check') {
+            $db->beginTransaction();inventory_lock($db);
+            $notice=inventory_order_notice($db,orders_id($_GET['id'] ?? null));
+            $db->commit();quvo_json(['ok'=>true,'stock_notice'=>$notice]);
+        }
         if (isset($_GET['receipt'])) payment_send_image(payment_receipt_image($db,orders_id($_GET['receipt'])),'payment-receipt');
         if (($_GET['view'] ?? '') === 'uploaded-receipts') {
             quvo_json(['ok'=>true]+payment_receipt_records($db,$_GET['receipt_date'] ?? (new DateTimeImmutable('now',new DateTimeZone('Asia/Manila')))->format('Y-m-d'),$_GET['status'] ?? 'all',$_GET['offset'] ?? '0',$_GET['q'] ?? ''));

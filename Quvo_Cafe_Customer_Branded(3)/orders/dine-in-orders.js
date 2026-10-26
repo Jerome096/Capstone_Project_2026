@@ -1,29 +1,43 @@
-// Dine-in orders are saved by PHP; browser storage only preserves a retry after a lost response.
-const dineOrders = { busy: false, loading: false, sessionId: "", pending: null, rows: [], selected: "", error: "" };
+// PHP owns accepted orders. Local storage preserves drafts and exact retries for
+// the same approved visit across refreshes and browser restarts.
+const dineOrders = { busy: false, loading: false, sessionId: "", tableCode: "", pending: null, rows: [], selected: "", error: "" };
 
-function dineStorageKey() {
-  return "quvo_dine_pending_" + guestTableCode;
+function dineStorageKey(sessionId = dineOrders.sessionId, tableCode = guestTableCode) {
+  return "quvo_dine_pending_v2_" + encodeURIComponent(tableCode) + "_" + sessionId;
 }
-function saveDinePending(value) {
+function saveDinePending(value, sessionId = dineOrders.sessionId, tableCode = guestTableCode) {
   // Refuse to send an order if its retry key cannot first be kept across refresh.
-  if (value) sessionStorage.setItem(dineStorageKey(), JSON.stringify(value));
-  else sessionStorage.removeItem(dineStorageKey());
-  dineOrders.pending = value;
-}
-function restoreDinePending(sessionId) {
-  if (dineOrders.sessionId === sessionId) return;
-  dineOrders.sessionId = sessionId;
-  dineOrders.rows = [];
-  dineOrders.selected = "";
-  state.order = null;
+  if (value) {
+    try {localStorage.setItem(dineStorageKey(sessionId, tableCode), JSON.stringify({ ...value, tableCode }));}
+    catch {throw new Error("Your browser could not save this order for recovery. Enable browser storage or free some space, then retry.");}
+  } else localStorage.removeItem(dineStorageKey(sessionId, tableCode));
   try {
-    const saved = JSON.parse(sessionStorage.getItem(dineStorageKey()) || "null");
-    dineOrders.pending = saved && saved.sessionId === sessionId ? saved : null;
-    if (!dineOrders.pending) sessionStorage.removeItem(dineStorageKey());
+    const legacyKey="quvo_dine_pending_"+tableCode;
+    const legacy=JSON.parse(sessionStorage.getItem(legacyKey)||"null");
+    if (String(legacy?.sessionId)===String(sessionId))sessionStorage.removeItem(legacyKey);
+  }catch{}
+  if (dineOrders.sessionId===sessionId && dineOrders.tableCode===tableCode)dineOrders.pending=value;
+}
+function restoreDinePending(sessionId, force = false) {
+  if (dineOrders.sessionId === sessionId && dineOrders.tableCode === guestTableCode && !force) return;
+  const sameVisit=dineOrders.sessionId===sessionId&&dineOrders.tableCode===guestTableCode;
+  dineOrders.sessionId = sessionId;
+  dineOrders.tableCode = guestTableCode;
+  if (!sameVisit) {dineOrders.rows = [];dineOrders.selected = "";state.order = null;}
+  dineOrders.pending=null;
+  try {
+    let durable=null,legacy=null;
+    try {durable=localStorage.getItem(dineStorageKey());}catch{}
+    if (!durable)try {legacy=sessionStorage.getItem("quvo_dine_pending_"+guestTableCode);}catch{}
+    const saved=JSON.parse(durable||legacy||"null");
+    if (saved&&String(saved.sessionId)===sessionId&&(!saved.tableCode||saved.tableCode===guestTableCode)&&saved.payload&&Array.isArray(saved.cart)) {
+      dineOrders.pending=saved;
+      if (legacy)try {saveDinePending(saved);}catch{}
+    }
   } catch {
     dineOrders.pending = null;
   }
-  if (dineOrders.pending) state.cart = dineOrders.pending.cart || [];
+  state.cart=dineOrders.pending?dineOrders.pending.cart:(window.QuvoDineCart?.restore(sessionId,guestTableCode)||[]);
 }
 function dineCartLocked() {
   return state.accessMode === "dineIn" && (dineOrders.busy || Boolean(dineOrders.pending));
@@ -124,6 +138,7 @@ async function refreshDineCartPrices() {
     return current ? [{ ...item, name: current.name, category: current.category, unitPrice: QuvoMenuOptions.price(current,QuvoMenuOptions.savedSelections(current,item.customization)), pricedOptions: QuvoMenuOptions.hasPricing(current) }] : [];
   });
   state.selectedCategory = "All";
+  window.QuvoDineCart?.save();
   renderCategories(); renderMenu(); renderCart();
 }
 async function submitDineOrder() {
@@ -137,6 +152,7 @@ async function submitDineOrder() {
   }
   if (dineOrders.busy) return;
   dineOrders.busy = true;
+  const sessionId=dineOrders.sessionId, tableCode=guestTableCode;
   let accepted = false;
   try {
     if (!dineOrders.pending) {
@@ -150,13 +166,18 @@ async function submitDineOrder() {
     const result = await dineOrderApi(dineOrders.pending.payload);
     accepted = true;
     // Keeping an old retry key is safe if storage removal fails; never submit it as a new order.
-    try { saveDinePending(null); } catch { dineOrders.pending = null; }
+    if (!window.QuvoDineCart || window.QuvoDineCart.clear(sessionId,tableCode)) {
+      try { saveDinePending(null,sessionId,tableCode); } catch { if(dineOrders.sessionId===sessionId&&guestTableCode===tableCode)dineOrders.pending=null; }
+    }
+    if(dineOrders.sessionId!==sessionId||guestTableCode!==tableCode||!state.sessionApproved)return;
+    dineOrders.pending=null;
     state.cart = [];
     setDineOrder(result.order);
     showScreen("screenTracking");
     if (result.order.payment_status === "unpaid") showCashierPaymentPopup(result.order);
     else showToast(result.replayed ? "Your saved order has been restored." : "Order submitted.");
   } catch (error) {
+    if(dineOrders.sessionId!==sessionId||guestTableCode!==tableCode||!state.sessionApproved)return;
     if (error.code === "ordering_closed") {
       try { saveDinePending(null); } catch { dineOrders.pending=null; }
       window.QuvoOrdering?.showClosed(error.message);

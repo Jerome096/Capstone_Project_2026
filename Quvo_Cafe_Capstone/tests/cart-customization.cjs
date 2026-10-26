@@ -16,13 +16,14 @@ ctx.window=ctx;
 if(onlineMode){ctx.state.onlineCustomer={id:'fixture-customer'};ctx.state.accessMode='online';ctx.document.body={classList:{add(){},remove(){}}};ctx.document.activeElement=null;el('itemModal').querySelector=()=>null;}
 ctx.onlineCartLocked=()=>locked;ctx.online={busy:false,pending:null};ctx.renderOnlinePayment=()=>{};ctx.onlinePaymentReady=()=>true;ctx.updateFulfillmentDisplay=()=>{};
 ctx.document.querySelector=()=>({value:'GCash'});ctx.onlineApiUrl=value=>'api/index.php?action='+value;
-const run=code=>vm.runInContext(code,ctx),root=path.resolve(__dirname,onlineMode?'../../Quvo_Cafe_Online_Ordering':'../../Quvo_Cafe_Customer_Branded(3)');for(const file of ['cart/cart.js','menu/customization.js'])run(fs.readFileSync(path.join(root,file),'utf8'));
+const run=code=>vm.runInContext(code,ctx),root=path.resolve(__dirname,onlineMode?'../../Quvo_Cafe_Online_Ordering':'../../Quvo_Cafe_Customer_Branded(3)');for(const file of ['shared/cart-limits.js','cart/cart.js','menu/customization.js'])run(fs.readFileSync(path.join(root,file),'utf8'));
 run('openCartItemEditor("coffee1")');assert.equal(el('sugarLevel').value,'sugar-75');assert.equal(el('iceLevel').value,'ice-less');assert.equal(el('itemNotes').value,'No straw');assert.match(el('addToCartBtn').textContent,/Save changes.*300/);
 el('sugarLevel').value='sugar-25';el('iceLevel').value='ice-none';run('handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,2);assert.equal(ctx.state.cart[0].cartId,'coffee1');assert.equal(ctx.state.cart[0].unitPrice,150);assert.equal(ctx.state.cart[0].customization.options['sugar-level'],'sugar-25');assert.match(el('cartItems').innerHTML,/data-cart-edit/);
 run('openCartItemEditor("food1")');assert.equal(el('drinkOptions').style.display,'none');el('itemNotes').value='No sauce <extra>';run('handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart[1].customization.notes,'No sauce <extra>');assert.equal(ctx.state.cart[1].customization.sugarLevel,'Not applicable');assert.match(el('cartItems').innerHTML,/&lt;extra&gt;/);
 run('openCartItemEditor("food1")');el('itemNotes').value='Cancel this edit';run('closeItemModal()');assert.equal(ctx.state.cart[1].customization.notes,'No sauce <extra>');assert.equal(ctx.state.editingCartId,null);
 locked=true;run('openCartItemEditor("coffee1")');assert.equal(ctx.state.editingCartId,null);locked=false;
-ctx.state.cart=Array.from({length:50},(_,i)=>({...ctx.state.cart[0],cartId:'line'+i}));run('openCartItemEditor("line0");handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,50,'editing is allowed at the line limit');
+ctx.state.cart=Array.from({length:50},(_,i)=>({...ctx.state.cart[0],cartId:'line'+i,itemId:i?String(100+i):'7'}));
+ctx.CUSTOMER_DATA.menuItems.push(...ctx.state.cart.slice(1).map(row=>({id:row.itemId,name:row.name,category:row.category,price:row.unitPrice})));run('openCartItemEditor("line0");handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,50,'editing is allowed at the line limit');
 run('openItemModal("7");handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,50,'adding still respects line limit');
 if(onlineMode){
   run(fs.readFileSync(path.join(root,'checkout/payment.js'),'utf8'));
@@ -30,4 +31,13 @@ if(onlineMode){
   run('openCartItemEditor("line0")');el('sugarLevel').value='sugar-0';run('handleAddToCart({preventDefault(){}})');assert.equal(run('checkoutPayment.receipt'),'data:image/png;base64,test','same-total editing preserves receipt');
   run('openCartItemEditor("line0");state.modalQuantity=3;handleAddToCart({preventDefault(){}})');assert.equal(run('checkoutPayment.receipt'),null,'changed total clears previous receipt');assert.equal(run('onlinePaymentReady()'),false,'new total requires matching payment proof');
 }
+ctx.state.cart=[];run('openItemModal("7");state.modalQuantity=11;handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,0,'oversized modal cannot add a line');
+run('state.modalQuantity=6;handleAddToCart({preventDefault(){}});openItemModal("7");state.modalQuantity=4;handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,2,'different options can share the limit');
+run('openItemModal("7");handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart.length,2,'repeated add cannot exceed ten');assert.equal(el('addToCartBtn').disabled,true);
+run('updateCartQuantity(state.cart[0].cartId,1)');assert.equal(ctx.state.cart[0].quantity,6,'cart stepper cannot bypass aggregate limit');
+run('openCartItemEditor(state.cart[0].cartId)');assert.equal(el('addToCartBtn').disabled,false,'editing a full item keeps its existing allowance');assert.equal(el('increaseQty').disabled,true);
+run('state.modalQuantity=7;handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart[0].quantity,6,'editing cannot exceed shared allowance');
+run('state.modalQuantity=5;handleAddToCart({preventDefault(){}});updateCartQuantity(state.cart[1].cartId,1)');assert.equal(ctx.state.cart[1].quantity,5,'reducing a line frees quantity for another variant');
+run('openItemModal("8");state.modalQuantity=10;handleAddToCart({preventDefault(){}})');assert.equal(ctx.state.cart[2].quantity,10,'a different item has a separate allowance');
+assert.match(el('cartItems').innerHTML,/data-cart-plus="[^"]+" disabled/,'full items disable cart plus buttons');
 console.log('PASS ('+(onlineMode?'online':'dine-in')+'): coffee selections, in-place edits, food notes, cancel, escaping, original price/ID, pending lock, 50-line limit'+(onlineMode?' and payment-proof total guard.':'.'));

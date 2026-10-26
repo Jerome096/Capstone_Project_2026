@@ -14,9 +14,7 @@ try{
     if(!in_array($action,['save','delete'],true))throw new OrderError('Invalid menu action.');
     $db->beginTransaction();
     if($action==='delete'){
-        inventory_lock($db);$id=orders_id($input['id']??null);
-        $q=$db->prepare('DELETE dbo.menu_items OUTPUT DELETED.menu_item_id WHERE menu_item_id=?');$q->execute([$id]);$removed=$q->fetchColumn();$q->closeCursor();
-        if($removed===false)throw new OrderError('This item no longer exists. Refresh the menu.',404);
+        $id=orders_id($input['id']??null);menu_remove($db,$id,(int)$user['staff_id']);
         $db->commit();quvo_json(['ok'=>true,'id'=>$id]);
     }
     $item=menu_save($db,$input);$db->commit();

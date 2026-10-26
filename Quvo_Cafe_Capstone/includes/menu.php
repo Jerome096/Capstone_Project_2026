@@ -28,9 +28,21 @@ function menu_image_send(PDO $db,mixed $id,mixed $version):never {
 }
 function menu_rows(PDO $db,?int $id=null):array {
     $sql='SELECT m.menu_item_id,m.item_name,m.category,m.price,m.is_available,m.option_groups_json,CONVERT(varchar(36),i.image_version) image_version,CASE WHEN '.inventory_menu_condition().' THEN 1 ELSE 0 END effective_available,CASE WHEN '.inventory_stock_condition().' THEN 1 ELSE 0 END stock_available FROM dbo.menu_items m LEFT JOIN dbo.menu_item_images i ON i.menu_item_id=m.menu_item_id';
-    $q=$db->prepare($sql.($id===null?' ORDER BY m.menu_item_id DESC':' WHERE m.menu_item_id=?'));$q->execute($id===null?[]:[$id]);$rows=$q->fetchAll();$q->closeCursor();
+    $q=$db->prepare($sql.' WHERE '.menu_active_condition().($id===null?' ORDER BY m.menu_item_id DESC':' AND m.menu_item_id=?'));$q->execute($id===null?[]:[$id]);$rows=$q->fetchAll();$q->closeCursor();
     return array_map(fn($row)=>['id'=>(int)$row['menu_item_id'],'name'=>$row['item_name'],'category'=>$row['category'],'price'=>(float)$row['price'],
         'manualAvailable'=>(bool)$row['is_available'],'inventoryBlocked'=>false,'stockWarning'=>!(bool)$row['stock_available'],'available'=>(bool)$row['effective_available']]+menu_metadata($row,'../api/menu-image/index.php?'),$rows);
+}
+// The caller owns the transaction. Retain snapshots, recipes and photos needed
+// by past orders and orders still awaiting payment; retrying removal is safe.
+function menu_remove(PDO $db,int $id,int $actor):void {
+    inventory_lock($db);
+    $q=$db->prepare('SELECT m.item_name,CASE WHEN '.menu_active_condition().' THEN 1 ELSE 0 END active FROM dbo.menu_items m WITH(UPDLOCK,HOLDLOCK) WHERE m.menu_item_id=?');
+    $q->execute([$id]);$item=$q->fetch();$q->closeCursor();
+    if(!$item)throw new OrderError('This item no longer exists. Refresh the menu.',404);
+    $db->prepare('UPDATE dbo.menu_items SET is_available=0,updated_at=SYSUTCDATETIME() WHERE menu_item_id=?')->execute([$id]);
+    if(!(bool)$item['active'])return;
+    $db->prepare("INSERT dbo.system_audit_log(actor_staff_id,action,entity_type,entity_key,details_json) VALUES(?,'menu_item_removed','menu_item',?,?)")
+        ->execute([$actor,(string)$id,json_encode(['name'=>$item['item_name']],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
 }
 // The caller owns the transaction; menu settings and its image change together.
 function menu_save(PDO $db,array $input):array {
@@ -41,7 +53,7 @@ function menu_save(PDO $db,array $input):array {
     $hasImage=array_key_exists('image',$input);$image=$hasImage?menu_image_input($input['image']):null;
     inventory_lock($db);
     if($id!==null){
-        $q=$db->prepare('SELECT option_groups_json,category FROM dbo.menu_items WITH(UPDLOCK,HOLDLOCK) WHERE menu_item_id=?');$q->execute([$id]);$old=$q->fetch();$q->closeCursor();
+        $q=$db->prepare('SELECT m.option_groups_json,m.category FROM dbo.menu_items m WITH(UPDLOCK,HOLDLOCK) WHERE m.menu_item_id=? AND '.menu_active_condition());$q->execute([$id]);$old=$q->fetch();$q->closeCursor();
         if(!$old)throw new OrderError('This menu item was removed. Refresh the menu.',404);
         $oldGroups=menu_groups($old);$hasCheckbox=in_array('checkbox',array_column($oldGroups,'type'),true);
         if($hasGroups&&(array_key_exists('optionVersion',$input)||menu_has_pricing($oldGroups)||$hasCheckbox)){

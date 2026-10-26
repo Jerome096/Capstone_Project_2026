@@ -59,14 +59,14 @@
       </label>
       <label>
         Unit (required)
-        <input
+        <select
           id="inventoryUnit"
-          placeholder="Example: kg"
-          type="text"
-          maxlength="20"
+          aria-describedby="inventoryUnitHint"
           required
-        />
-        <span class="inventory-field-hint">Use one unit: kg, g, L, ml or pcs.</span>
+        >
+          <option value="">Choose unit</option>
+        </select>
+        <span id="inventoryUnitHint" class="inventory-field-hint">Stock quantities and reorder levels use this unit.</span>
       </label>
       <label>
         Reorder level

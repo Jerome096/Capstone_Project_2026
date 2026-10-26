@@ -8,6 +8,7 @@
   let preference='auto',soundError=false,options={},controls,notice;
   let previous=new Map(),announced=new Set(),reminders=new Map();
   const queue=new Map();
+  const sounding=new Set();
   try{preference=sessionStorage.getItem(preferenceKey)||'auto';}catch{}
   const savePreference=value=>{preference=value;try{sessionStorage.setItem(preferenceKey,value);}catch{}};
   function saveSnapshot(){
@@ -17,7 +18,14 @@
     reminders=new Map([...reminders].filter(([id])=>previous.has(id)));
     try{sessionStorage.setItem('quvo_ready_orders_'+scope,JSON.stringify({orders:[...previous],announced:[...announced],reminders:[...reminders]}));}catch{}
   }
-  function reset(){scope='';previous=new Map();announced=new Set();reminders=new Map();queue.clear();pending=false;soundPending=false;clearTimeout(soundRetry);soundRetry=0;renderNotice();}
+  function stopSound(){
+    for(const {tone,gain} of sounding){
+      try{tone.stop();}catch{}
+      tone.disconnect();gain.disconnect();
+    }
+    sounding.clear();
+  }
+  function reset(){stopSound();scope='';previous=new Map();announced=new Set();reminders=new Map();queue.clear();pending=false;soundPending=false;lastChime=0;clearTimeout(soundRetry);soundRetry=0;renderNotice();}
   function useScope(value){
     if(scope===value)return;
     reset();scope=value;
@@ -51,17 +59,22 @@
     if(withVibration&&vibrationSupported){try{navigator.vibrate(preview?[100]:[180,100,180,100,320]);}catch{}}
     if(!audio||audio.state!=='running'){if(AudioEngine){soundError=true;renderControls();}return false;}
     try{
+      // Replace any previous sequence so reminders and test taps never stack volume.
+      stopSound();
       const start=audio.currentTime+.02;
-      for(const [index,frequency] of [659.25,830.61,987.77].entries()){
-        const tone=audio.createOscillator(),gain=audio.createGain(),at=start+index*.19;
-        tone.type='sine';tone.frequency.value=frequency;
-        gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(.12,at+.025);gain.gain.exponentialRampToValueAtTime(.0001,at+.18);
+      // Four three-note chimes over 7.2 seconds. A brighter waveform and 90%
+      // peak gain are more noticeable without clipping or exceeding device volume.
+      for(let repeat=0;repeat<4;repeat++)for(const [index,frequency] of [659.25,830.61,987.77].entries()){
+        const tone=audio.createOscillator(),gain=audio.createGain(),at=start+repeat*2+index*.42;
+        tone.type='triangle';tone.frequency.value=frequency;
+        gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(.9,at+.02);gain.gain.setValueAtTime(.9,at+.25);gain.gain.exponentialRampToValueAtTime(.0001,at+.35);
         tone.connect(gain);gain.connect(audio.destination);
-        tone.onended=()=>{tone.disconnect();gain.disconnect();};tone.start(at);tone.stop(at+.19);
+        const voice={tone,gain};sounding.add(voice);
+        tone.onended=()=>{sounding.delete(voice);tone.disconnect();gain.disconnect();};tone.start(at);tone.stop(at+.36);
       }
       if(!preview)lastChime=Date.now();
       soundError=false;return true;
-    }catch{soundError=true;renderControls();return false;}
+    }catch{stopSound();soundError=true;renderControls();return false;}
   }
   function deliverPendingSound(recover=false){
     if(!soundPending||!queue.size||preference==='off'||document.visibilityState==='hidden')return;
@@ -96,11 +109,11 @@
     else deliverPendingSound();
     renderNotice();
   }
-  function mute(){savePreference('off');enabled=false;pending=false;soundPending=false;clearTimeout(soundRetry);soundRetry=0;try{navigator.vibrate?.(0);}catch{}renderControls();renderNotice();}
+  function mute(){stopSound();savePreference('off');enabled=false;pending=false;soundPending=false;clearTimeout(soundRetry);soundRetry=0;try{navigator.vibrate?.(0);}catch{}renderControls();renderNotice();}
   function renderNotice(){
     if(!notice)return;
-    const order=queue.values().next().value;notice.hidden=!order;
-    if(!order){soundPending=false;pending=false;clearTimeout(soundRetry);soundRetry=0;}
+    const order=queue.values().next().value,wasVisible=!notice.hidden;notice.hidden=!order;
+    if(!order){if(wasVisible)stopSound();soundPending=false;pending=false;clearTimeout(soundRetry);soundRetry=0;}
     notice.querySelector('[data-ready-play]').hidden=!order||!soundPending||preference==='off';
     if(!order){notice.querySelector('strong').textContent='';notice.querySelector('p').textContent='';return;}
     notice.querySelector('strong').textContent=queue.size>1?'Your orders are ready':'Your order is ready';
@@ -149,9 +162,10 @@
     controls.querySelector('[data-ready-toggle]').addEventListener('click',()=>enabled&&preference!=='off'&&!soundError?mute():enable(true));
     controls.querySelector('[data-ready-test]').addEventListener('click',()=>enable(true));
     notice.querySelector('[data-ready-play]').addEventListener('click',()=>enable(true));
-    notice.querySelector('[data-ready-dismiss]').addEventListener('click',()=>{const id=queue.keys().next().value;queue.delete(id);renderNotice();});
+    notice.querySelector('[data-ready-dismiss]').addEventListener('click',()=>{stopSound();const id=queue.keys().next().value;queue.delete(id);renderNotice();});
     notice.querySelector('[data-ready-view]').addEventListener('click',async event=>{
       const button=event.currentTarget,id=queue.keys().next().value;if(!id||button.disabled)return;
+      stopSound();
       button.disabled=true;
       try{await options.onSelect(id);queue.delete(id);renderNotice();}catch{}finally{button.disabled=false;}
     });
@@ -163,6 +177,10 @@
       if(((submit&&!submit.disabled)||preference==='on')&&(!enabled||(AudioEngine&&audio?.state!=='running')))enable(false);
     },true);
     document.addEventListener('visibilitychange',async()=>{
+      if(document.visibilityState==='hidden'){
+        if(sounding.size&&queue.size&&preference!=='off')soundPending=true;
+        stopSound();return;
+      }
       if(document.visibilityState!=='visible')return;
       try{await options.onVisible?.();}catch{}flush();deliverPendingSound(true);renderControls();
     });

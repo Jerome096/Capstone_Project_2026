@@ -221,6 +221,10 @@
     grid-template-columns: 1fr;
   }
 
+  .inventory-bom-section {
+    order: -1;
+  }
+
   .inventory-toolbar,
   .inventory-actions {
     flex-direction: column;
@@ -314,7 +318,7 @@
 #inventoryPendingBanner { padding: 12px; border: 1px solid var(--q-border); border-radius: 12px; margin-bottom: 12px; }
 #inventoryPendingBanner[hidden] { display: none; }
 .inventory-row > * { min-width: 0; overflow-wrap: anywhere; }
-.inventory-row-actions { flex-wrap: wrap; }
+.inventory-row-actions { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
 .inventory-row-actions { padding-block: 6px; }
 .inventory-row-actions .inventory-remove-btn { color: #9c2f20; }
 .inventory-row-actions .btn { min-height: 42px; }

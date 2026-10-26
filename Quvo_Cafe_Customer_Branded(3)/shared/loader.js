@@ -6,12 +6,14 @@
     "shared/order-ready-alerts.js",
     "menu/menu-data.js",
     "shared/state.js",
+    "shared/cart-limits.js",
     "shared/helpers.js",
     "shared/navigation.js",
     "cart/cart.js",
     "dine-in/dine-in.js",
     "dine-in/assistance.js",
     "orders/dine-in-orders.js",
+    "shared/cart-storage.js",
     "menu/menu.js",
     "checkout/checkout.js",
     "menu/customization.js",
@@ -36,7 +38,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=staff-alerts-1";
+        script.src = src + "?v=customer-item-limit-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

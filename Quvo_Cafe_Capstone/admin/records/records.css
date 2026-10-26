@@ -1,4 +1,5 @@
 /* Styles for records; shared controls remain in shared/css. */
+.record-item p, .record-summary-card span { min-width:0; overflow-wrap:anywhere; }
 
 .records-card {
   border: 1px solid var(--border);

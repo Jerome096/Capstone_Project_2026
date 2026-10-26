@@ -61,7 +61,7 @@ function renderCart() {
               <div class="cart-stepper">
                 <button type="button" data-cart-minus="${escapeCustomerHtml(item.cartId)}">−</button>
                 <strong>${item.quantity}</strong>
-                <button type="button" data-cart-plus="${escapeCustomerHtml(item.cartId)}">+</button>
+                <button type="button" data-cart-plus="${escapeCustomerHtml(item.cartId)}" ${QuvoCartLimits.remaining(item.itemId) === 0 ? "disabled" : ""}>+</button>
               </div>
               <div class="cart-item-controls">
                 <button class="edit-cart-btn" type="button" data-cart-edit="${escapeCustomerHtml(item.cartId)}" ${onlineCartLocked() ? "disabled" : ""}>Edit</button>
@@ -103,19 +103,22 @@ function updateCartQuantity(cartId, change) {
     return;
   }
 
-  item.quantity = Math.min(999, item.quantity + change);
+  if (change > 0 && !QuvoCartLimits.allowed(item.itemId, item.quantity + change, item.cartId)) return showToast(QuvoCartLimits.message);
+  item.quantity += change;
 
   if (item.quantity <= 0) {
     removeCartItem(cartId);
     return;
   }
 
+  window.QuvoOnlineCart?.save();
   renderCart();
 }
 
 function removeCartItem(cartId) {
   if (onlineCartLocked()) return showToast("Retry your pending order before changing the cart.");
   state.cart = state.cart.filter((item) => item.cartId !== cartId);
+  window.QuvoOnlineCart?.save();
   renderCart();
   showToast("Item removed from cart.");
 }

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/orders.php';
+require_once __DIR__.'/payment-images.php';
 
 // The caller commits the order, immutable catalog snapshots, and payment together.
 function pos_submit(PDO $db,array $actor,array $input): array
@@ -28,7 +29,7 @@ function pos_submit(PDO $db,array $actor,array $input): array
     }
     $expected=orders_cents($input['expected_total']??null);$received=orders_cents($input['amount_received']??null);
     $method=$input['payment_method']??null;$reference=orders_text($input['payment_reference']??'',100);
-    if(!in_array($method,['Cash','GCash','PayMaya'],true))throw new OrderError('Choose Cash, GCash or PayMaya.');
+    if(!is_string($method)||$method===''||strlen($method)>10)throw new OrderError('Choose a valid payment method.');
     if($received<$expected||($method!=='Cash'&&$received!==$expected)||($method==='Cash'&&$reference!==''))throw new OrderError('Record the full payment; digital payment must match the total.');
     $hash=hash('sha256',json_encode([$customer,$lines,$expected,$method,$received,$reference],JSON_THROW_ON_ERROR));
     $q=$db->prepare('SELECT order_id,CONVERT(varchar(64),submission_hash,2) request_hash FROM dbo.orders WHERE pos_staff_id=? AND submission_key=?');
@@ -37,6 +38,9 @@ function pos_submit(PDO $db,array $actor,array $input): array
         if(!hash_equals(strtolower($old['request_hash']),$hash))throw new OrderError('This submission key was already used for a different POS order.',409);
         return ['order'=>orders_get($db,(int)$old['order_id']),'replayed'=>true];
     }
+    // Validate active configuration only after replay lookup. A removed method
+    // must not prevent recovery of an already accepted, identical payment.
+    if($method!=='Cash')payment_active_method($db,$method);
     [$catalog,$total]=orders_catalog($db,$lines,$expected);
     foreach($lines as $line)if(!in_array($catalog[$line['menu_item_id']]['category'],['coffee','non-coffee'],true)&&$line['customization']['size']!=='Not applicable')throw new OrderError('Drink sizes apply only to drinks.');
     $q=$db->prepare("INSERT dbo.orders(order_source,pos_staff_id,customer_name,submission_key,submission_hash,total_amount,preferred_payment_method) OUTPUT INSERTED.order_id VALUES('walk_in',?,?,?,CONVERT(binary(32),?,2),?,?)");

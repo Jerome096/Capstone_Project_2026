@@ -130,6 +130,12 @@ async function applyGuestSession(data, generation) {
   CUSTOMER_DATA.tableNumber = data.table.name;
   setTableLabels();
   guestSessionStatus = data.session?.status || null;
+  if (["closed", "cancelled", "rejected"].includes(guestSessionStatus)) {
+    const endedId=String(data.session.session_id);
+    window.QuvoDineCart?.clear(endedId,guestTableCode);
+    try {saveDinePending(null,endedId,guestTableCode);}catch{}
+    if(dineOrders.sessionId===endedId&&dineOrders.tableCode===guestTableCode){dineOrders.pending=null;dineOrders.sessionId="";}
+  }
   updateGuestIdleNotice(data.session);
   nameForm.querySelector('button[type="submit"]').disabled = !data.table.active;
   if (data.table.active && guestSessionStatus === "active") {
@@ -147,7 +153,7 @@ async function applyGuestSession(data, generation) {
     state.customerName = data.session.guest_name;
     state.sessionApproved = true;
     renderGuestIdleNotice();
-    restoreDinePending(String(data.session.session_id));
+    restoreDinePending(String(data.session.session_id), !wasApproved);
     if (dineOrders.pending && !state.cart.length) state.cart = dineOrders.pending.cart || [];
     renderCart();
     renderCategories();

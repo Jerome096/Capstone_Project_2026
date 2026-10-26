@@ -32,6 +32,7 @@ const context = vm.createContext({
   getFoodItems:order=>order.items.filter(item=>!['coffee','non-coffee'].includes(item.category)),
   guestTableCode:"1",guestCsrf:"guest",formatCurrency:n=>Number(n).toFixed(2),
   sessionStorage:{store:new Map(),setItem(k,v){this.store.set(k,v)},getItem(k){return this.store.get(k)||null},removeItem(k){this.store.delete(k)}},
+  localStorage:{store:new Map(),setItem(k,v){this.store.set(k,v)},getItem(k){return this.store.get(k)||null},removeItem(k){this.store.delete(k)}},
   async fetch(url,options) {
     if (options.method === "POST") {
       const body=JSON.parse(options.body); requests.push(body);
@@ -118,6 +119,7 @@ run(read("Quvo_Cafe_Customer_Branded(3)/orders/dine-in-orders.js"));
   await run("submitDineOrder()");
   assert.equal(run("Boolean(dineOrders.pending)"),true);
   assert.equal(run("state.cart.length"),1,"failed submission retains cart");
+  context.sessionStorage.store.clear();
   run('dineOrders.sessionId=""; dineOrders.pending=null; state.cart=[]; restoreDinePending("8")');
   assert.equal(run("state.cart.length"),1,"reload recovers pending cart");
   await run("submitDineOrder()");

@@ -180,6 +180,7 @@ function online_submit(PDO $db,int $customerId,array $input): array
         if(!hash_equals(strtolower($old['request_hash']),$hash)) throw new OrderError('Submission key already used for a different order.',409);
         return ['order'=>online_order($db,$customerId,(int)$old['order_id']),'replayed'=>true];
     }
+    orders_require_customer_quantities($lines);
     ordering_require_open($db);
     // Existing submissions can still be recovered with their original payment choice.
     if($method==='Cash') throw new OrderError('Choose an available online payment method.');

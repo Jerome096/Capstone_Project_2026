@@ -109,6 +109,13 @@ function payment_receipt_records(PDO $db,mixed $date,mixed $status='all',mixed $
     return ['uploads'=>$rows,'next_offset'=>$more?$offset+50:null];
 }
 
+// POS uses configured names even when no QR image has been uploaded.
+function payment_pos_methods(PDO $db):array {
+    $methods=[['code'=>'Cash','label'=>'Cash']];
+    foreach($db->query("SELECT payment_method,display_name FROM dbo.online_payment_methods WHERE is_active=1 AND payment_method<>'Cash' ORDER BY updated_at,payment_method")->fetchAll() as $row)
+        $methods[]=['code'=>$row['payment_method'],'label'=>$row['display_name']];
+    return $methods;
+}
 function payment_active_method(PDO $db, mixed $method): array
 {
     if (!is_string($method) || strlen($method)>10) throw new OrderError('Choose a valid payment method.');

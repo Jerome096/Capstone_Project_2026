@@ -177,6 +177,10 @@ body.admin-mode .locked-nav {
   opacity: 1;
 }
 
+.nav-badge[hidden] {
+  display: none !important;
+}
+
 .nav-badge {
   width: auto;
   min-width: 20px;

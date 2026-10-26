@@ -100,6 +100,10 @@
     const menuLabel = navOpen ? "Close workspace menu" : "Open workspace menu";
     toggle.setAttribute("aria-label", total ? `${menuLabel}. Needs attention: ${description}` : menuLabel);
     toggle.title = total ? `Needs attention: ${description}` : "Workspace menu";
+    for (const screen of Object.keys(notificationCounts)) {
+      const badge = sidebar.querySelector(`.nav-item[data-screen="${screen}"] .nav-badge`);
+      if (badge) badge.hidden = notificationCounts[screen] < 1;
+    }
     for (const [screen, link] of notificationLinks) {
       link.hidden = notificationCounts[screen] === 0;
       link.querySelector(".nav-badge").textContent = notificationCounts[screen];

@@ -178,6 +178,8 @@
   justify-content: space-between;
   gap: 14px;
 }
+.receipt-line > span, .receipt-line > b { min-width:0; overflow-wrap:anywhere; }
+.receipt-line > b { text-align:right; }
 
 .receipt-items {
   display: grid;

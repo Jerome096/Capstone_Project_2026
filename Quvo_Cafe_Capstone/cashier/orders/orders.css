@@ -290,3 +290,10 @@
   font-size: 12px;
 }
 .food-readiness span { font-size: 10px; }
+.sql-stock-notice { margin:12px 0; padding:12px 14px; border:1px solid #dfc58d; border-radius:12px; background:#fff7e8; color:#694813; font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.sql-stock-notice[hidden] { display:none; }
+.sql-stock-notice strong { display:block; }
+.sql-stock-notice ul { max-height:190px; overflow-y:auto; margin:8px 0; padding-left:18px; }
+.sql-stock-notice li + li { margin-top:8px; }
+.sql-stock-notice p { margin:6px 0 0; }
+.sql-stock-notice small { display:block; font-size:12px; }

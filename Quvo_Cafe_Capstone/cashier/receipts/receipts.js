@@ -179,7 +179,7 @@ function buildPaymentReviewPaper(review) {
 
       <div class="receipt-total-box">
         <div class="receipt-line grand-total"><span>Total</span><b>₱${review.total.toLocaleString("en-PH")}</b></div>
-        <div class="receipt-line"><span>Payment method</span><b>${review.paymentMethod}</b></div>
+        <div class="receipt-line"><span>Payment method</span><b>${escapeHtml(review.paymentMethodLabel || review.paymentMethod)}</b></div>
         ${
           review.paymentMethod === "Cash"
             ? `
@@ -187,7 +187,7 @@ function buildPaymentReviewPaper(review) {
           <div class="receipt-line"><span>Change to give</span><b>₱${review.change.toLocaleString("en-PH")}</b></div>
         `
             : `
-          <div class="receipt-line"><span>${getPaymentReferenceLabel(review.paymentMethod)}</span><b>${escapeHtml(review.gcashReference || "Verified by cashier")}</b></div>
+          <div class="receipt-line"><span>${escapeHtml(getPaymentReferenceLabel(review.paymentMethodLabel || review.paymentMethod))}</span><b>${escapeHtml(review.gcashReference || "Verified by cashier")}</b></div>
         `
         }
       </div>
@@ -356,7 +356,7 @@ function buildReceiptPaper(receipt) {
 
       <div class="receipt-total-box">
         <div class="receipt-line grand-total"><span>Total</span><b>₱${receipt.total.toLocaleString("en-PH")}</b></div>
-        <div class="receipt-line"><span>Payment method</span><b>${method}</b></div>
+        <div class="receipt-line"><span>Payment method</span><b>${escapeHtml(method)}</b></div>
         ${
           method === "Cash"
             ? `
@@ -364,7 +364,7 @@ function buildReceiptPaper(receipt) {
           <div class="receipt-line"><span>Change</span><b>₱${change.toLocaleString("en-PH")}</b></div>
         `
             : `
-          <div class="receipt-line"><span>${getPaymentReferenceLabel(method)}</span><b>${receipt.gcashReference || "Verified"}</b></div>
+          <div class="receipt-line"><span>${escapeHtml(getPaymentReferenceLabel(method))}</span><b>${escapeHtml(receipt.gcashReference || "Verified")}</b></div>
         `
         }
       </div>

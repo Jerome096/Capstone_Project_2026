@@ -1,5 +1,9 @@
 // SQL owns stock balances, recipes and the movement log. Stock warnings never change menu availability.
 const inventorySql = {loaded:false, loading:false, busy:false, pending:null, request:0, error:'', menus:[], impact:[], nextOffset:null, editVersion:null, editCurrent:null, recipeId:null, restockOnly:false};
+const inventoryStockUnitChoices = [
+  ['kg','kg — Kilogram'],['g','g — Gram'],['l','L — Liter'],['ml','mL — Milliliter'],['pcs','pcs — Pieces'],
+  ['pack','pack — Pack'],['bottle','bottle — Bottle'],['box','box — Box'],['can','can — Can'],['cup','cup — Cup'],
+];
 function inventoryAllowed() {return window.QUVO_CONFIG.allowedScreens.includes('inventory');}
 function inventoryPendingKey() {
   const id=window.QUVO_SESSION?.staff_id;
@@ -127,16 +131,26 @@ function renderInventoryMovements() {
 }
 function renderInventoryRecipes() {
   const e=escapeHtml;
-  document.getElementById('inventoryRecipeList').innerHTML=state.inventoryRecipes.length?state.inventoryRecipes.map(recipe=>`<article class="inventory-recipe-card"><div class="inventory-card-top"><b>${e(recipe.menu)}</b><span class="inventory-chip">Version ${recipe.version}</span></div><div class="inventory-chip-row">${recipe.ingredients.map(line=>`<span class="inventory-chip">${e(line.item)}: ${inventoryQty(line.qty)} ${e(line.unit)}</span>`).join('')}</div><div class="inventory-recipe-actions"><button class="btn light" onclick="openInventoryRecipeModal('${recipe.menuId}')">Edit Bill of Materials</button></div></article>`).join(''):`<article class="inventory-recipe-card"><b>${inventorySql.loaded?'No Bill of Materials saved.':'Recipes not loaded.'}</b><p>Add stock items, then link the ingredients used for one serving of each menu item.</p></article>`;
+  document.getElementById('inventoryRecipeList').innerHTML=state.inventoryRecipes.length?state.inventoryRecipes.map(recipe=>`<article class="inventory-recipe-card"><div class="inventory-card-top"><b>${e(recipe.menu)}</b></div><div class="inventory-chip-row">${recipe.ingredients.map(line=>`<span class="inventory-chip">${e(line.item)}: ${inventoryQty(line.qty)} ${e(line.unit)}</span>`).join('')}</div><div class="inventory-recipe-actions"><button class="btn light" onclick="openInventoryRecipeModal('${recipe.menuId}')">Edit Bill of Materials</button></div></article>`).join(''):`<article class="inventory-recipe-card"><b>${inventorySql.loaded?'No Bill of Materials saved.':'Recipes not loaded.'}</b><p>Add stock items, then link the ingredients used for one serving of each menu item.</p></article>`;
 }
 function inventoryCanEdit() {return inventoryAllowed()&&inventorySql.loaded&&!inventorySql.busy&&!inventorySql.pending;}
+function fillInventoryStockUnits(currentUnit='') {
+  const select=document.getElementById('inventoryUnit'),current=String(currentUnit).trim();
+  const e=value=>escapeHtml(value).replaceAll('"','&quot;');
+  const matching=inventoryStockUnitChoices.find(([code])=>code===current.toLowerCase());
+  const choices=current&&!matching?[...inventoryStockUnitChoices,[current,current+' (existing unit)']]:inventoryStockUnitChoices;
+  select.innerHTML='<option value="">Choose unit</option>'+choices.map(([code,label])=>'<option value="'+e(code)+'">'+e(label)+'</option>').join('');
+  select.value=matching?matching[0]:current;
+  document.getElementById('inventoryUnitHint').textContent=current?'The unit stays fixed to preserve this item’s stock history.':'Stock quantities and reorder levels use this unit.';
+}
 function openInventoryStockModal(itemId=null) {
   if(!inventoryCanEdit())return;
   const item=itemId?state.inventoryItems.find(i=>i.id===String(itemId)):null;if(itemId&&!item)return;
   state.editingInventoryItemId=item?.id||null;inventorySql.editVersion=item?.version||null;inventorySql.editCurrent=item?.current??null;
   document.getElementById('inventoryStockTitle').textContent=item?'Update stock item':'New inventory item';
-  const values={inventoryItemName:item?.name||'',inventoryCategory:item?.category||'Other',inventoryCurrent:item?.current??'0',inventoryUnit:item?.unit||'',inventoryReorder:item?.reorder??'0',inventoryLinkedMenu:item?.linkedMenu||'',inventoryNote:''};
+  const values={inventoryItemName:item?.name||'',inventoryCategory:item?.category||'Other',inventoryCurrent:item?.current??'0',inventoryReorder:item?.reorder??'0',inventoryLinkedMenu:item?.linkedMenu||'',inventoryNote:''};
   for(const [id,value] of Object.entries(values))document.getElementById(id).value=value;
+  fillInventoryStockUnits(item?.unit||'');
   document.getElementById('inventoryStockError').textContent='';document.getElementById('inventoryStockModal').classList.remove('hidden');updateInventoryControls();
 }
 function closeInventoryStockModal() {if(inventorySql.busy)return;document.getElementById('inventoryStockModal').classList.add('hidden');state.editingInventoryItemId=null;}
@@ -149,7 +163,7 @@ function inventoryFeedback(errorId,message,fieldId=null) {
 function validateInventoryStock(payload) {
   if(!payload.name||payload.name.length>100)return ['inventoryItemName','Enter a stock item name, up to 100 characters.'];
   if(!payload.category)return ['inventoryCategory','Choose a category.'];
-  if(!/^[a-z][a-z0-9 ._-]{0,19}$/i.test(payload.unit))return ['inventoryUnit','Enter one unit, such as kg, g, L, ml or pcs.'];
+  if(!/^[a-z][a-z0-9 ._-]{0,19}$/i.test(payload.unit))return ['inventoryUnit','Choose one unit from the list.'];
   for(const [key,id,label] of [['current','inventoryCurrent','Current stock'],['reorder','inventoryReorder','Reorder level']]) {
     if(!/^(?:[0-9]{1,9}(?:\.[0-9]{1,3})?|\.[0-9]{1,3})$/.test(payload[key]))return [id,label+' must be zero or a positive number with at most three decimal places.'];
   }
@@ -266,7 +280,12 @@ function inventoryRecipeUnits(stockUnit) {
   const groups=[
     [{code:'L',label:'Liters (L)',scale:1000,aliases:['l','liter','liters','litre','litres']},{code:'ml',label:'Milliliters (ml)',scale:1,aliases:['ml','milliliter','milliliters','millilitre','millilitres']}],
     [{code:'kg',label:'Kilograms (kg)',scale:1000,aliases:['kg','kilogram','kilograms']},{code:'g',label:'Grams (g)',scale:1,aliases:['g','gram','grams']}],
-    [{code:'pcs',label:'Pieces (pcs)',scale:1,aliases:['pc','pcs','piece','pieces']}]
+    [{code:'pcs',label:'Pieces (pcs)',scale:1,aliases:['pc','pcs','piece','pieces']}],
+    [{code:'pack',label:'Packs (pack)',scale:1,aliases:['pack','packs']}],
+    [{code:'bottle',label:'Bottles (bottle)',scale:1,aliases:['bottle','bottles']}],
+    [{code:'box',label:'Boxes (box)',scale:1,aliases:['box','boxes']}],
+    [{code:'can',label:'Cans (can)',scale:1,aliases:['can','cans']}],
+    [{code:'cup',label:'Cups (cup)',scale:1,aliases:['cup','cups']}]
   ];
   for(const choices of groups){const stock=choices.find(unit=>unit.aliases.includes(code));if(stock)return {stock,choices};}
   const stock={code:String(stockUnit),label:String(stockUnit),scale:1};return {stock,choices:[stock]};

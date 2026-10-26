@@ -1,5 +1,43 @@
 // Keep an uncertain submission for the same cashier so a retry cannot charge twice.
-const posSql={busy:false,pending:null};
+const posSql={busy:false,pending:null,paymentMethods:new Map([['Cash','Cash']]),methodsLoading:false,methodsError:false,methodsRequest:0};
+function posPaymentLabel(code){return posSql.paymentMethods.get(code)||String(code||'Payment');}
+function posPaymentMethodAvailable(){return posSql.paymentMethods.has(selectedPaymentMethod)&&(!posSql.methodsLoading||selectedPaymentMethod==='Cash');}
+function selectPosPaymentMethod(code){
+  if(!posSql.paymentMethods.has(code)||(posSql.methodsLoading&&code!=='Cash'))return;
+  selectedPaymentMethod=code;
+  document.querySelectorAll('#posPaymentMethods [data-method]').forEach(button=>{
+    const selected=button.dataset.method===code;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));
+  });
+  const cash=code==='Cash',label=posPaymentLabel(code),amount=document.getElementById('amountReceived');
+  document.getElementById('checkoutCashBlock').classList.toggle('hidden',!cash);
+  document.getElementById('checkoutChangeLine').classList.toggle('hidden',!cash);
+  document.getElementById('checkoutReferenceBlock').classList.toggle('hidden',cash);
+  document.getElementById('paymentReferenceLabel').textContent=getPaymentReferenceLabel(label)+' no. optional';
+  document.getElementById('paymentReference').placeholder='Enter '+label+' reference number if available';
+  if(!cash)amount.value=getCartTotal();validateCheckout();
+}
+function renderPosPaymentMethods(){
+  const list=document.getElementById('posPaymentMethods');if(!list)return;
+  const e=value=>escapeHtml(value).replaceAll('"','&quot;');
+  if(selectedPaymentMethod&&!posSql.paymentMethods.has(selectedPaymentMethod)){
+    selectedPaymentMethod=null;document.getElementById('checkoutCashBlock').classList.remove('hidden');document.getElementById('checkoutChangeLine').classList.remove('hidden');document.getElementById('checkoutReferenceBlock').classList.add('hidden');
+  }
+  list.innerHTML=Array.from(posSql.paymentMethods,([code,label])=>'<button type="button" class="method'+(selectedPaymentMethod===code?' selected':'')+'" data-method="'+e(code)+'" aria-pressed="'+String(selectedPaymentMethod===code)+'"'+(posSql.methodsLoading&&code!=='Cash'?' disabled':'')+'><i data-lucide="'+(code==='Cash'?'banknote':code==='GCash'?'wallet':'credit-card')+'"></i><span>'+e(label)+'</span></button>').join('');
+  document.getElementById('posPaymentMethodsStatus').textContent=posSql.methodsLoading?'Loading payment methods...':posSql.methodsError?'Could not load digital payment methods. Cash is available. Refresh to try again.':'';
+  document.getElementById('posPaymentMethodsRetry').hidden=!posSql.methodsError;
+  lucide.createIcons();validateCheckout();
+}
+async function loadPosPaymentMethods(){
+  const request=++posSql.methodsRequest;posSql.methodsLoading=true;posSql.methodsError=false;renderPosPaymentMethods();
+  try{
+    const response=await fetch(quvoPath('api/pos/index.php')+'?view=payment-methods',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+    const data=await response.json();if(!response.ok||!data.ok||!Array.isArray(data.methods))throw new Error('Payment methods unavailable.');
+    const methods=new Map([['Cash','Cash']]);
+    for(const method of data.methods)if(typeof method.code==='string'&&method.code&&method.code.length<=10&&method.code!=='Cash'&&typeof method.label==='string'&&method.label.trim())methods.set(method.code,method.label);
+    if(request===posSql.methodsRequest)posSql.paymentMethods=methods;
+  }catch{if(request===posSql.methodsRequest){posSql.paymentMethods=new Map([['Cash','Cash']]);posSql.methodsError=true;}}
+  finally{if(request===posSql.methodsRequest){posSql.methodsLoading=false;renderPosPaymentMethods();}}
+}
 function posStaffId(){return String(window.QUVO_SESSION?.staff_id||QUVO_AUTH.getSession()?.staff_id||'');}
 function posPendingKey(){const id=posStaffId();if(!id)throw new Error('Please sign in again.');return 'quvo_pos_sql_pending_v1_'+id;}
 function savePosPending(value){if(value)sessionStorage.setItem(posPendingKey(),JSON.stringify(value));else sessionStorage.removeItem(posPendingKey());posSql.pending=value;}
@@ -14,7 +52,7 @@ function updatePosPendingUi(){
 function startSqlPosReview(){
   if(posSql.pending)return openPosPendingReview();
   const total=state.posCart.reduce((sum,item)=>sum+Math.round(item.price*100)*item.qty,0);
-  if(!selectedPaymentMethod||total<=0||posSql.busy)return;
+  if(!posPaymentMethodAvailable()||total<=0||posSql.busy)return;
   const received=selectedPaymentMethod==='Cash'?document.getElementById('amountReceived').value.trim():(total/100).toFixed(2);
   const customer=document.getElementById('counterCustomerName').value.trim()||'Walk-in customer';
   const reference=selectedPaymentMethod==='Cash'?'':document.getElementById('paymentReference').value.trim();
@@ -23,7 +61,7 @@ function startSqlPosReview(){
   const key=[hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
   const payload={submission_key:key,customer_name:customer,expected_total:(total/100).toFixed(2),payment_method:selectedPaymentMethod,amount_received:received,payment_reference:reference,
     items:state.posCart.map(item=>({menu_id:item.menuId,quantity:item.qty,drink_options:item.drinkOptions,...(item.optionSelections?{custom_options:item.optionSelections,custom_options_version:item.optionVersion}:{}),notes:item.note||''}))};
-  pendingPaymentReview={type:'manual',orderNumber:'New walk-in order',location:'Counter',source:'Walk-in / POS',customerName:customer,paymentMethod:selectedPaymentMethod,total:total/100,
+  pendingPaymentReview={type:'manual',orderNumber:'New walk-in order',location:'Counter',source:'Walk-in / POS',customerName:customer,paymentMethod:selectedPaymentMethod,paymentMethodLabel:posPaymentLabel(selectedPaymentMethod),total:total/100,
     amountReceived:Number(received),change:Math.max(0,Number(received)-total/100),gcashReference:reference,payload,
     items:state.posCart.map(item=>({...item,category:state.menu.find(menu=>menu.id===item.menuId)?.category||'',customizations:[...(item.customizations||[])]}))};
   document.getElementById('posSqlError').textContent='';closeCheckoutModal();openPaymentReviewModal();updatePosPendingUi();

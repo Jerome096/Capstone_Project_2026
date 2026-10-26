@@ -13,22 +13,22 @@ $_SESSION["operations_portal"] = "cashier";
   <link rel="icon" type="image/png" href="../shared/images/quvo-favicon.png" />
   <link rel="stylesheet" href="../shared/css/styles.css?v=no-barista-1" />
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
-  <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=no-barista-1" />
+  <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=hide-zero-badges-1" />
   <link rel="stylesheet" href="../shared/css/portal.css" />
-  <link rel="stylesheet" href="../cashier/dashboard/dashboard.css?v=dashboard-cleanup-1" />
-  <link rel="stylesheet" href="../cashier/menu/menu.css" />
+  <link rel="stylesheet" href="../cashier/dashboard/dashboard.css?v=report-colors-1" />
+  <link rel="stylesheet" href="../cashier/menu/menu.css?v=pos-payment-methods-1" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css" />
-  <link rel="stylesheet" href="../cashier/orders/orders.css?v=food-ready-1" />
-  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=online-receipt-uploads-1" />
+  <link rel="stylesheet" href="../cashier/orders/orders.css?v=order-stock-notice-1" />
+  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-payment-methods-1" />
   <link rel="stylesheet" href="../cashier/receipts/uploaded-receipts.css?v=online-receipt-uploads-1" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css?v=staff-alerts-1" />
-  <link rel="stylesheet" href="../admin/reports/reports.css?v=report-periods-1" />
+  <link rel="stylesheet" href="../admin/reports/reports.css?v=pos-payment-methods-1" />
   <link rel="stylesheet" href="../admin/operating-hours/operating-hours.css?v=logout-grace-1" />
-  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=clear-item-pricing-1" />
-  <link rel="stylesheet" href="../admin/records/records.css" />
+  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=desktop-menu-editor-1" />
+  <link rel="stylesheet" href="../admin/records/records.css?v=pos-payment-methods-1" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css" />
-  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-actions-1" />
+  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-layout-2" />
   <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
   <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
   <link rel="stylesheet" href="../shared/css/menu-options.css?v=sizes-checkbox-addons-1" />
@@ -69,10 +69,10 @@ $_SESSION["operations_portal"] = "cashier";
 <div class="nav-section-label nav-section-label-first">Operations</div>
 <button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
 <button class="nav-item" data-screen="menu"><i data-lucide="utensils"></i><span>Menu</span></button>
-<button class="nav-item" data-screen="sessions"><i data-lucide="users"></i><span>Sessions</span><span class="nav-badge" id="sidebarSessionCount" title="Sessions awaiting approval">0</span></button>
-<button class="nav-item" data-screen="orders"><i data-lucide="clipboard-list"></i><span>Orders</span><span class="nav-badge" id="sidebarOrderCount" title="Orders awaiting payment collection or approval">0</span></button>
+<button class="nav-item" data-screen="sessions"><i data-lucide="users"></i><span>Sessions</span><span class="nav-badge" id="sidebarSessionCount" title="Sessions awaiting approval" hidden>0</span></button>
+<button class="nav-item" data-screen="orders"><i data-lucide="clipboard-list"></i><span>Orders</span><span class="nav-badge" id="sidebarOrderCount" title="Orders awaiting payment collection or approval" hidden>0</span></button>
 <button class="nav-item" data-screen="receipts"><i data-lucide="receipt-text"></i><span>Receipts</span></button>
-<button class="nav-item" data-screen="alerts"><i data-lucide="bell"></i><span>Alerts</span><span class="nav-badge" id="sidebarAlertCount">0</span></button>
+<button class="nav-item" data-screen="alerts"><i data-lucide="bell"></i><span>Alerts</span><span class="nav-badge" id="sidebarAlertCount" hidden>0</span></button>
 <div class="nav-divider"></div>
 <div class="nav-section-label">Other workspaces</div>
 <a class="nav-item portal-link" href="../admin/index.php"><i data-lucide="shield-check"></i><span>Admin</span><i class="portal-arrow" data-lucide="arrow-up-right"></i></a>
@@ -99,6 +99,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=dashboard-cleanup-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=hide-zero-badges-1"></script>
 </body>
 </html>

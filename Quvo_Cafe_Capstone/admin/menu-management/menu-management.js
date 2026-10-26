@@ -194,7 +194,7 @@ async function removeAdminMenuItem(itemId, button) {
   const message =
     itemId < 0
       ? `Discard the unsaved item "${item.name}"?`
-      : `Permanently remove "${item.name}" from the menu? This cannot be undone.`;
+      : `Remove "${item.name}" from the menu? Previous orders and receipts will stay saved.`;
   if (!window.confirm(message)) return;
 
   pendingMenuItems.add(itemId);

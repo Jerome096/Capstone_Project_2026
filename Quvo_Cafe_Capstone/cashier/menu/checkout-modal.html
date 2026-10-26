@@ -23,7 +23,7 @@
     ></div>
     <div class="payment-section">
       <label>Select payment method</label>
-      <div class="payment-methods">
+      <div class="payment-methods" id="posPaymentMethods" role="group" aria-label="Payment method">
         <button
           class="method"
           data-method="Cash"
@@ -31,21 +31,9 @@
           <i data-lucide="banknote"></i>
           <span>Cash</span>
         </button>
-        <button
-          class="method"
-          data-method="GCash"
-        >
-          <i data-lucide="wallet"></i>
-          <span>GCash</span>
-        </button>
-        <button
-          class="method"
-          data-method="PayMaya"
-        >
-          <i data-lucide="credit-card"></i>
-          <span>PayMaya</span>
-        </button>
       </div>
+      <p class="helper-text" id="posPaymentMethodsStatus" role="status" aria-live="polite"></p>
+      <button class="btn light" type="button" id="posPaymentMethodsRetry" hidden>Refresh payment methods</button>
     </div>
     <div
       class="amount-field"
@@ -75,9 +63,10 @@
       class="amount-field hidden"
       id="checkoutReferenceBlock"
     >
-      <label id="paymentReferenceLabel">Payment reference no. optional</label>
+      <label id="paymentReferenceLabel" for="paymentReference">Payment reference no. optional</label>
       <input
         id="paymentReference"
+        maxlength="100"
         placeholder="Enter reference number if available"
         type="text"
       />

@@ -16,7 +16,7 @@ function workspace(staff=17){
  });
  const run=code=>vm.runInContext(code,context);
  for(const file of ['cashier/menu/menu.js','cashier/menu/pos-sql.js','cashier/orders/sql-orders.js','cashier/receipts/receipts.js'])run(fs.readFileSync(path.join(__dirname,'..',file),'utf8'));
- run('sqlRender=()=>{};sqlUpdateReceipts=()=>{};renderCart=()=>{};');return {context,element,run};
+ run('sqlRender=()=>{};sqlUpdateReceipts=()=>{};renderCart=()=>{};posSql.paymentMethods.set("GCash","GCash");');return {context,element,run};
 }
 (async()=>{
  let app=workspace();app.context.state.posCart=structuredClone(cart);app.element('amountReceived').value='200';app.element('counterCustomerName').value='POS check';

@@ -1,4 +1,5 @@
-// SQL is authoritative. Browser storage retains only an unconfirmed submission for safe retry.
+// SQL is authoritative for accepted orders. Account-scoped browser storage keeps
+// cart drafts and the original unconfirmed submission across refresh/restart.
 const online = {csrf:"",revision:0,busy:false,pending:null,generation:0,poll:null,loading:false,nextOffset:null,selectedId:null,error:""};
 async function onlineApi(input=null,query="session") {
   const token=online.csrf;
@@ -15,18 +16,32 @@ async function onlineApi(input=null,query="session") {
   }
   return result;
 }
-function onlinePendingKey(){return "quvo_online_pending_sql_v1_"+state.onlineCustomer.id;}
-function saveOnlinePending(value){
-  if(value) sessionStorage.setItem(onlinePendingKey(),JSON.stringify(value));
-  else sessionStorage.removeItem(onlinePendingKey());
-  online.pending=value;
+function onlinePendingKey(customerId=state.onlineCustomer.id){return "quvo_online_pending_sql_v1_"+customerId;}
+function saveOnlinePending(value,customerId=state.onlineCustomer.id){
+  const key=onlinePendingKey(customerId);
+  if(value) {
+    // Save before sending to SQL. If this fails, no order is submitted with an
+    // unrecoverable key that could be duplicated after a browser crash.
+    try {localStorage.setItem(key,JSON.stringify(value));}
+    catch {throw new Error("Your browser could not save this order for recovery. Enable browser storage or free some space, then retry.");}
+  } else localStorage.removeItem(key);
+  try {sessionStorage.removeItem(key);}catch{}
+  if(String(state.onlineCustomer?.id)===String(customerId))online.pending=value;
 }
 function restoreOnlinePending(){
   online.pending=null;
-  try {const saved=JSON.parse(sessionStorage.getItem(onlinePendingKey())||"null");
-    if(saved && saved.customerId===state.onlineCustomer.id && saved.payload && Array.isArray(saved.cart)) online.pending=saved;
+  try {
+    const key=onlinePendingKey();
+    let durable=null,legacy=null;
+    try {durable=localStorage.getItem(key);}catch{}
+    if(!durable)try {legacy=sessionStorage.getItem(key);}catch{}
+    const saved=JSON.parse(durable||legacy||"null");
+    if(saved && String(saved.customerId)===String(state.onlineCustomer.id) && saved.payload && Array.isArray(saved.cart)) {
+      online.pending=saved;
+      if(legacy)try {localStorage.setItem(key,legacy);sessionStorage.removeItem(key);}catch{}
+    }
   }catch{}
-  state.cart=online.pending?online.pending.cart:[];
+  state.cart=online.pending?online.pending.cart:(window.QuvoOnlineCart?.restore()||[]);
   if(online.pending){
     const payload=online.pending.payload;
     document.querySelectorAll('input[name="fulfillmentOption"]').forEach(input=>input.checked=(input.value==="Pickup") === (payload.fulfillment==="pickup"));
@@ -61,7 +76,7 @@ async function refreshOnlineMenu(reviewCart=false){
   const data=await onlineApi(null,"menu");if(generation!==online.generation)return;
   CUSTOMER_DATA.menuItems=data.items;CUSTOMER_DATA.categories=["All",...new Set(data.items.map(item=>item.category))];
   if(!CUSTOMER_DATA.categories.includes(state.selectedCategory))state.selectedCategory="All";
-  if(reviewCart)state.cart=state.cart.flatMap(item=>{const current=data.items.find(entry=>entry.id===item.itemId);return current?[{...item,name:current.name,category:current.category,unitPrice:QuvoMenuOptions.price(current,QuvoMenuOptions.savedSelections(current,item.customization)),pricedOptions:QuvoMenuOptions.hasPricing(current)}]:[];});
+  if(reviewCart){state.cart=state.cart.flatMap(item=>{const current=data.items.find(entry=>entry.id===item.itemId);return current?[{...item,name:current.name,category:current.category,unitPrice:QuvoMenuOptions.price(current,QuvoMenuOptions.savedSelections(current,item.customization)),pricedOptions:QuvoMenuOptions.hasPricing(current)}]:[];});window.QuvoOnlineCart?.save();}
   renderCategories();renderMenu();renderCart();
 }
 async function onlineForm(form,errorElement,action){

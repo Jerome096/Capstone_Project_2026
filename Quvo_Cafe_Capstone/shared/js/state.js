@@ -48,24 +48,24 @@ function getOrderSourceLabel(source) {
 }
 
 function isDigitalPayment(method) {
-  return method === "GCash" || method === "PayMaya";
+  return typeof method==='string'&&method!==''&&method!=='Cash';
 }
 
 function getPaymentReferenceLabel(method) {
-  return method === "PayMaya" ? "PayMaya reference" : "GCash reference";
+  return (method||'Payment')+' reference';
 }
 
 function getPaymentPendingText(method) {
   if (method === "Cash") return "Awaiting cash collection";
   if (method === "PayMaya") return "Awaiting PayMaya confirmation";
   if (method === "GCash") return "Awaiting GCash confirmation";
-  return "Awaiting payment confirmation";
+  return method?'Awaiting '+method+' confirmation':'Awaiting payment confirmation';
 }
 
 function getPaymentActionLabel(method) {
   if (method === "Cash") return "Collect cash & start preparing";
   if (method === "PayMaya") return "Verify PayMaya & start preparing";
-  return "Verify GCash & start preparing";
+  return 'Verify '+(method||'payment')+' & start preparing';
 }
 
 function formatStockQty(value) {

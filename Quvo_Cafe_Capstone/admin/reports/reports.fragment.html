@@ -27,16 +27,27 @@
       </div>
       <span class="sheet-badge">Tabular report</span>
     </div>
+    <p class="report-comparison-status" id="reportComparisonStatus" role="status">Load a report to compare periods.</p>
+    <div class="report-color-legend" aria-label="Report color meanings">
+      <span class="report-change report-change--positive">Improvement</span>
+      <span class="report-change report-change--negative">Decline</span>
+      <span class="report-change report-change--neutral">No change / no comparison</span>
+    </div>
+    <details class="report-color-help">
+      <summary>How the colors work</summary>
+      <p>Higher revenue, order counts and average paid order are green; lower values are red. For voided, unpaid and after-closing orders, fewer is green and more is red. Equal values or missing previous records are gray.</p>
+      <p>Daily compares the previous business day, Monthly the previous month, and Yearly the previous year. Each period follows its saved opening hours. Percent change is (selected value − previous value) ÷ previous value × 100. When the previous value is zero, the amount changes but no percentage is shown.</p>
+    </details>
     <div class="report-table-wrap">
-      <table class="report-sheet-table">
-        <thead>
-          <tr>
+      <table class="report-sheet-table" role="table" aria-label="Report summary and previous-period comparison">
+        <thead role="rowgroup">
+          <tr role="row">
             <th>Metric</th>
             <th id="reportValueHeading">Selected date</th>
             <th>Reference note</th>
           </tr>
         </thead>
-        <tbody id="reportSummaryRows"></tbody>
+        <tbody id="reportSummaryRows" role="rowgroup"></tbody>
       </table>
     </div>
   </section>
@@ -92,6 +103,17 @@
           </tr>
         </thead>
         <tbody id="paymentSummaryRows"></tbody>
+      </table>
+    </div>
+  </section>
+  <section class="report-table-card report-payment-methods-card">
+    <div class="eyebrow">Payment methods used</div>
+    <h2>Payment method details</h2>
+    <p class="helper-text">Paid orders and revenue by payment method for the selected business period. Additional methods are also included in Other digital above.</p>
+    <div class="report-table-wrap">
+      <table class="report-sheet-table compact">
+        <thead><tr><th>Payment method</th><th>Paid orders</th><th>Revenue</th></tr></thead>
+        <tbody id="reportPaymentMethodRows"></tbody>
       </table>
     </div>
   </section>

@@ -16,6 +16,42 @@ function reportPeriodLabel(date, period) {
   return receiptDateLabel(date);
 }
 
+function reportMetricChange(current, previous, currency = false, lowerBetter = false) {
+  const units = value => {
+    if ((typeof value !== 'string' && typeof value !== 'number') || !/^\d+(?:\.\d{1,2})?$/.test(String(value))) return null;
+    const scaled = Math.round(Number(value) * (currency ? 100 : 1));
+    return Number.isSafeInteger(scaled) ? scaled : null;
+  };
+  const selected = units(current), before = units(previous);
+  if (selected === null || before === null) return {tone:'neutral', direction:'unavailable'};
+  const delta = selected - before;
+  return {tone:delta === 0 ? 'neutral' : (lowerBetter ? delta < 0 : delta > 0) ? 'positive' : 'negative',
+    direction:delta === 0 ? 'equal' : delta > 0 ? 'higher' : 'lower',
+    amount:Math.abs(delta) / (currency ? 100 : 1), percentage:before === 0 ? null : delta / before * 100};
+}
+
+function reportComparisonCell(key, value, currency, lowerBetter, comparison, money) {
+  const e = escapeHtml, previous = comparison?.summary?.[key];
+  let change = reportMetricChange(value, previous, currency, lowerBetter), unavailable = '';
+  if (!comparison) unavailable = 'Comparison unavailable';
+  else if (comparison.selectedStatus === 'upcoming') unavailable = 'Period has not started';
+  else if (!comparison.hasActivity) unavailable = 'No previous transactions';
+  else if (key === 'outsideHoursOrders' && !comparison.outsideHoursComparable) unavailable = 'No comparable schedule';
+  if (unavailable) change = {tone:'neutral', direction:'unavailable'};
+  let label = unavailable || 'Comparison unavailable';
+  if (change.direction === 'equal') label = '= No change';
+  else if (change.direction === 'higher' || change.direction === 'lower') {
+    const amount = currency ? money(change.amount) : new Intl.NumberFormat('en-PH').format(change.amount);
+    const percent = change.percentage === null ? 'from zero' : Math.abs(change.percentage) < .1 ? '<0.1%' :
+      (change.percentage > 0 ? '+' : '\u2212') + new Intl.NumberFormat('en-PH', {maximumFractionDigits:1}).format(Math.abs(change.percentage)) + '%';
+    label = (change.direction === 'higher' ? '\u2191 Higher by ' : '\u2193 Lower by ') + amount + ' (' + percent + ')';
+  }
+  const previousValue = previous === null || previous === undefined ? '\u2014' : currency ? money(previous) : new Intl.NumberFormat('en-PH').format(previous);
+  return '<div class="report-metric-value report-metric-value--' + change.tone + '">' + e(currency ? money(value) : value) + '</div>' +
+    '<div class="report-prior-value">Previous: ' + e(previousValue) + '</div>' +
+    '<span class="report-change report-change--' + change.tone + '">' + e(label) + '</span>';
+}
+
 function bindReports() {
   for (const [period, settings] of Object.entries(reportPeriods)) {
     const input = document.getElementById(settings.input);
@@ -85,25 +121,32 @@ function renderReports() {
   const windowLabel = hours ? ' · Window: ' + [hours.windowStart, hours.windowEnd].map(value => new Date(value.replace(' ', 'T') + 'Z').toLocaleString('en-PH', {timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})).join(' to ') : '';
   document.getElementById('reportsStatus').textContent = r.error || (r.loading ? 'Loading transactions...' : data ? 'Business period: ' + reportPeriodLabel(data.date, r.period) + windowLabel + ' · Philippine time · Includes transactions already closed by EOD.' + (hours?.setupRequired ? ' Install the operating-hours SQL setup to enable store schedules.' : '') : 'Choose a period to load reports.');
   document.getElementById('reportsRefresh').disabled = r.loading;
+  const comparison = data?.comparison, comparisonStatus = document.getElementById('reportComparisonStatus');
+  const previousLabel = {daily:'previous business day', monthly:'previous month', yearly:'previous year'}[r.period];
+  let comparisonText = comparison ? 'Compared with the ' + previousLabel + ': ' + reportPeriodLabel(comparison.date, r.period) + '.' : 'Previous-period comparison is unavailable.';
+  if (comparison?.selectedStatus === 'in_progress') comparisonText += ' Current period is still in progress; previous totals cover the full period.';
+  else if (comparison?.selectedStatus === 'upcoming') comparisonText += ' This period has not started; color comparisons are not applied yet.';
+  if (comparison && !comparison.hasActivity) comparisonText += ' No transactions were recorded in that previous period.';
+  if (comparisonStatus) comparisonStatus.textContent = !data ? (r.loading ? 'Loading comparison...' : 'Load a report to compare periods.') : comparisonText;
   if (document.getElementById('reports').classList.contains('active-screen')) document.getElementById('screenSub').textContent = r.date ? reportPeriodLabel(r.date, r.period) + ' \u00b7 Transaction report' : 'Select a report period';
   if (!data) {
     const text = r.loading ? 'Loading transactions...' : r.error ? 'Reports could not load. Use Refresh to retry.' : 'No report loaded.';
-    for (const [id, columns] of [['reportSummaryRows',3], ['hourlyOrderRows',3], ['topItemRows',3], ['paymentSummaryRows',7]]) document.getElementById(id).innerHTML = '<tr><td colspan="' + columns + '">' + e(text) + '</td></tr>';
+    for (const [id, columns] of [['reportSummaryRows',3], ['hourlyOrderRows',3], ['topItemRows',3], ['paymentSummaryRows',7], ['reportPaymentMethodRows',3]]) document.getElementById(id).innerHTML = '<tr><td colspan="' + columns + '">' + e(text) + '</td></tr>';
     return;
   }
   const s = data.summary;
   const scope = r.period === 'daily' ? 'on this date' : r.period === 'monthly' ? 'during this month' : 'during this year';
   const metrics = [
-    ['Total revenue', money(s.totalRevenue), 'Approved payments ' + scope + '; excludes cash change.'],
-    ['Orders placed', s.ordersPlaced, 'Orders created ' + scope + ', including unpaid and cancelled orders.'],
-    ['Paid orders', s.paidOrders, 'Payments approved ' + scope + ', across all order sources.'],
-    ['Average paid order', money(s.averageOrderValue), 'Revenue divided by paid orders.'],
-    ['Completed orders', s.completedOrders, 'Paid orders marked served ' + scope + '; retained after EOD.'],
-    ['Voided orders', s.voidedOrders, 'Orders cancelled ' + scope + '; not revenue.'],
-    ['Unpaid orders', s.unpaidOrders, 'Orders created ' + scope + ' that are currently unpaid.'],
+    ['totalRevenue', 'Total revenue', true, false, 'Approved payments ' + scope + '; excludes cash change.'],
+    ['ordersPlaced', 'Orders placed', false, false, 'Orders created ' + scope + ', including unpaid and cancelled orders.'],
+    ['paidOrders', 'Paid orders', false, false, 'Payments approved ' + scope + ', across all order sources.'],
+    ['averageOrderValue', 'Average paid order', true, false, 'Revenue divided by paid orders.'],
+    ['completedOrders', 'Completed orders', false, false, 'Paid orders marked served ' + scope + '; retained after EOD.'],
+    ['voidedOrders', 'Voided orders', false, true, 'Orders cancelled ' + scope + '; not revenue.'],
+    ['unpaidOrders', 'Unpaid orders', false, true, 'Orders created ' + scope + ' that are currently unpaid.'],
   ];
-  if (r.period === 'daily' && hours && !hours.legacy) metrics.push(['After scheduled closing', s.outsideHoursOrders || 0, 'Already included in revenue for this opening day; recorded before the next opening.']);
-  summary.innerHTML = metrics.map(([label, value, note]) => '<tr><td>' + e(label) + '</td><td class="numeric-cell">' + e(value) + '</td><td>' + e(note) + '</td></tr>').join('');
+  if (r.period === 'daily' && hours && !hours.legacy) metrics.push(['outsideHoursOrders', 'After scheduled closing', false, true, 'Already included in revenue for this opening day; recorded before the next opening.']);
+  summary.innerHTML = metrics.map(([key, label, currency, lowerBetter, note]) => '<tr role="row" data-report-metric="' + key + '"><td role="cell">' + e(label) + '</td><td role="cell" class="numeric-cell report-comparison-cell">' + reportComparisonCell(key, s[key] || 0, currency, lowerBetter, comparison, money) + '</td><td role="cell">' + e(note) + '</td></tr>').join('');
   const activeBuckets = data.activity.filter(row => Number(row.orders) > 0);
   document.getElementById('hourlyOrderRows').innerHTML = activeBuckets.length ? activeBuckets.map(row => {
     const bucket = Number(row.bucket);
@@ -114,4 +157,5 @@ function renderReports() {
   }).join('') : '<tr><td colspan="3">No paid orders for this period.</td></tr>';
   document.getElementById('topItemRows').innerHTML = data.topItems.length ? data.topItems.map((item, index) => '<tr><td class="numeric-cell">' + (index + 1) + '</td><td>' + e(item.name) + '</td><td class="numeric-cell">' + Number(item.units) + '</td></tr>').join('') : '<tr><td colspan="3">No paid item sales for this period.</td></tr>';
   document.getElementById('paymentSummaryRows').innerHTML = data.breakdown.map(row => '<tr><td>' + e(row.label) + '</td>' + ['Cash','GCash','PayMaya','Other','None'].map(method => '<td class="numeric-cell">' + (row.type === 'money' ? money(row.values[method]) : Number(row.values[method])) + '</td>').join('') + '<td class="numeric-cell strong-cell">' + (row.type === 'money' ? money(row.total) : Number(row.total)) + '</td></tr>').join('');
+  document.getElementById('reportPaymentMethodRows').innerHTML=(data.paymentDetails||[]).length?data.paymentDetails.map(method=>'<tr><td>'+e(method.label)+'</td><td class="numeric-cell">'+Number(method.orders)+'</td><td class="numeric-cell">'+money(method.revenue)+'</td></tr>').join(''):'<tr><td colspan="3">No paid payment-method totals for this period.</td></tr>';
 }

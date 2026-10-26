@@ -4,15 +4,16 @@ const sqlOrders = {
   olderOffset: null, historyLoaded: false, paymentOrder: null, paymentAttempt: null,
   receiptDate:null, receiptRequest:0, receiptLoading:false,
   reminderAttempts:new Map(),reminderTimes:new Map(),
+  stockNotice:null,stockError:false,stockLoading:false,stockPromise:null,stockRequest:0,stockReview:false,
 };
 const sqlMoney = value => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value));
 function sqlDate(value) {
   return value ? new Date(value.replace(" ", "T") + "Z").toLocaleString("en-PH") : "";
 }
-async function sqlOrderApi(input, query = "") {
+async function sqlOrderApi(input, query = "", timeout = 15000) {
   const response = await fetch(quvoPath("api/orders/index.php") + query, {
     method: input ? "POST" : "GET", credentials: "same-origin", cache: "no-store",
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(timeout),
     headers: { "Content-Type": "application/json", "X-CSRF-Token": window.QUVO_CSRF || "" },
     ...(input ? { body: JSON.stringify(input) } : {}),
   });
@@ -252,12 +253,49 @@ function openOnlineOrderDetails(id) {
     proof.src=quvoPath("api/orders/index.php?receipt="+encodeURIComponent(row.order_id));
   }
 }
+function sqlStockNoticeLines(notice) {
+  const quantity=value=>new Intl.NumberFormat('en-PH',{maximumFractionDigits:3}).format(Number(value));
+  const items=rows=>(rows||[]).map(item=>String(item.name)+' \u00d7 '+Number(item.quantity)).join(', ');
+  return [
+    ...(notice?.unavailableItems||[]).map(item=>items([item])+' is marked unavailable.'),
+    ...(notice?.shortages||[]).map(stock=>items(stock.items)+' \u2014 '+stock.name+': '+(!stock.active?'inactive in inventory.':
+      (Number(stock.available)<=0?'out of stock. ':'insufficient for this order. ')+quantity(stock.available)+' '+stock.unit+' recorded; '+quantity(stock.required)+' '+stock.unit+' needed.')),
+  ];
+}
+function renderSqlPaymentStock() {
+  const box=document.getElementById('sqlPaymentStockNotice');if(!box)return;
+  const r=sqlOrders,lines=sqlStockNoticeLines(r.stockNotice);
+  box.hidden=!r.stockLoading&&!r.stockError&&!lines.length;
+  box.innerHTML=r.stockLoading?'<span>Checking recorded stock...</span>':r.stockError?
+    '<strong>Stock check unavailable</strong><p>You can still accept this order. Review inventory with the team if needed.</p>':
+    '<strong>Stock notice</strong><ul>'+lines.map(line=>'<li>'+escapeHtml(line)+'</li>').join('')+'</ul><p>Check availability with the team. You can still accept this order.</p>';
+}
+function resetSqlPaymentStock() {
+  sqlOrders.stockRequest++;sqlOrders.stockNotice=null;sqlOrders.stockError=false;sqlOrders.stockLoading=false;sqlOrders.stockPromise=null;sqlOrders.stockReview=false;
+  renderSqlPaymentStock();
+}
+function loadSqlPaymentStock(order) {
+  if(sqlOrders.paymentOrder!==order)return Promise.resolve();
+  if(sqlOrders.stockPromise)return sqlOrders.stockPromise;
+  const request=++sqlOrders.stockRequest;sqlOrders.stockLoading=true;sqlOrders.stockError=false;renderSqlPaymentStock();
+  const current=()=>request===sqlOrders.stockRequest&&sqlOrders.paymentOrder===order;
+  const task=(async()=>{
+    try{
+      const data=await sqlOrderApi(null,'?view=stock-check&id='+encodeURIComponent(order.sqlId),6000);
+      if(!data.stock_notice||String(data.stock_notice.orderId)!==String(order.sqlId))throw new Error('Invalid stock check.');
+      if(current())sqlOrders.stockNotice=data.stock_notice;
+    }catch{if(current()){sqlOrders.stockNotice=null;sqlOrders.stockError=true;}}
+    finally{if(current()){sqlOrders.stockLoading=false;sqlOrders.stockPromise=null;renderSqlPaymentStock();}}
+  })();
+  sqlOrders.stockPromise=task;return task;
+}
 function openSqlPayment(id) {
-  if (sqlOrders.changing) return;
+  if (sqlOrders.changing || sqlOrders.stockReview) return;
   const order = state.orders.find(row => row.id === id);
   if (!order || order.paid || order.stage !== "received") return;
   sqlOrders.paymentOrder = order;
   sqlOrders.paymentAttempt = null;
+  resetSqlPaymentStock();
   const onlineOrder=order.raw.order_source === "online";
   document.getElementById("sqlPaymentTitle").textContent = (onlineOrder ? "Approve payment · " : "Collect payment · ") + order.number;
   document.getElementById("sqlPaymentEyebrow").textContent=onlineOrder?"Online payment approval":"Cashier payment";
@@ -276,12 +314,14 @@ function openSqlPayment(id) {
   document.getElementById("sqlPaymentError").textContent = "";
   document.getElementById("sqlPaymentModal").classList.remove("hidden");
   updateSqlPayment();
+  loadSqlPaymentStock(order);
 }
 function closeSqlPayment() {
   if (sqlOrders.changing) return;
   document.getElementById("sqlPaymentModal").classList.add("hidden");
   sqlOrders.paymentOrder = null;
   sqlOrders.paymentAttempt = null;
+  resetSqlPaymentStock();
 }
 function updateSqlPayment() {
   const onlineOrder=sqlOrders.paymentOrder?.raw.order_source === "online";
@@ -292,12 +332,13 @@ function updateSqlPayment() {
   const received = Number(document.getElementById("sqlAmountReceived").value);
   document.getElementById("sqlPaymentChange").textContent = sqlMoney(Math.max(0, Math.round((received - total) * 100) / 100));
   document.getElementById("sqlPaymentConfirm").textContent = onlineOrder ? (sqlOrders.paymentAttempt ? "Retry payment approval" : "Approve payment") : (sqlOrders.paymentAttempt ? "Retry payment confirmation" : "Confirm payment received");
-  document.querySelectorAll("#sqlPaymentForm input, #sqlPaymentForm select").forEach(el => el.disabled = onlineOrder || sqlOrders.changing || Boolean(sqlOrders.paymentAttempt));
-  document.getElementById("sqlPaymentConfirm").disabled = sqlOrders.changing;
+  if(sqlOrders.stockReview)document.getElementById("sqlPaymentConfirm").textContent='Checking stock...';
+  document.querySelectorAll("#sqlPaymentForm input, #sqlPaymentForm select").forEach(el => el.disabled = onlineOrder || sqlOrders.changing || sqlOrders.stockReview || Boolean(sqlOrders.paymentAttempt));
+  document.getElementById("sqlPaymentConfirm").disabled = sqlOrders.changing || sqlOrders.stockReview;
 }
 async function confirmSqlPayment(event) {
   event.preventDefault();
-  if (sqlOrders.changing || !sqlOrders.paymentOrder) return;
+  if (sqlOrders.changing || sqlOrders.stockReview || !sqlOrders.paymentOrder) return;
   const order = sqlOrders.paymentOrder;
   if (!sqlOrders.paymentAttempt) {
     const onlineOrder=order.raw.order_source === "online";
@@ -307,10 +348,18 @@ async function confirmSqlPayment(event) {
       document.getElementById("sqlPaymentError").textContent = "Enter the full amount received with at most two decimal places.";
       return;
     }
-    const label=method===order.raw.preferred_payment_method?(order.raw.preferred_payment_label||method):method;
-    const confirmation=onlineOrder?"Approve " + label + " payment for " + order.number + " (" + sqlMoney(order.total) + ") after verifying the customer's receipt and receiving account? This sends the order to preparation.":
-      "Confirm " + label + " payment for " + order.number + " (" + sqlMoney(order.total) + "), with change of " + sqlMoney(Number(amount) - order.total) + "? This sends the order to preparation.";
-    if (!window.confirm(confirmation)) return;
+    sqlOrders.stockReview=true;updateSqlPayment();
+    let confirmed=false,reviewRequest;
+    try{
+      const stockTask=loadSqlPaymentStock(order);reviewRequest=sqlOrders.stockRequest;await stockTask;
+      if(sqlOrders.paymentOrder!==order||reviewRequest!==sqlOrders.stockRequest)return;
+      const label=method===order.raw.preferred_payment_method?(order.raw.preferred_payment_label||method):method;
+      const confirmation=onlineOrder?"Approve " + label + " payment for " + order.number + " (" + sqlMoney(order.total) + ") after verifying the customer's receipt and receiving account? This sends the order to preparation.":
+        "Confirm " + label + " payment for " + order.number + " (" + sqlMoney(order.total) + "), with change of " + sqlMoney(Number(amount) - order.total) + "? This sends the order to preparation.";
+      const stock=sqlStockNoticeLines(sqlOrders.stockNotice),stockText=sqlOrders.stockError?'\n\nStock check unavailable. You can still accept this order.':stock.length?'\n\nStock notice:\n'+stock.slice(0,4).join('\n')+(stock.length>4?'\nMore stock details are shown in the payment popup.':'')+'\n\nYou can still accept this order.':'';
+      confirmed=window.confirm(confirmation+stockText);
+    }finally{if(sqlOrders.paymentOrder===order&&reviewRequest===sqlOrders.stockRequest){sqlOrders.stockReview=false;updateSqlPayment();}}
+    if(!confirmed||sqlOrders.paymentOrder!==order)return;
     sqlOrders.paymentAttempt = {
       action: "pay", id: order.sqlId, payment_method: method, amount_received: amount,
       payment_reference: onlineOrder || method === "Cash" ? "" : document.getElementById("sqlPaymentReference").value.trim(),

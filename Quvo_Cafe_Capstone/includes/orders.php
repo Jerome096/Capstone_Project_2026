@@ -108,6 +108,20 @@ function orders_lines(mixed $items): array
     return $lines;
 }
 
+// Customer ordering limit is cumulative across sizes, notes and separate cart lines.
+// Run only for new submissions, after the exact-retry lookup; POS keeps its own rules.
+function orders_require_customer_quantities(array $lines): void
+{
+    $totals = [];
+    foreach ($lines as $line) {
+        $id = $line['menu_item_id'];
+        $totals[$id] = ($totals[$id] ?? 0) + $line['quantity'];
+        if ($totals[$id] > 10) {
+            throw new OrderError('You can order up to 10 of each item per order, including different sizes and options.', 422, 'item_quantity_limit');
+        }
+    }
+}
+
 function orders_header_sql(): string
 {
     return "SELECT o.order_id,o.order_number,o.session_id,o.customer_name,o.total_amount,
@@ -257,6 +271,7 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     if (!(bool) $table["is_active"] || $session["status"] !== "active") {
         throw new OrderError("An active, approved customer session is required.", 403);
     }
+    orders_require_customer_quantities($lines);
     ordering_require_open($db);
     [$catalog, $total] = orders_catalog($db, $lines, $expectedTotal);
     $query = $db->prepare("INSERT INTO dbo.orders
@@ -341,7 +356,7 @@ function orders_pay(PDO $db, int $actorId, int $id, array $input): array
     $order = orders_lock($db, $id);
     $method = $input["payment_method"] ?? null;
     if (!is_string($method) || (!in_array($method, ["Cash", "GCash", "PayMaya"], true) &&
-        !($order['order_source']==='online' && $method===$order['preferred_payment_method']))) {
+        !(in_array($order['order_source'],['online','walk_in'],true) && $method===$order['preferred_payment_method']))) {
         throw new OrderError("Choose a payment method valid for this order.");
     }
     $total = orders_cents($order["total_amount"]);

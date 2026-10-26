@@ -24,6 +24,8 @@
 .report-summary-card {
   margin-bottom: 18px;
 }
+.report-payment-methods-card { margin-top:18px; }
+.report-payment-methods-card td:first-child { overflow-wrap:anywhere; }
 
 .report-table-wrap {
   margin-top: 14px;
@@ -178,3 +180,29 @@
 #reportYear { width:110px; }
 #reportsStatus { margin-bottom:16px; }
 #reports .report-table-card { min-width:0; }
+.report-comparison-status { margin:12px 0 10px; color:#61584e; font-size:13px; line-height:1.6; }
+.report-color-legend { display:flex; flex-wrap:wrap; gap:8px; }
+.report-change { display:inline-block; max-width:100%; padding:5px 9px; border-radius:8px; font-size:12px; font-weight:700; line-height:1.5; white-space:normal; }
+.report-change--positive { color:#205d38; background:#e9f5ec; }
+.report-change--negative { color:#a12622; background:#fff0ef; }
+.report-change--neutral { color:#535b64; background:#eef0f2; }
+.report-metric-value { font-size:16px; font-weight:700; line-height:1.5; }
+.report-metric-value--positive { color:#205d38; }
+.report-metric-value--negative { color:#a12622; }
+.report-metric-value--neutral { color:#535b64; }
+.report-prior-value { margin:3px 0 6px; color:#645d54; font-size:12px; }
+.report-comparison-cell { min-width:230px; }
+.report-color-help { margin-top:8px; font-size:12px; color:#61584e; line-height:1.7; }
+.report-color-help summary { cursor:pointer; min-height:44px; display:list-item; align-content:center; font-weight:700; }
+.report-color-help p { max-width:850px; margin:4px 0 10px; }
+@media (max-width:600px) {
+  .report-color-legend { gap:6px; }
+  #reports .report-summary-card .report-sheet-table { display:block; min-width:0; }
+  #reports .report-summary-card thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+  #reportSummaryRows { display:grid; gap:12px; }
+  #reportSummaryRows tr { display:grid; border:1px solid #dfd6cb; border-radius:10px; overflow:hidden; }
+  #reportSummaryRows td { display:block; border:0; padding:10px 12px; background:#fffdf9; overflow-wrap:anywhere; }
+  #reportSummaryRows td:first-child { font-weight:700; background:#f0e8dd; }
+  #reportSummaryRows .report-comparison-cell { min-width:0; text-align:left; }
+  #reportSummaryRows td:last-child { padding-top:0; font-size:12px; color:#61584e; line-height:1.6; }
+}

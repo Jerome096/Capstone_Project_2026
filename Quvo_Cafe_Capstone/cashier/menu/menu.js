@@ -243,32 +243,11 @@ function bindCheckoutModal() {
     if (event.target.id === "checkoutModal") closeCheckoutModal();
   });
 
-  document.querySelectorAll(".method").forEach((button) => {
-    button.addEventListener("click", () => {
-      selectedPaymentMethod = button.dataset.method;
-      document
-        .querySelectorAll(".method")
-        .forEach((entry) => entry.classList.remove("selected"));
-      button.classList.add("selected");
-
-      const amountInput = document.getElementById("amountReceived");
-      const isCash = selectedPaymentMethod === "Cash";
-      document.getElementById("checkoutCashBlock").classList.toggle("hidden", !isCash);
-      document.getElementById("checkoutChangeLine").classList.toggle("hidden", !isCash);
-      document
-        .getElementById("checkoutReferenceBlock")
-        .classList.toggle("hidden", isCash);
-      document.getElementById("paymentReferenceLabel").textContent =
-        `${getPaymentReferenceLabel(selectedPaymentMethod)} no. optional`;
-      document.getElementById("paymentReference").placeholder =
-        `Enter ${selectedPaymentMethod} reference number if available`;
-      if (!isCash) {
-        amountInput.value = getCartTotal();
-      }
-
-      validateCheckout();
-    });
+  document.getElementById('posPaymentMethods').addEventListener('click',event=>{
+    const button=event.target.closest?.('button[data-method]');
+    if(button&&!button.disabled)selectPosPaymentMethod(button.dataset.method);
   });
+  document.getElementById('posPaymentMethodsRetry').addEventListener('click',loadPosPaymentMethods);
 
   document.getElementById("amountReceived").addEventListener("input", validateCheckout);
   document.getElementById("confirmPaidBtn").addEventListener("click", confirmPaidOrder);
@@ -280,6 +259,7 @@ function openCheckoutModal() {
   if (state.posCart.length === 0) return;
 
   selectedPaymentMethod = null;
+  posSql.paymentMethods=new Map([['Cash','Cash']]);
 
   document
     .querySelectorAll(".method")
@@ -319,6 +299,7 @@ function openCheckoutModal() {
   confirm.classList.add("disabled");
 
   document.getElementById("checkoutModal").classList.remove("hidden");
+  loadPosPaymentMethods();
   lucide.createIcons();
 }
 
@@ -334,7 +315,7 @@ function validateCheckout() {
   document.getElementById("changeAmount").textContent =
     `₱${change.toLocaleString("en-PH")}`;
 
-  if (selectedPaymentMethod && amount >= total && total > 0) {
+  if (posPaymentMethodAvailable() && amount >= total && total > 0) {
     confirm.disabled = false;
     confirm.classList.remove("disabled");
   } else {

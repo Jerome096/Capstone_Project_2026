@@ -50,13 +50,20 @@ async function submitOrder(){
     }
     renderCart();
     const result=await onlineApi(online.pending.payload);
-    try{saveOnlinePending(null);}catch{online.pending=null;}
+    // Clear the draft first. A crash before pending cleanup then safely retries
+    // the accepted key instead of restoring a fresh, duplicate cart submission.
+    if(!window.QuvoOnlineCart||window.QuvoOnlineCart.clear(readyCustomerId)) {
+      try{saveOnlinePending(null,readyCustomerId);}catch{if(String(state.onlineCustomer?.id)===readyCustomerId)online.pending=null;}
+    }
+    if(String(state.onlineCustomer?.id)!==readyCustomerId)return;
+    online.pending=null;
     clearOnlinePaymentReceipt();
     state.cart=[];online.selectedId=result.order.order_id;state.order=result.order;
     state.onlineOrders=[result.order,...state.onlineOrders.filter(order=>order.order_id!==result.order.order_id)];
     if(readyGeneration===online.generation&&String(state.onlineCustomer?.id)===readyCustomerId)window.QuvoReadyAlerts?.observe("online:"+readyCustomerId,[result.order]);
     renderHistory();renderTracking();showScreen("screenTracking");showToast("Order received. Payment will be confirmed by the cashier.");
   }catch(error){
+    if(String(state.onlineCustomer?.id)!==readyCustomerId)return;
     if(error.code==="ordering_closed"){
       try{saveOnlinePending(null);}catch{online.pending=null;}
       window.QuvoOrdering?.showClosed(error.message);

@@ -8,6 +8,9 @@ const run=code=>vm.runInContext(code,ctx);run(fs.readFileSync(path.join(__dirnam
 (async()=>{
   await run('loadInventory()');assert.equal(run('inventorySql.loaded'),true);assert.match(el('inventoryRows').innerHTML,/Milk &lt;safe&gt;/);assert.doesNotMatch(el('inventoryRows').innerHTML,/<safe>/);assert.match(el('inventoryMovementLog').innerHTML,/&lt;receipt&gt;/);assert.equal(el('inventoryAffectedStat').textContent,1);
   run('openInventoryStockModal()');const noSend=requests.length;
+  run('fillInventoryStockUnits("L")');assert.equal(el('inventoryUnit').value,'l','existing uppercase liter selects the canonical liter choice');
+  run('fillInventoryStockUnits("bundle")');assert.equal(el('inventoryUnit').value,'bundle');assert.match(el('inventoryUnit').innerHTML,/bundle \(existing unit\)/,'an existing custom unit stays editable without changing its meaning');
+  run('fillInventoryStockUnits()');assert.equal(el('inventoryUnit').value,'');assert.doesNotMatch(el('inventoryUnit').innerHTML,/bundle/,'a new item never inherits the previous custom unit');
   await run('saveInventoryStockItem()');assert.match(el('inventoryStockError').textContent,/stock item name/);assert.equal(el('inventoryItemName').focused,true);
   el('inventoryItemName').value='New milk';await run('saveInventoryStockItem()');assert.match(el('inventoryStockError').textContent,/one unit/);assert.equal(el('inventoryUnit').focused,true);
   el('inventoryUnit').value='ml';el('inventoryCurrent').value='1.0001';await run('saveInventoryStockItem()');assert.match(el('inventoryStockError').textContent,/Current stock/);assert.equal(requests.length,noSend,'invalid form sends no request or retry record');assert.equal(storage.size,0);
@@ -29,9 +32,9 @@ const run=code=>vm.runInContext(code,ctx);run(fs.readFileSync(path.join(__dirnam
     ['l','180','ml','0.180'],['L','1','ml','0.001'],['liters','1.125','L','1.125'],
     ['mL','.125','L','125.000'],['ml','0.001','L','1.000'],
     ['kg','18','g','0.018'],['grams','0.012','kg','12.000'],['kilograms','1','g','0.001'],
-    ['pcs','2','pcs','2.000'],['bag','3','bag','3.000']
+    ['pcs','2','pcs','2.000'],['bag','3','bag','3.000'],['pack','2','pack','2.000'],['bottles','1.5','bottle','1.500'],['box','2','box','2.000'],['can','.5','can','0.500'],['cups','1.25','cup','1.250']
   ])assert.equal(run('inventoryRecipeStockQuantity('+JSON.stringify({unit,name:'Test material'})+','+JSON.stringify(quantity)+','+JSON.stringify(selected)+')'),expected,unit+' from '+selected);
-  for(const [unit,quantity,selected] of [['L','.5','ml'],['kg','.125','g'],['L','1','kg'],['pcs','1','ml'],['g','1000000','kg'],['ml','999999999.999','L']])assert.throws(()=>run('inventoryRecipeStockQuantity('+JSON.stringify({unit,name:'Test material'})+','+JSON.stringify(quantity)+','+JSON.stringify(selected)+')'));
+  for(const [unit,quantity,selected] of [['L','.5','ml'],['kg','.125','g'],['L','1','kg'],['pcs','1','ml'],['g','1000000','kg'],['ml','999999999.999','L'],['cup','1','ml'],['pack','1','pcs'],['bottle','1','L'],['box','1','pack']])assert.throws(()=>run('inventoryRecipeStockQuantity('+JSON.stringify({unit,name:'Test material'})+','+JSON.stringify(quantity)+','+JSON.stringify(selected)+')'));
   run('state.inventoryItems[0].unit="l"');recipeFields[0].value='180';
   await run('saveInventoryRecipe()');assert.deepEqual(JSON.parse(requests.at(-1).options.body).ingredients,[{item_id:'1',quantity:'0.180'}],'recipe saves the exact quantity converted to the stock unit');
   run('addManualStockMovement("1")');el('inventoryMovementType').value='waste';el('inventoryMovementQty').value='0.125';el('inventoryMovementNote').value='Spill';await run('saveInventoryMovement()');assert.equal(JSON.parse(requests.at(-1).options.body).quantity,'-0.125');

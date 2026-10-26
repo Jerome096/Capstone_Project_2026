@@ -50,7 +50,18 @@ IDs are compared as decimal strings to preserve bigint precision. Old ready
 history remains silent on initial load.
 
 The alert module and stylesheet are identical in both customer app shared folders.
-The module uses a short Web Audio chime and `navigator.vibrate` where supported;
+The module uses four repeating three-note Web Audio chimes over 7.2 seconds and
+`navigator.vibrate` where supported. Triangle waves with a 0.9 peak gain make the
+sound brighter and louder than the previous 0.57-second sine chime at 0.12 gain.
+Short attack/release envelopes avoid abrupt note boundaries. Notes do not overlap;
+a new ready alert, reminder or test replaces the previous sequence rather than
+adding volume. Mute, Dismiss, View order, a served order and account/session reset
+cancel remaining scheduled notes. Test alert also plays without a ready notice.
+If a playing alert is interrupted by hiding the page, its sound remains pending
+for return while the order remains in the notice. Device media volume and browser
+audio permissions still determine actual speaker output.
+
+Audio is generated inside the browser;
 there are no external audio downloads or third-party notification services.
 No SQL schema or order status changes are required.
 

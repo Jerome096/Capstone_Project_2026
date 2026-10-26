@@ -6,9 +6,11 @@
     "shared/order-ready-alerts.js",
     "menu/menu-data.js",
     "shared/state.js",
+    "shared/cart-limits.js",
     "shared/helpers.js",
     "shared/image-upload.js",
     "shared/storage.js",
+    "shared/cart-storage.js",
     "shared/navigation.js",
     "cart/cart.js",
     "login/login.js",
@@ -41,7 +43,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=receipt-remove-1";
+        script.src = src + "?v=customer-item-limit-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

@@ -205,6 +205,13 @@
   position: relative;
   border-radius: 16px;
 }
+#posPaymentMethods { display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:8px; max-height:240px; overflow-y:auto; }
+#posPaymentMethods .method { min-width:0; min-height:64px; height:auto; }
+#posPaymentMethods .method span { overflow-wrap:anywhere; white-space:normal; }
+#checkoutReferenceBlock label { overflow-wrap:anywhere; }
+#posPaymentMethodsStatus { margin:8px 0 0; line-height:1.5; }
+#posPaymentMethodsStatus:empty { display:none; }
+#posPaymentMethodsRetry[hidden] { display:none; }
 
 .item-modal-card {
   width: 330px;
