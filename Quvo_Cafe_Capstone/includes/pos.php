@@ -42,7 +42,7 @@ function pos_submit(PDO $db,array $actor,array $input): array
     // must not prevent recovery of an already accepted, identical payment.
     if($method!=='Cash')payment_active_method($db,$method);
     [$catalog,$total]=orders_catalog($db,$lines,$expected);
-    foreach($lines as $line)if(!in_array($catalog[$line['menu_item_id']]['category'],['coffee','non-coffee'],true)&&$line['customization']['size']!=='Not applicable')throw new OrderError('Drink sizes apply only to drinks.');
+    foreach($lines as $line)if(!menu_category_is_drink($catalog[$line['menu_item_id']]['category'])&&$line['customization']['size']!=='Not applicable')throw new OrderError('Drink sizes apply only to drinks.');
     $q=$db->prepare("INSERT dbo.orders(order_source,pos_staff_id,customer_name,submission_key,submission_hash,total_amount,preferred_payment_method) OUTPUT INSERTED.order_id VALUES('walk_in',?,?,?,CONVERT(binary(32),?,2),?,?)");
     $q->execute([$actor['staff_id'],$customer,$key,$hash,orders_money($total),$method]);$id=(int)$q->fetchColumn();$q->closeCursor();
     $q=$db->prepare('INSERT dbo.order_items(order_id,line_number,menu_item_id,item_name,category,unit_price,quantity,customization_json,notes) VALUES(?,?,?,?,?,?,?,?,?)');

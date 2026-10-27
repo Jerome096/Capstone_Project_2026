@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/orders.php';
-const KITCHEN_FOOD_CATEGORIES=['food','sandwich','meal','snack','pastry','pasta','dessert'];
+const KITCHEN_FOOD_CATEGORIES=QUVO_KITCHEN_CATEGORIES;
 function kitchen_actor(array $actor):void {
     if(!in_array($actor['role'],['admin','staff','kitchen'],true))throw new OrderError('Kitchen access is required.',403);
 }
@@ -18,7 +18,7 @@ function kitchen_get(PDO $db,int $id):array {
 }
 function kitchen_list(PDO $db,mixed $offset=0):array {
     $offset=filter_var($offset,FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>1000000]]);if($offset===false)throw new OrderError('Invalid queue offset.');
-    $q=$db->prepare("SELECT o.order_id FROM dbo.orders o JOIN dbo.payments p ON p.order_id=o.order_id WHERE o.order_status IN ('preparing','ready') AND EXISTS(SELECT 1 FROM dbo.order_items i WHERE i.order_id=o.order_id AND i.category IN ('food','sandwich','meal','snack','pastry','pasta','dessert')) ORDER BY p.paid_at,o.order_id OFFSET ? ROWS FETCH NEXT 101 ROWS ONLY");
+    $q=$db->prepare("SELECT o.order_id FROM dbo.orders o JOIN dbo.payments p ON p.order_id=o.order_id WHERE o.order_status IN ('preparing','ready') AND EXISTS(SELECT 1 FROM dbo.order_items i WHERE i.order_id=o.order_id AND i.category IN ('food','sandwich','meal','snack','pastry','pasta','dessert','meal-sets','appetizer','sandwiches','pizza')) ORDER BY p.paid_at,o.order_id OFFSET ? ROWS FETCH NEXT 101 ROWS ONLY");
     $q->bindValue(1,$offset,PDO::PARAM_INT);$q->execute();$ids=$q->fetchAll(PDO::FETCH_COLUMN);$q->closeCursor();$more=count($ids)>100;$result=[];
     foreach(array_slice($ids,0,100) as $id){try{$result[]=kitchen_get($db,(int)$id);}catch(OrderError $error){if(!in_array($error->status,[404,409],true))throw $error;}}
     return ['orders'=>$result,'next_offset'=>$more?$offset+100:null];

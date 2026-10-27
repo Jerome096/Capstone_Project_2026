@@ -3,7 +3,7 @@ const root=path.resolve(__dirname,'../..'),files=['Quvo_Cafe_Capstone/shared/js/
 let checks=0;const check=(actual,expected,label)=>{assert.deepEqual(actual,expected,label);checks++;};
 const groups=[{id:'milk',label:'Milk',pricing:'extra',required:false,choices:[{id:'none',label:'No milk',price:'0.00'},{id:'oat',label:'Oat milk',price:'20.10'}]},{id:'size',label:'Size',pricing:'size',required:true,choices:[{id:'small',label:'Small',price:'150.00'},{id:'large',label:'Large',price:'180.20'}]},{id:'shot',label:'Shot',pricing:'extra',required:true,choices:[{id:'none',label:'None',price:'0.00'},{id:'extra',label:'Extra shot',price:'0.20'}]}];
 for(const file of files){
- const context=vm.createContext({window:{},Intl});vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);const options=context.window.QuvoMenuOptions;
+ const context=vm.createContext({Intl});context.window=context;vm.runInContext(fs.readFileSync(path.join(root,path.dirname(file),'menu-categories.js'),'utf8'),context);vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);const options=context.window.QuvoMenuOptions;
  const item={price:140,optionGroups:groups};
  check(options.priceCents(item,{size:'large',milk:'oat',shot:'extra'}),20050,'Full size price plus extras in integer centavos');
  check(options.price(item,{size:'small',milk:'none',shot:'none'}),150,'A size replaces the base price');

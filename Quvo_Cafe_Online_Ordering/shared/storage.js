@@ -74,7 +74,9 @@ async function enterOnlineAccount(account){
 async function refreshOnlineMenu(reviewCart=false){
   const generation=online.generation;
   const data=await onlineApi(null,"menu");if(generation!==online.generation)return;
-  CUSTOMER_DATA.menuItems=data.items;CUSTOMER_DATA.categories=["All",...new Set(data.items.map(item=>item.category))];
+  CUSTOMER_DATA.menuItems=data.items;
+  const usedCategories=new Set(data.items.map(item=>item.category));
+  CUSTOMER_DATA.categories=QuvoMenuCategories.filters(data.items).filter(category=>category==="All"||usedCategories.has(category));
   if(!CUSTOMER_DATA.categories.includes(state.selectedCategory))state.selectedCategory="All";
   if(reviewCart){state.cart=state.cart.flatMap(item=>{const current=data.items.find(entry=>entry.id===item.itemId);return current?[{...item,name:current.name,category:current.category,unitPrice:QuvoMenuOptions.price(current,QuvoMenuOptions.savedSelections(current,item.customization)),pricedOptions:QuvoMenuOptions.hasPricing(current)}]:[];});window.QuvoOnlineCart?.save();}
   renderCategories();renderMenu();renderCart();

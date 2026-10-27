@@ -7,7 +7,7 @@ function openItemModal(itemId){
   const item=CUSTOMER_DATA.menuItems.find(entry=>entry.id===itemId);if(!item)return showToast('This item is no longer available.');
   onlineItemReturnFocus=document.activeElement;
   state.selectedItem=item;state.editingCartId=null;state.modalQuantity=1;customizeForm.reset();modalQty.textContent='1';
-  QuvoMenuOptions.photo(modalItemIcon,item);modalItemCategory.textContent=item.category;modalItemName.textContent=item.name;modalItemDesc.textContent=item.description;
+  QuvoMenuOptions.photo(modalItemIcon,item);modalItemCategory.textContent=QuvoMenuCategories.label(item.category);modalItemName.textContent=item.name;modalItemDesc.textContent=item.description;
   QuvoMenuOptions.render(drinkOptions,item);drinkOptions.style.display=QuvoMenuOptions.groups(item).length?'grid':'none';
   itemModal.classList.add('open');itemModal.setAttribute('aria-hidden','false');document.body.classList.add('storefront-item-open');updateModalPrice();
   itemModal.querySelector('.close-btn')?.focus({preventScroll:true});

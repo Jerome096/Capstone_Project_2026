@@ -22,7 +22,7 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=hide-zero-badges-1" />
   <link rel="stylesheet" href="../shared/css/portal.css" />
   <link rel="stylesheet" href="../cashier/dashboard/dashboard.css?v=report-colors-1" />
-  <link rel="stylesheet" href="../cashier/menu/menu.css?v=pos-payment-methods-1" />
+  <link rel="stylesheet" href="../cashier/menu/menu.css?v=menu-categories-1" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css" />
   <link rel="stylesheet" href="../cashier/orders/orders.css?v=order-stock-notice-1" />
   <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-payment-methods-1" />
@@ -110,6 +110,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=hide-zero-badges-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=menu-categories-1"></script>
 </body>
 </html>

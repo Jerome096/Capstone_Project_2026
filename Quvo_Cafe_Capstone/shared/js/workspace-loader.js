@@ -34,6 +34,7 @@ const QUVO_MODAL_FRAGMENTS = [
 
 const QUVO_WORKSPACE_SCRIPTS = [
   "shared/js/ordering-control.js",
+  "shared/js/menu-categories.js",
   "shared/js/menu-options.js",
   "admin/menu-management/menu-photo.js",
   "admin/menu-management/menu-editor.js",
@@ -82,7 +83,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=hide-zero-badges-1";
+    script.src = quvoPath(path) + "?v=menu-categories-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

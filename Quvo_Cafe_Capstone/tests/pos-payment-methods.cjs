@@ -5,7 +5,8 @@ const ctx=vm.createContext({console,Intl,Date,Map,Math,Number,String,Array,Boole
  document:{getElementById:el,querySelectorAll:()=>[]},window:{QUVO_SESSION:{staff_id:1}},QUVO_AUTH:{getSession:()=>({staff_id:1})},
  lucide:{createIcons(){}},escapeHtml:value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'),quvoPath:value=>value,showToast(){},sqlOrders:{revision:0},
  async fetch(url,options){requests.push({url,options});assert.equal(url,'api/pos/index.php?view=payment-methods');if(fail)throw Error('Methods offline');const saved=structuredClone(methods),response={ok:true,json:async()=>({ok:true,methods:saved})};if(delay){delay=false;return new Promise(resolve=>deferred.push(()=>resolve(response)));}return response;}});
-const run=code=>vm.runInContext(code,ctx);for(const file of ['shared/js/state.js','cashier/menu/menu.js','cashier/menu/pos-sql.js','cashier/receipts/receipts.js'])run(fs.readFileSync(path.join(__dirname,'..',file),'utf8'));
+const run=code=>vm.runInContext(code,ctx);run(fs.readFileSync(path.join(__dirname,'../shared/js/menu-categories.js'),'utf8'));ctx.QuvoMenuCategories=ctx.window.QuvoMenuCategories;
+for(const file of ['shared/js/state.js','cashier/menu/menu.js','cashier/menu/pos-sql.js','cashier/receipts/receipts.js'])run(fs.readFileSync(path.join(__dirname,'..',file),'utf8'));
 run('state.menu=[{id:1,category:"food"}];state.posCart=[{menuId:1,cartId:"one",name:"Egg",qty:1,price:100,customizations:[],drinkOptions:null,note:""}];');let checks=0;
 const check=(ok,label)=>{assert.ok(ok,label);checks++;};
 (async()=>{

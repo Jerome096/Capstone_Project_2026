@@ -162,3 +162,7 @@ h1, h2 { font-family: var(--dine-serif); font-weight: 400; letter-spacing: -.035
   .dine-menu-grid .dine-menu-card { transition: none; }
   .dine-menu-grid .dine-menu-card:hover { transform: none; }
 }
+
+.dine-menu-toolbar .category-tabs { flex:1 1 680px; }
+.dine-menu-toolbar .category-btn { flex:0 0 auto; white-space:nowrap; }
+@media(max-width:720px){.dine-menu-toolbar .category-tabs{flex-basis:auto;}}

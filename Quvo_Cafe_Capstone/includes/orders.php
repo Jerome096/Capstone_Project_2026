@@ -311,7 +311,7 @@ function orders_catalog(PDO $db, array &$lines, int $expectedTotal): array
     $total = 0;
     foreach ($lines as &$line) {
         $menu = $catalog[$line["menu_item_id"]];
-        if (!in_array($menu["category"], ["coffee", "non-coffee"], true)
+        if (!menu_category_is_drink($menu["category"])
             && ($line["customization"]["sugarLevel"] !== "Not applicable"
                 || $line["customization"]["iceLevel"] !== "Not applicable")) {
             throw new OrderError("Sugar and ice options apply only to drinks.");

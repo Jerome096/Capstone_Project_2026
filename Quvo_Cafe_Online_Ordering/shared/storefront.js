@@ -41,12 +41,12 @@
   let pendingSelection=null,aboutRequest=0;
   function productArt(item){
     if(item.imageUrl)return QuvoMenuOptions.photoHTML(item);
-    const food=/food|meal|pastr/i.test(item.category),matcha=/matcha/i.test(item.name);
-    return art({...item,id:matcha?'matcha':item.id,art:food?'plate':/hot|espresso|cappuccino/i.test(item.name)?'hot':'iced',tone:matcha?'#829b53':food?'#d9a52f':'#bc9369'});
+    const food=QuvoMenuCategories.isFood(item.category),matcha=/matcha/i.test(item.name);
+    return art({...item,id:matcha?'matcha':item.id,art:food?'plate':item.category==='hot-coffee'||/hot|espresso|cappuccino/i.test(item.name)?'hot':'iced',tone:matcha?'#829b53':food?'#d9a52f':'#bc9369'});
   }
   function card(item){
-    const e=escapeCustomerHtml,bg=/food|meal|pastr/i.test(item.category)?'#ebe7dc':/matcha/i.test(item.name)?'#e8ecdf':'#eee7da';
-    return `<article class="menu-card" data-card-item-id="${e(item.id)}" style="--art-bg:${bg}"><button type="button" class="product-image" data-open-item="${e(item.id)}" aria-label="View ${e(item.name)}">${productArt(item)}</button><div class="product-info"><p class="product-category">${e(item.category)}</p><button type="button" class="product-title" data-open-item="${e(item.id)}">${e(item.name)}</button><p class="product-description">${e(item.description||'Make it your own. View available options.')}</p><div class="product-bottom"><strong class="product-price">${QuvoMenuOptions.priceLabel(item)}</strong><button type="button" class="add-item" data-open-item="${e(item.id)}" aria-label="Customize ${e(item.name)}">${icon('plus')}</button></div></div></article>`;
+    const e=escapeCustomerHtml,bg=QuvoMenuCategories.isFood(item.category)?'#ebe7dc':/matcha/i.test(item.name)?'#e8ecdf':'#eee7da';
+    return `<article class="menu-card" data-card-item-id="${e(item.id)}" style="--art-bg:${bg}"><button type="button" class="product-image" data-open-item="${e(item.id)}" aria-label="View ${e(item.name)}">${productArt(item)}</button><div class="product-info"><p class="product-category">${e(QuvoMenuCategories.label(item.category))}</p><button type="button" class="product-title" data-open-item="${e(item.id)}">${e(item.name)}</button><p class="product-description">${e(item.description||'Make it your own. View available options.')}</p><div class="product-bottom"><strong class="product-price">${QuvoMenuOptions.priceLabel(item)}</strong><button type="button" class="add-item" data-open-item="${e(item.id)}" aria-label="Customize ${e(item.name)}">${icon('plus')}</button></div></div></article>`;
   }
   function renderFeatured(){
     const root=$('#storefrontFeaturedList');if(!root)return;

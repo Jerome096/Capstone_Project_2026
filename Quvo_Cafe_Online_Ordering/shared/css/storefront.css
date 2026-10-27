@@ -36,3 +36,10 @@ html{height:auto;min-height:100%;}body{height:auto;min-height:100vh;overflow-x:h
 @media print{.site-header,.site-footer,.bottom-nav,.modal,.toast,dialog,.floating-cart-btn{display:none!important;}.screen:not(.screen-active){display:none!important;}body{background:white;}}
 
 #home-headline,#about-story-heading{overflow-wrap:anywhere;}
+
+/* Category names remain readable with the expanded cafe menu. */
+.menu-toolbar .category-tabs { display:flex; flex-wrap:wrap; gap:8px; flex:1 1 680px; min-width:0; }
+.menu-toolbar .category { flex:0 0 auto; white-space:nowrap; }
+.menu-toolbar { flex-wrap:wrap; }
+.menu-toolbar .search-field { flex:0 1 280px; }
+@media(max-width:720px){.menu-toolbar .category-tabs{flex-basis:auto;}.menu-toolbar .search-field{flex-basis:auto;}}

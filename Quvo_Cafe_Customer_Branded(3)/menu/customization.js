@@ -5,7 +5,7 @@ function openItemModal(itemId){
   if(dineCartLocked())return showToast('Retry your pending order before changing the cart.');
   const item=CUSTOMER_DATA.menuItems.find(entry=>entry.id===itemId);if(!item)return showToast('This item is no longer available.');
   state.selectedItem=item;state.editingCartId=null;state.modalQuantity=1;customizeForm.reset();modalQty.textContent='1';
-  QuvoMenuOptions.photo(modalItemIcon,item);modalItemCategory.textContent=item.category;modalItemName.textContent=item.name;modalItemDesc.textContent=item.description;
+  QuvoMenuOptions.photo(modalItemIcon,item);modalItemCategory.textContent=QuvoMenuCategories.label(item.category);modalItemName.textContent=item.name;modalItemDesc.textContent=item.description;
   QuvoMenuOptions.render(drinkOptions,item);drinkOptions.style.display=QuvoMenuOptions.groups(item).length?'grid':'none';
   itemModal.classList.add('open');itemModal.setAttribute('aria-hidden','false');updateModalPrice();
 }

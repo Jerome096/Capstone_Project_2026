@@ -48,7 +48,7 @@ function menu_remove(PDO $db,int $id,int $actor):void {
 function menu_save(PDO $db,array $input):array {
     $id=isset($input['id'])?orders_id($input['id']):null;
     $name=orders_text($input['name']??null,100,true);$category=$input['category']??null;$price=$input['price']??null;$available=$input['available']??null;
-    if(!in_array($category,['coffee','non-coffee','food','pastry'],true)||!is_string($price)||!preg_match('/\A\d{1,8}(\.\d{1,2})?\z/',$price)||!is_bool($available))throw new OrderError('Enter a valid category, price and availability.');
+    if(!in_array($category,array_merge(QUVO_MENU_CATEGORIES,QUVO_LEGACY_MENU_CATEGORIES),true)||!is_string($price)||!preg_match('/\A\d{1,8}(\.\d{1,2})?\z/',$price)||!is_bool($available))throw new OrderError('Enter a valid category, price and availability.');
     $hasGroups=array_key_exists('optionGroups',$input);$groups=$hasGroups?menu_validate_groups($input['optionGroups']):null;
     $hasImage=array_key_exists('image',$input);$image=$hasImage?menu_image_input($input['image']):null;
     inventory_lock($db);

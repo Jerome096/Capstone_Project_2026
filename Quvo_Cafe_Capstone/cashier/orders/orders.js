@@ -124,7 +124,7 @@ function getMenuItemForOrderItem(orderItem) {
 }
 
 function isBeverageOrderItem(orderItem) {
-  if (orderItem.category) return ["coffee", "non-coffee"].includes(orderItem.category.toLowerCase());
+  if (orderItem.category) return QuvoMenuCategories.isDrink(orderItem.category);
   const menuItem = getMenuItemForOrderItem(orderItem);
   if (menuItem) return isDrinkItem(menuItem);
   return (

@@ -27,7 +27,7 @@ function renderCategories() {
   categoryTabs.innerHTML = CUSTOMER_DATA.categories
     .map((category) => {
       const activeClass = category === state.selectedCategory ? "active" : "";
-      return `<button class="category-btn ${activeClass}" type="button" data-category="${escapeCustomerHtml(category)}" aria-pressed="${category === state.selectedCategory}">${escapeCustomerHtml(category === "All" ? "All items" : category)}</button>`;
+      return `<button class="category-btn ${activeClass}" type="button" data-category="${escapeCustomerHtml(category)}" aria-pressed="${category === state.selectedCategory}">${escapeCustomerHtml(category === "All" ? "All items" : QuvoMenuCategories.label(category))}</button>`;
     })
     .join("");
 
@@ -46,7 +46,7 @@ function getFilteredMenuItems() {
       state.selectedCategory === "All" || item.category === state.selectedCategory;
     const matchesSearch =
       item.name.toLowerCase().includes(state.searchTerm) ||
-      item.category.toLowerCase().includes(state.searchTerm) ||
+      QuvoMenuCategories.label(item.category).toLowerCase().includes(state.searchTerm) ||
       item.description.toLowerCase().includes(state.searchTerm);
 
     return matchesCategory && matchesSearch;
@@ -55,9 +55,9 @@ function getFilteredMenuItems() {
 
 // Presentation only: reuse the online menu's artwork when an item has no uploaded photo.
 function dineMenuArt(item) {
-  if (/food|meal|pastr/i.test(item.category)) return "food-plate";
+  if (QuvoMenuCategories.isFood(item.category)) return "food-plate";
   if (/matcha/i.test(item.name)) return "matcha";
-  return /hot|espresso|cappuccino/i.test(item.name) ? "hot-coffee" : "iced-coffee";
+  return item.category === "hot-coffee" || /hot|espresso|cappuccino/i.test(item.name) ? "hot-coffee" : "iced-coffee";
 }
 
 function dineMenuPhoto(item) {
@@ -91,7 +91,7 @@ function renderMenu() {
         <article class="menu-card clickable-card dine-menu-card" role="button" tabindex="0" data-card-item-id="${escapeCustomerHtml(item.id)}" aria-label="Customize ${escapeCustomerHtml(item.name)}">
           <div class="item-icon dine-product-image dine-art-${dineMenuArt(item)}">${dineMenuPhoto(item)}</div>
           <div class="dine-product-info">
-            <p class="eyebrow">${escapeCustomerHtml(item.category)}</p>
+            <p class="eyebrow">${escapeCustomerHtml(QuvoMenuCategories.label(item.category))}</p>
             <h3>${escapeCustomerHtml(item.name)}</h3>
             <p class="dine-product-description">${escapeCustomerHtml(item.description || "Make it your own. View available options.")}</p>
             <div class="card-bottom">

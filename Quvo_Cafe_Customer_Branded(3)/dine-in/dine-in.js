@@ -145,7 +145,7 @@ async function applyGuestSession(data, generation) {
       const menu = await guestSessionApi(null, "menu");
       if (generation !== guestGeneration) return;
       CUSTOMER_DATA.menuItems = menu.items;
-      CUSTOMER_DATA.categories = ["All", ...new Set(menu.items.map((item) => item.category))];
+      CUSTOMER_DATA.categories = QuvoMenuCategories.filters(menu.items);
       state.selectedCategory = "All";
       state.searchTerm = "";
       menuSearch.value = "";

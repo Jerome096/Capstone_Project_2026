@@ -4,6 +4,7 @@ const el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',
 const escape=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const ctx=vm.createContext({console,Date,JSON,Set,Number,String,window:{QUVO_SESSION:{full_name:'Cashier test'}},state:{menu:[],orders:[]},document:{getElementById:el},escapeHtml:escape,normalizeName:value=>value.toLowerCase()});
 const run=code=>vm.runInContext(code,ctx);
+run(fs.readFileSync(path.join(__dirname,'../shared/js/menu-categories.js'),'utf8'));ctx.QuvoMenuCategories=ctx.window.QuvoMenuCategories;
 for(const file of ['cashier/orders/orders.js','cashier/receipts/receipts.js','shared/js/thermal-print.js','cashier/orders/preparation-tickets.js'])run(fs.readFileSync(path.join(__dirname,'..',file),'utf8'));
 const order={id:'sql1',number:'QVO-1',paid:true,stage:'preparing',source:'online',table:'Online delivery',customerName:'<Guest>',fulfillment:'Delivery request',approvedBy:'Cashier test',approvedAt:'10/13/2026 7:30 PM',items:[
   {name:'<Coffee>',qty:2,category:'coffee',note:'50% sugar · Less ice'},

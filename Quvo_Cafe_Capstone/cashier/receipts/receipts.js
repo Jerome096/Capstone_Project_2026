@@ -1,5 +1,5 @@
 function isDrinkItem(item) {
-  return item.category === "coffee" || item.category === "non-coffee";
+  return QuvoMenuCategories.isDrink(item.category);
 }
 function receiptDay(value=new Date()) {
   if(!(value instanceof Date))value=new Date(value);

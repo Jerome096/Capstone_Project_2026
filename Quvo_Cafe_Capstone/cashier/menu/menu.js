@@ -7,15 +7,11 @@ function bindMenu() {
     openAdminWorkspace(openMenuAdmin);
   });
 
-  document.querySelectorAll(".filter").forEach((button) => {
-    button.addEventListener("click", () => {
-      document
-        .querySelectorAll(".filter")
-        .forEach((entry) => entry.classList.remove("active"));
-      button.classList.add("active");
-      activeMenuFilter = button.dataset.filter;
-      renderMenu();
-    });
+  document.getElementById("posCategoryFilters").addEventListener("click", event => {
+    const button = event.target.closest("[data-filter]");
+    if (!button) return;
+    activeMenuFilter = button.dataset.filter;
+    renderMenu();
   });
 
   document.getElementById("menuSearch").addEventListener("input", renderMenu);
@@ -25,6 +21,9 @@ function bindMenu() {
 
 function renderMenu() {
   const grid = document.getElementById("menuGrid");
+  const categories = QuvoMenuCategories.filters(state.menu, "all");
+  if (!categories.includes(activeMenuFilter)) activeMenuFilter = "all";
+  document.getElementById("posCategoryFilters").innerHTML = categories.map(category => '<button type="button" class="filter '+(category===activeMenuFilter?'active':'')+'" data-filter="'+escapeHtml(category)+'" aria-pressed="'+(category===activeMenuFilter)+'">'+escapeHtml(category==='all'?'All':QuvoMenuCategories.label(category))+'</button>').join('');
   const query = document.getElementById("menuSearch")?.value.toLowerCase().trim() || "";
 
   const items = state.menu.filter((item) => {
@@ -39,7 +38,7 @@ function renderMenu() {
         .map(
           (item) => `
     <button class="menu-card ${item.available ? "available" : "unavailable"}" ${item.available ? `onclick="openItemModal(${item.id})"` : `onclick="showToast('This item is unavailable.')"`}>
-      <span class="category-tag">${item.category}</span>
+      <span class="category-tag">${escapeHtml(QuvoMenuCategories.label(item.category))}</span>
       <span class="dot menu-dot ${item.available ? "active-dot" : "inactive-dot"}"></span>
       ${item.imageUrl?'<div class="menu-card-photo">'+QuvoMenuOptions.photoHTML(item)+'</div>':''}
       <div class="menu-title">${escapeHtml(item.name)}</div>

@@ -5,11 +5,11 @@ function configureMenuHeader(){
  paymentNote.textContent='Your selected payment method will be confirmed by Quvo Café staff before preparation begins.';fulfillmentCard.classList.remove('hidden');
 }
 function renderCategories(){
- categoryTabs.innerHTML=CUSTOMER_DATA.categories.map(category=>'<button class="category category-btn '+(category===state.selectedCategory?'active':'')+'" type="button" data-category="'+escapeCustomerHtml(category)+'" aria-pressed="'+(category===state.selectedCategory)+'">'+escapeCustomerHtml(category==='All'?'All items':category.charAt(0).toUpperCase()+category.slice(1))+'</button>').join('');
+ categoryTabs.innerHTML=CUSTOMER_DATA.categories.map(category=>'<button class="category category-btn '+(category===state.selectedCategory?'active':'')+'" type="button" data-category="'+escapeCustomerHtml(category)+'" aria-pressed="'+(category===state.selectedCategory)+'">'+escapeCustomerHtml(category==='All'?'All items':QuvoMenuCategories.label(category))+'</button>').join('');
  categoryTabs.querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>{state.selectedCategory=button.dataset.category;renderCategories();renderMenu();}));
 }
 function getFilteredMenuItems(){
- const rows=CUSTOMER_DATA.menuItems.filter(item=>(state.selectedCategory==='All'||item.category===state.selectedCategory)&&[item.name,item.category,item.description||''].join(' ').toLowerCase().includes(state.searchTerm));
+ const rows=CUSTOMER_DATA.menuItems.filter(item=>(state.selectedCategory==='All'||item.category===state.selectedCategory)&&[item.name,QuvoMenuCategories.label(item.category),item.description||''].join(' ').toLowerCase().includes(state.searchTerm));
  const sort=document.getElementById('menuSort').value;if(sort==='price-low')rows.sort((a,b)=>a.price-b.price);if(sort==='price-high')rows.sort((a,b)=>b.price-a.price);return rows;
 }
 function renderMenu(){

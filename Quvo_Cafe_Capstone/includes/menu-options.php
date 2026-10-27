@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/menu-categories.php';
 
 function menu_default_groups(string $category):array {
-    if(!in_array($category,['coffee','non-coffee'],true))return [];
+    if(!menu_category_is_drink($category))return [];
     return [
         ['id'=>'sugar-level','label'=>'Sugar level','type'=>'select','required'=>true,'default'=>'sugar-100','choices'=>array_map(fn($n)=>['id'=>'sugar-'.$n,'label'=>$n.'%'],[100,75,50,25,0])],
         ['id'=>'ice-level','label'=>'Ice level','type'=>'select','required'=>true,'default'=>'ice-regular','choices'=>[

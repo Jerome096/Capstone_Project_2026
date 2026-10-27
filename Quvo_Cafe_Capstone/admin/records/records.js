@@ -69,8 +69,5 @@ function addSystemRecord(title, detail, type = "System") {
 }
 
 function formatCategory(category) {
-  return category
-    .split("-")
-    .map((part) => capitalize(part))
-    .join("-");
+  return QuvoMenuCategories.label(category);
 }

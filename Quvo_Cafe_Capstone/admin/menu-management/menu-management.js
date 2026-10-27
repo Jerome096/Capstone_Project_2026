@@ -67,10 +67,8 @@ function renderAdminEditPanel(itemId) {
       <label>
         Category
         <select id="adminItemCategory">
-          <option value="coffee" ${item.category === "coffee" ? "selected" : ""}>Coffee</option>
-          <option value="non-coffee" ${item.category === "non-coffee" ? "selected" : ""}>Non-coffee</option>
-          <option value="food" ${item.category === "food" ? "selected" : ""}>Food</option>
-          <option value="pastry" ${item.category === "pastry" ? "selected" : ""}>Pastry</option>
+          ${QuvoMenuCategories.choices.map(category=>'<option value="'+category.id+'" '+(item.category===category.id?'selected':'')+'>'+escapeHtml(category.label)+'</option>').join('')}
+          ${!QuvoMenuCategories.choices.some(category=>category.id===item.category)?'<option value="'+escapeAttribute(item.category)+'" selected>'+escapeHtml(QuvoMenuCategories.label(item.category))+' (previous category)</option>':''}
         </select>
       </label>
 
@@ -248,7 +246,7 @@ function addAdminMenuItem() {
   const newItem = {
     id: -1,
     name: "New item",
-    category: "coffee",
+    category: "hot-coffee",
     price: 0,
     available: false,
     optionGroups: [],

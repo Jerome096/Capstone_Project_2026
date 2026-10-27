@@ -2,7 +2,7 @@
   'use strict';
   const escape=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   function defaults(category){
-    if(!['coffee','non-coffee'].includes(String(category).toLowerCase()))return [];
+    if(!QuvoMenuCategories.isDrink(category))return [];
     return [
       {id:'sugar-level',label:'Sugar level',type:'select',required:true,default:'sugar-100',choices:[100,75,50,25,0].map(n=>({id:'sugar-'+n,label:n+'%'}))},
       {id:'ice-level',label:'Ice level',type:'select',required:true,default:'ice-regular',choices:[{id:'ice-regular',label:'Regular ice'},{id:'ice-less',label:'Less ice'},{id:'ice-none',label:'No ice'},{id:'ice-hot',label:'Hot'}]},

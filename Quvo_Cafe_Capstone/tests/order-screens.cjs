@@ -47,6 +47,7 @@ const context = vm.createContext({
   }
 });
 const run = s => vm.runInContext(s,context);
+run(read("Quvo_Cafe_Capstone/shared/js/menu-categories.js"));context.QuvoMenuCategories=context.window.QuvoMenuCategories;
 run(read("Quvo_Cafe_Capstone/cashier/orders/sql-orders.js"));
 run(read("Quvo_Cafe_Capstone/cashier/orders/preparation-tickets.js"));
 run(read("Quvo_Cafe_Capstone/cashier/receipts/receipts.js"));

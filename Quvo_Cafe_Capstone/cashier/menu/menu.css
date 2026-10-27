@@ -405,3 +405,8 @@
 .menu-toolbar {
   gap: 12px;
 }
+
+/* The expanded category list wraps without squeezing the search input. */
+#posCategoryFilters { display:flex; flex-wrap:wrap; gap:8px; min-width:0; flex:1 1 520px; }
+#posCategoryFilters .filter { white-space:nowrap; }
+.menu-toolbar { flex-wrap:wrap; }

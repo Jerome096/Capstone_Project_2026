@@ -48,7 +48,7 @@ function renderCart() {
       return `
         <article class="cart-item">
           <div>
-            <p class="eyebrow">${escapeCustomerHtml(item.category)}</p>
+            <p class="eyebrow">${escapeCustomerHtml(QuvoMenuCategories.label(item.category))}</p>
             <h3>${escapeCustomerHtml(item.name)}</h3>
             <strong class="price">${formatCurrency(item.unitPrice * item.quantity)}</strong>
             <div class="cart-meta">

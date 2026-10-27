@@ -318,3 +318,9 @@ retried using the Save button inside the popup, with the original payload and ke
 Verify with `C:\php85\php.exe tests/inventory.php` and `node tests/inventory.cjs`.
 SQL fixtures always roll back. Existing POS, dine-in and online SQL checks also
 cover their unchanged order workflows.
+
+For the expanded cafe menu categories, run `22_menu_categories.sql` after the
+existing schema/ordering scripts and before deploying the matching runtime files.
+It adds twelve menu categories, maps current Coffee to Cold Coffee and current
+Food/Pastry to Appetizer, and retains historical order categories. It can be run
+again safely. See `../docs/MENU_CATEGORIES.md` for labels and preparation routing.

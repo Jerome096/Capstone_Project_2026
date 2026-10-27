@@ -15,6 +15,7 @@ function workspace(staff=17){
  async fetch(url,options){assert.equal(url,'api/pos/index.php');assert.equal(options.headers['X-CSRF-Token'],'csrf');requests.push(JSON.parse(options.body));if(mode==='lost')throw new Error('Connection lost after commit');if(mode==='invalid')return {ok:false,status:422,json:async()=>({ok:false,error:'Invalid cart'})};return {ok:true,status:200,json:async()=>({ok:true,order:structuredClone(row),replayed:mode==='retry'})};}
  });
  const run=code=>vm.runInContext(code,context);
+ run(fs.readFileSync(path.join(__dirname,'../shared/js/menu-categories.js'),'utf8'));context.QuvoMenuCategories=context.window.QuvoMenuCategories;
  for(const file of ['cashier/menu/menu.js','cashier/menu/pos-sql.js','cashier/orders/sql-orders.js','cashier/receipts/receipts.js'])run(fs.readFileSync(path.join(__dirname,'..',file),'utf8'));
  run('sqlRender=()=>{};sqlUpdateReceipts=()=>{};renderCart=()=>{};posSql.paymentMethods.set("GCash","GCash");');return {context,element,run};
 }
