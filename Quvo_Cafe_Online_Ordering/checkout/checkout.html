@@ -1,27 +1,29 @@
 <section class="fulfillment-card hidden" id="fulfillmentCard">
-  <p class="eyebrow">Online fulfillment</p>
+  <p class="eyebrow">How will you receive your order?</p>
   <div class="fulfillment-options">
-    <label class="payment-option">
-      <input checked="" name="fulfillmentOption" type="radio" value="Pickup" />
-      <span>Pickup</span>
-    </label>
-    <label class="payment-option">
-      <input name="fulfillmentOption" type="radio" value="Staff-coordinated delivery request" />
-      <span>Delivery request</span>
-    </label>
+    <label class="payment-option"><input checked name="fulfillmentOption" type="radio" value="Pickup"><span>Pickup</span></label>
+    <label class="payment-option"><input name="fulfillmentOption" type="radio" value="Customer-booked Lalamove"><span>Delivery · Book your Lalamove</span></label>
   </div>
-  <div class="delivery-fields hidden" id="deliveryDetails">
-    <label for="deliveryAddress">Delivery address or landmark</label>
-    <textarea
-      id="deliveryAddress"
-      placeholder="Enter your delivery address or landmark"
-      rows="3"
-    ></textarea>
-    <label for="deliveryContact">Receiver contact number</label>
-    <input id="deliveryContact" placeholder="Enter the receiver’s contact number" type="tel" />
-    <p class="small-copy">
-      Quvo Café staff will contact you if courier details or the delivery fee need confirmation.
-    </p>
+  <div class="delivery-fields lalamove-details hidden" id="deliveryDetails">
+    <div class="delivery-intro"><span class="delivery-provider-chip">Customer-booked delivery</span><h3>Your rider picks up at Quvo</h3><p>You book Lalamove using the café as the pickup point. Enter your own drop-off address in Lalamove.</p></div>
+    <div class="cafe-pickup-card"><div class="cafe-pickup-heading"><div><p class="eyebrow">Lalamove pickup point</p><h4>Quvo Café</h4></div><button id="copyCafeAddress" type="button" class="secondary-btn">Copy address</button></div>
+      <label class="sr-only" for="deliveryAddress">Quvo Café pickup address</label><textarea id="deliveryAddress" rows="2" readonly aria-describedby="deliverySetupStatus"></textarea>
+      <p id="deliverySetupStatus" class="small-copy" role="status">Loading café pickup details…</p><button id="deliverySettingsRetry" type="button" class="secondary-btn" hidden>Reload pickup details</button>
+      <div class="cafe-location-map">
+        <iframe id="deliveryMap" title="Quvo Café pickup location on Google Maps" data-src="https://www.google.com/maps?q=14.3791004,120.9783569&amp;z=18&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <a class="delivery-map-link" href="https://www.google.com/maps?cid=14148209030383117993" target="_blank" rel="noopener noreferrer">Open Quvo Café in Google Maps ↗</a>
+      </div>
+      <div id="deliveryPhoneContact" class="delivery-phone-contact" hidden><div><label for="deliveryPhone">Quvo phone number</label><input id="deliveryPhone" type="text" readonly inputmode="tel" autocomplete="off"></div><button id="copyCafePhone" class="secondary-btn" type="button">Copy number</button></div>
+      <div class="delivery-contact-links"><a id="deliveryFacebook" class="secondary-btn" target="_blank" rel="noopener noreferrer" hidden>Message Quvo on Facebook</a></div>
+    </div>
+    <div class="delivery-how"><h4>Before you place your delivery order</h4><ol>
+      <li><strong>Contact Quvo first.</strong> Confirm your order and agree on a rider pickup time through Facebook or phone.</li>
+      <li><strong>Book your Lalamove.</strong> Copy the café address above into the pickup field, then enter your destination in Lalamove.</li>
+      <li><strong>Attach both screenshots below.</strong> Upload your café payment receipt and your Lalamove booking details, then submit your order.</li>
+      <li><strong>Share your order number with Quvo.</strong> Message the café if pickup details change.</li>
+    </ol><a class="delivery-lalamove-link" href="https://www.lalamove.com/en-ph/" target="_blank" rel="noopener noreferrer">Open Lalamove ↗</a>
+    <p class="delivery-fee-note">Your Lalamove fee is arranged and paid separately in Lalamove. The total below covers your café items.</p></div>
+    <input id="deliveryContact" type="hidden">
   </div>
 </section>
 <section class="payment-card" id="customerPaymentOptions">
@@ -46,6 +48,7 @@
         <a id="paymentQrDownload" class="secondary-btn" download hidden>Download QR code</a>
         <p id="paymentQrInstructions" class="small-copy" hidden>Scan the QR in your payment app, or download and upload it there. Check the recipient and send the exact total above.</p>
       </section>
+      <div class="payment-upload-stack">
       <section class="payment-step payment-receipt-step">
         <div class="payment-step-heading"><span class="payment-step-number">2</span><h3>Upload receipt <span class="payment-required">Required</span></h3></div>
         <p class="small-copy">Use a clear screenshot or photo showing the amount, recipient, and reference number.</p>
@@ -59,6 +62,15 @@
         <img id="paymentReceiptPreview" alt="Your uploaded payment receipt" hidden />
         <button id="removePaymentReceipt" class="secondary-btn payment-receipt-remove" type="button" aria-describedby="paymentReceiptStatus" hidden>Remove photo</button>
       </section>
+      <section class="payment-step delivery-booking-step" id="deliveryBookingStep" hidden>
+        <div class="payment-step-heading"><span class="payment-step-number">3</span><h3>Lalamove booking <span class="payment-required">Required for delivery</span></h3></div>
+        <p class="small-copy">Upload a clear screenshot showing your booking reference, rider and Quvo pickup details.</p>
+        <label class="payment-receipt-upload" for="deliveryBookingImage"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 15v5h16v-5"/></svg><strong id="deliveryBookingButtonText">Choose Lalamove screenshot</strong><span>Image · Up to 2 MB</span><input id="deliveryBookingImage" type="file" accept="image/*,.heic,.heif" aria-describedby="deliveryBookingStatus"></label>
+        <p class="small-copy payment-receipt-status" id="deliveryBookingStatus" role="status">Required for delivery: show the booking reference, rider and pickup details.</p>
+        <img id="deliveryBookingPreview" alt="Your Lalamove booking screenshot" hidden>
+        <button id="removeDeliveryBooking" class="secondary-btn payment-receipt-remove" type="button" hidden>Remove screenshot</button>
+      </section>
+      </div>
     </div>
     <p class="small-copy payment-verification-note">The cashier verifies your payment before preparation. Already paid but unable to submit? Contact the café before paying again.</p>
   </div>

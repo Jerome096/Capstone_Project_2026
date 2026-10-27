@@ -16,6 +16,7 @@
   bindAdminMenu();
   window.QuvoWebsiteContent?.bind();
   window.QuvoOperatingHours?.bind();
+  window.QuvoWifiSettings?.bind();
   bindEodModal();
   bindSalesHistory();
   bindReports();

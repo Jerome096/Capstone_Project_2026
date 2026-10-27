@@ -14,7 +14,8 @@ function getFilteredMenuItems(){
 }
 function renderMenu(){
  const items=getFilteredMenuItems();menuCount.textContent=items.length+' item'+(items.length===1?'':'s')+' to explore';
- menuList.innerHTML=items.length?items.map(QuvoStorefront.card).join(''):'<div class="empty-card"><h3>'+(!CUSTOMER_DATA.menuItems.length?'No menu items available':'No matching items')+'</h3><p>'+(!CUSTOMER_DATA.menuItems.length?'Please refresh the menu or check back shortly.':'Try another category or search term.')+'</p></div>';
+ const rows=state.selectedCategory==='All'?QuvoMenuCategories.filters(items).filter(category=>category!=='All'&&items.some(item=>item.category===category)).flatMap(category=>[category,...items.filter(item=>item.category===category)]):items;
+ menuList.innerHTML=items.length?rows.map(item=>typeof item==='string'?'<h2 class="menu-category-heading" data-menu-category-heading="'+escapeCustomerHtml(item)+'">'+escapeCustomerHtml(QuvoMenuCategories.label(item))+'</h2>':QuvoStorefront.card(item)).join(''):'<div class="empty-card"><h3>'+(!CUSTOMER_DATA.menuItems.length?'No menu items available':'No matching items')+'</h3><p>'+(!CUSTOMER_DATA.menuItems.length?'Please refresh the menu or check back shortly.':'Try another category or search term.')+'</p></div>';
  QuvoMenuOptions.bindPhotos(menuList);QuvoStorefront.renderFeatured();
 }
 function bindMenuEvents(){menuSearch.addEventListener('input',event=>{state.searchTerm=event.target.value.trim().toLowerCase();renderMenu();});}

@@ -23,6 +23,7 @@ const ctx=vm.createContext({console,AbortSignal,Error,Number,Math,JSON,Array,Dat
   }
 });
 ctx.window=ctx;
+ctx.QuvoDelivery={ready:()=>true,payload:()=>({delivery_flow:'lalamove-v1',delivery_config_version:'test-version',booking_image:'data:image/png;base64,test-booking'}),clear(){},update(){}};
 const run=source=>vm.runInContext(source,ctx);
 for(const file of ['shared/storage.js','checkout/checkout.js','checkout/payment.js'])run(fs.readFileSync(path.join(root,file),'utf8'));
 (async()=>{
@@ -43,7 +44,8 @@ for(const file of ['shared/storage.js','checkout/checkout.js','checkout/payment.
   assert.deepEqual(requests[0],requests[1]);assert.equal(saved.size,1,'retry never creates another order');
   assert.equal(run('state.currentScreen'),'screenTracking');assert.equal(run('state.cart.length'),0);assert.equal(run('online.pending'),null);
   assert.equal(store.size,0,'accepted retry clears pending storage');
-  assert.equal(durable.size,0,'accepted retry clears durable pending storage');
+  assert.equal(durable.has('quvo_online_pending_sql_v1_7'),false,'accepted retry clears durable pending storage');
+  assert.equal(durable.get('quvo_online_tracking_v1_7'),'40','accepted order remains selected for tracking after refresh');
   ctx.state.onlineCustomer={id:'8'};run('restoreOnlinePending()');assert.equal(run('online.pending'),null,'different accounts do not inherit pending orders');
   console.log('PASS: lost checkout response, reload recovery, fulfillment selection, identical retry, one saved order, and account-scoped pending storage.');
 })().catch(error=>{console.error(error);process.exitCode=1});

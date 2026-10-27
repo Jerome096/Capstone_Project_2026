@@ -1,0 +1,9 @@
+.wifi-settings-card { width:100%; max-width:780px; padding:24px; background:var(--q-surface,#fffdf9); border:1px solid var(--q-border,#e7d8c6); border-radius:18px; }
+.wifi-settings-card h2 { margin:5px 0 12px; }
+#wifiSettingsForm { display:grid; gap:16px; margin-top:18px; }
+#wifiSettingsForm label { display:grid; gap:8px; font-size:13px; font-weight:600; }
+#wifiSettingsForm input { width:100%; min-height:44px; padding:12px 14px; border:1px solid var(--q-border,#e7d8c6); border-radius:12px; background:var(--q-surface,#fffdf9); color:inherit; font:inherit; }
+#toggleWifiPassword { justify-self:start; }
+.wifi-settings-actions { display:flex; flex-wrap:wrap; gap:10px; padding-top:12px; border-top:1px solid var(--q-border,#e7d8c6); }
+.wifi-settings-actions .btn { flex:1; min-height:44px; }
+@media(max-width:600px){.wifi-settings-card{padding:18px;}.wifi-settings-actions{flex-direction:column;}#wifiSettingsForm input{font-size:16px;}}

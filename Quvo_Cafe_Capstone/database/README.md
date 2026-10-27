@@ -324,3 +324,16 @@ existing schema/ordering scripts and before deploying the matching runtime files
 It adds twelve menu categories, maps current Coffee to Cold Coffee and current
 Food/Pastry to Appetizer, and retains historical order categories. It can be run
 again safely. See `../docs/MENU_CATEGORIES.md` for labels and preparation routing.
+
+Run `23_customer_booked_delivery.sql` before deploying customer-booked Lalamove
+checkout. It adds café pickup/contact snapshots and a protected booking image
+table while preserving historical delivery destinations and order data. The
+script can be run again safely. Set the café Address, Phone and Facebook Social
+link through Website content. See `../docs/CUSTOMER_BOOKED_DELIVERY.md`.
+
+Run `24_guest_wifi.sql` before using Admin > Guest Wi-Fi. It creates a separate
+private settings row with blank initial credentials. The café enters its real
+network name/password in that admin module. Paid active dine-in visits can then
+open the Wi-Fi note in tracking. Existing orders, accounts and settings are
+preserved, and repeating the migration retains saved Wi-Fi details. See
+`../docs/GUEST_WIFI.md`.

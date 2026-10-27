@@ -1,18 +1,39 @@
 const pendingMenuItems = new Set();
+const adminMenuFilters={category:'all',search:''};
 
 function bindAdminMenu() {
+  const search=document.getElementById('adminMenuSearch');
+  if(search){
+    search.value='';adminMenuFilters.search='';
+    const enableSearch=()=>search.removeAttribute('readonly');
+    search.addEventListener('focus',enableSearch);search.addEventListener('pointerdown',enableSearch);
+  }
   const addBtn = document.getElementById("addAdminMenuItemBtn");
   if (addBtn) {
     addBtn.addEventListener("click", addAdminMenuItem);
   }
+  document.getElementById('adminMenuCategoryFilter')?.addEventListener('change',event=>{adminMenuFilters.category=event.target.value;renderAdminMenu();});
+  document.getElementById('adminMenuSearch')?.addEventListener('input',event=>{adminMenuFilters.search=event.target.value.trim().toLowerCase();renderAdminMenu();});
+  document.getElementById('clearAdminMenuFilters')?.addEventListener('click',()=>{adminMenuFilters.category='all';adminMenuFilters.search='';document.getElementById('adminMenuSearch').value='';renderAdminMenu();});
 }
 
 function renderAdminMenu() {
   const rows = document.getElementById("adminMenuRows");
   if (!rows) return;
+  const categoryFilter=document.getElementById('adminMenuCategoryFilter');
+  const categories=QuvoMenuCategories.filters(state.menu,'all');
+  if(!categories.includes(adminMenuFilters.category))adminMenuFilters.category='all';
+  if(categoryFilter){
+    const options=categories.map(category=>'<option value="'+escapeAttribute(category)+'">'+escapeHtml(category==='all'?'All categories':QuvoMenuCategories.label(category))+'</option>').join('');
+    if(categoryFilter.innerHTML!==options)categoryFilter.innerHTML=options;
+    categoryFilter.value=adminMenuFilters.category;
+  }
+  const filtered=state.menu.filter(item=>(adminMenuFilters.category==='all'||item.category===adminMenuFilters.category)&&[item.name,QuvoMenuCategories.label(item.category)].join(' ').toLowerCase().includes(adminMenuFilters.search));
+  const count=document.getElementById('adminMenuResultCount');if(count)count.textContent='Showing '+filtered.length+' of '+state.menu.length+' item'+(state.menu.length===1?'':'s');
+  const clear=document.getElementById('clearAdminMenuFilters');if(clear)clear.disabled=adminMenuFilters.category==='all'&&!adminMenuFilters.search;
 
-  rows.innerHTML = state.menu.length
-    ? state.menu
+  rows.innerHTML = filtered.length
+    ? filtered
         .map(
           (item) => `
     <div class="admin-menu-row">
@@ -25,7 +46,7 @@ function renderAdminMenu() {
   `,
         )
         .join("")
-    : `<div class="helper-text" style="padding:16px;">No menu items yet. Click Add item to create one.</div>`;
+    : `<div class="helper-text" style="padding:16px;">${state.menu.length?'No matching menu items. Try another category or clear the search.':'No menu items yet. Click Add item to create one.'}</div>`;
 
   if (state.selectedAdminMenuItemId) {
     const panel=document.getElementById("adminEditPanel");
@@ -61,8 +82,9 @@ function renderAdminEditPanel(itemId) {
     <form class="admin-edit-form" onsubmit="saveAdminMenuItem(event, ${item.id})">
       <label>
         Item name
-        <input id="adminItemName" value="${escapeAttribute(item.name)}" />
+        <input id="adminItemName" required maxlength="100" aria-describedby="adminMenuSaveError" value="${escapeAttribute(item.name)}" />
       </label>
+      <div id="adminMenuSaveError" class="admin-error hidden" role="alert"></div>
 
       <label>
         Category
@@ -115,6 +137,17 @@ function setAdminAvailability(value) {
   });
 }
 
+function adminMenuSaveError(message, duplicate = false) {
+  const notice = document.getElementById("adminMenuSaveError");
+  if (notice) {
+    notice.textContent = message;
+    notice.classList.toggle("hidden", !message);
+  }
+  const name = document.getElementById("adminItemName");
+  name?.setAttribute("aria-invalid", duplicate ? "true" : "false");
+  if (duplicate) name?.focus();
+}
+
 async function saveAdminMenuItem(event, itemId) {
   event.preventDefault();
 
@@ -123,6 +156,7 @@ async function saveAdminMenuItem(event, itemId) {
 
   const button = event.target.querySelector('button[type="submit"]');
   if (button.disabled) return;
+  adminMenuSaveError("");
 
   let editorPayload;
   try{editorPayload=QuvoMenuEditor.payload(itemId);}catch(error){showToast(error.message);return;}
@@ -133,6 +167,11 @@ async function saveAdminMenuItem(event, itemId) {
     price: editorPayload.price ?? document.getElementById("adminItemPrice").value,
     available: document.getElementById("adminItemAvailable").value === "true",
   };
+  if (state.menu.some((entry) => Number(entry.id) > 0 && Number(entry.id) !== Number(itemId) &&
+      entry.category === payload.category && entry.name.trim().toLowerCase() === payload.name.toLowerCase())) {
+    adminMenuSaveError("An item with this name already exists in this category. Choose a different name or category.", true);
+    return;
+  }
 
   // Draft items have temporary negative IDs.
   if (item.id > 0) {
@@ -158,7 +197,9 @@ async function saveAdminMenuItem(event, itemId) {
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
-      throw new Error(data.error || "Unable to save the item.");
+      const error = new Error(data.error || "Unable to save the item.");
+      error.duplicateMenuName = data.code === "duplicate_menu_name";
+      throw error;
     }
 
     const index = state.menu.findIndex((entry) => entry.id === itemId);
@@ -177,12 +218,15 @@ async function saveAdminMenuItem(event, itemId) {
 
     showToast(`${data.item.name} saved to the database.`);
   } catch (error) {
+    adminMenuSaveError(error.message, error.duplicateMenuName === true);
     showToast(error.message);
   } finally {
     pendingMenuItems.delete(itemId);
     event.target.inert=false;
     button.disabled = false;
     button.textContent = "Save changes";
+    const nameField = document.getElementById("adminItemName");
+    if (nameField?.getAttribute("aria-invalid") === "true") nameField.focus();
   }
 }
 
@@ -235,9 +279,12 @@ async function removeAdminMenuItem(itemId, button) {
 }
 
 function addAdminMenuItem() {
+  adminMenuFilters.search='';const search=document.getElementById('adminMenuSearch');if(search)search.value='';
   const draft = state.menu.find((item) => item.id < 0);
 
   if (draft) {
+    if(adminMenuFilters.category!=='all')adminMenuFilters.category=draft.category;
+    renderAdminMenu();
     selectAdminMenuItem(draft.id);
     showToast("Save your new item before adding another.");
     return;
@@ -246,7 +293,7 @@ function addAdminMenuItem() {
   const newItem = {
     id: -1,
     name: "New item",
-    category: "hot-coffee",
+    category: adminMenuFilters.category==='all'?'hot-coffee':adminMenuFilters.category,
     price: 0,
     available: false,
     optionGroups: [],

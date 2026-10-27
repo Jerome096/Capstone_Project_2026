@@ -9,9 +9,10 @@ function rejected(callable $fn,int $status,string $label): void {
     try{$fn();}catch(OrderError $e){check($e->status===$status,$label);return;}throw new RuntimeException('FAIL: accepted '.$label);
 }
 require_once __DIR__.'/ordering-fixture.php';
+require_once __DIR__.'/delivery-fixture.php';
 $db=quvo_db();$before=$db->query('SELECT COUNT(*) FROM dbo.customer_sessions')->fetchColumn();
 try {
-    $db->beginTransaction();ordering_test_open($db);
+    $db->beginTransaction();ordering_test_open($db);delivery_test_settings($db);
     $tag=bin2hex(random_bytes(6));
     $input=['name'=>'Online <test>','email'=>"online-$tag@example.invalid",'contact'=>'09123456789','address'=>'Test address','password'=>'Temporary-only-123'];
     $a=online_register($db,$input);$id=(int)$a['customer_account_id'];
@@ -84,10 +85,10 @@ try {
     check(online_order($db,$id,$orderId)['order_status']==='served','cashier progress visible to online customer');
     check((int)$db->query("SELECT COUNT(*) FROM dbo.order_status_history WHERE order_id=$orderId")->fetchColumn()===4,'online status history saved');
     check($db->query("SELECT completed_at FROM dbo.order_fulfillments WHERE order_id=$orderId")->fetchColumn()!==null,'fulfillment completion recorded');
-    $delivery=online_submit($db,$id,[...$orderInput,'submission_key'=>'33333333-3333-4333-8333-333333333333','fulfillment'=>'delivery','address'=>'Delivery snapshot','contact'=>'09999999999','payment_method'=>'GCash']);
+    $delivery=online_submit($db,$id,[...$orderInput,'submission_key'=>'33333333-3333-4333-8333-333333333333','fulfillment'=>'delivery','address'=>'Delivery snapshot','contact'=>'09999999999','payment_method'=>'GCash',...delivery_test_payload($db,$png)]);
     $deliveryId=(int)$delivery['order']['order_id'];
     online_update_profile($db,$id,[...$input,'address'=>'Another address']);
-    check(online_order($db,$id,$deliveryId)['address_snapshot']==='Delivery snapshot','delivery address is a historical snapshot');
+    check(online_order($db,$id,$deliveryId)['pickup_address_snapshot']==='Quvo test pickup address','cafe pickup address is a historical snapshot');
     check(orders_cancel($db,['staff_id'=>$actor,'role'=>'staff'],$deliveryId,'Customer request')['order_status']==='cancelled','cashier can cancel unpaid online order');
     check(online_order($db,$id,$deliveryId)['payment_status']==='not_due','customer sees cancellation and no payment due');
     check(count(online_orders($db,$id)['orders'])===2,'history survives account profile changes');
@@ -124,7 +125,7 @@ try {
             'fulfillment'=>$fulfillment,'address'=>'Kitchen integration delivery address','contact'=>'09999999999','expected_total'=>$mixed?'25.25':'10.00',
             'items'=>[['itemId'=>$foodId,'quantity'=>1,'customization'=>['notes'=>'No sauce']],...($mixed?$orderInput['items']:[])]];
         // The mixed ticket uses one drink plus one food item.
-        if($mixed)$kitchenInput['items'][1]['quantity']=1;
+        if($mixed){$kitchenInput['items'][1]['quantity']=1;$kitchenInput+=delivery_test_payload($db,$png);}
         $onlineFood=online_submit($db,$id,$kitchenInput);$foodOrderId=(int)$onlineFood['order']['order_id'];
         rejected(fn()=>kitchen_get($db,$foodOrderId),409,$fulfillment.' online food waits for cashier approval');
         orders_pay($db,$actor,$foodOrderId,['payment_method'=>'GCash','amount_received'=>$kitchenInput['expected_total']]);

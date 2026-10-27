@@ -3,7 +3,7 @@ const bottomNav=document.querySelector('.bottom-nav');
 const onlinePublicScreens=['screenHome','screenMenu','screenAbout'];
 function canNavigateTo(screenId){
  if(screenId==='screenOnlineAuth'||onlinePublicScreens.includes(screenId)||state.onlineCustomer)return true;
- QuvoStorefront.requestLogin();return false;
+ QuvoStorefront.requestLogin(screenId);return false;
 }
 function showScreen(screenId){
  if(screenId==='screenOnlineAuth'){QuvoStorefront.requestLogin();return;}

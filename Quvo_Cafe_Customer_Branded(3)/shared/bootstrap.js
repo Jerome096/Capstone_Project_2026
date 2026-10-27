@@ -11,6 +11,7 @@ async function initializeCustomerApp() {
   bindCustomizationEvents();
   bindCheckoutEvents();
   bindCartEvents();
+  window.QuvoDineWifi?.bind();
   window.QuvoReadyAlerts?.start({channel:"dine",onSelect:async id=>{showScreen("screenTracking");await selectDineOrder(id);},onVisible:()=>refreshGuestSession()});
   window.QuvoOrdering?.start();
   await startDineInFlow();

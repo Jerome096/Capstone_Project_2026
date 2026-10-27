@@ -24,6 +24,12 @@
           Add item
         </button>
       </div>
+      <div class="admin-menu-filters">
+        <label for="adminMenuCategoryFilter">Category<select id="adminMenuCategoryFilter"><option value="all">All categories</option></select></label>
+        <label for="adminMenuSearch">Search menu<input id="adminMenuSearch" type="search" autocomplete="off" readonly autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-bwignore placeholder="Search item name or category"></label>
+        <button class="btn light" id="clearAdminMenuFilters" type="button">Clear filters</button>
+      </div>
+      <p class="helper-text admin-menu-result-count" id="adminMenuResultCount" role="status" aria-live="polite"></p>
       <div class="admin-menu-table">
         <div class="admin-menu-row admin-menu-header">
           <span>Item</span>

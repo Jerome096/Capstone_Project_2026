@@ -23,7 +23,7 @@ function restoreDinePending(sessionId, force = false) {
   const sameVisit=dineOrders.sessionId===sessionId&&dineOrders.tableCode===guestTableCode;
   dineOrders.sessionId = sessionId;
   dineOrders.tableCode = guestTableCode;
-  if (!sameVisit) {dineOrders.rows = [];dineOrders.selected = "";state.order = null;}
+  if (!sameVisit) {window.QuvoDineWifi?.reset();dineOrders.rows = [];dineOrders.selected = "";state.order = null;}
   dineOrders.pending=null;
   try {
     let durable=null,legacy=null;
@@ -92,6 +92,7 @@ async function refreshDineOrders() {
     } while (offset !== null);
     if (sessionId !== dineOrders.sessionId || !state.sessionApproved || dineOrders.busy) return;
     dineOrders.rows = rows;
+    window.QuvoDineWifi?.refresh();
     window.QuvoReadyAlerts?.observe("dine:"+sessionId,rows);
     const id = dineOrders.selected || rows[0]?.order_id;
     if (id) {

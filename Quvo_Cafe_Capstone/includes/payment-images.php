@@ -90,11 +90,13 @@ function payment_receipt_records(PDO $db,mixed $date,mixed $status='all',mixed $
         $params[]='%'.str_replace(['[','%','_'],['[[]','[%]','[_]'],$search).'%';
     }
     $sql="SELECT o.order_id,o.order_number,o.customer_name,o.total_amount,o.order_status,o.cancellation_reason,
-        o.cancelled_at,o.created_at,r.uploaded_at,r.payment_method,COALESCE(m.display_name,r.payment_method) payment_method_label,p.paid_at,
+        o.cancelled_at,o.created_at,r.uploaded_at,r.payment_method,f.fulfillment_type,
+        CASE WHEN EXISTS(SELECT 1 FROM dbo.online_delivery_bookings dbk WHERE dbk.order_id=o.order_id) THEN 1 ELSE 0 END has_delivery_booking,COALESCE(m.display_name,r.payment_method) payment_method_label,p.paid_at,
         CASE WHEN p.payment_id IS NOT NULL THEN 'paid' ELSE 'unpaid' END payment_status,
         $uploadStatus upload_status,$event record_at,
         CASE WHEN o.order_status='cancelled' THEN 'cancellation' WHEN p.paid_at IS NOT NULL THEN 'payment' ELSE 'upload' END date_basis
         FROM dbo.online_payment_receipts r JOIN dbo.orders o ON o.order_id=r.order_id
+        LEFT JOIN dbo.order_fulfillments f ON f.order_id=o.order_id
         LEFT JOIN dbo.payments p ON p.order_id=o.order_id
         LEFT JOIN dbo.online_payment_methods m ON m.payment_method=r.payment_method
         WHERE ".implode(' AND ',$where)." ORDER BY $event DESC,o.order_id DESC OFFSET ? ROWS FETCH NEXT 51 ROWS ONLY";

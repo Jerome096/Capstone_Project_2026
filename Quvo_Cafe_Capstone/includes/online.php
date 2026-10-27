@@ -5,6 +5,7 @@ require_once __DIR__.'/menu.php';
 require_once __DIR__.'/orders.php';
 require_once __DIR__.'/auth.php';
 require_once __DIR__.'/payment-images.php';
+require_once __DIR__.'/delivery.php';
 
 function online_start_session(): string
 {
@@ -145,11 +146,13 @@ function online_order(PDO $db,int $customerId,int $id): array
     return $order;
 }
 
-function online_orders(PDO $db,int $customerId,mixed $offset=0): array
+function online_orders(PDO $db,int $customerId,mixed $offset=0,mixed $scope='all'): array
 {
+    if(!in_array($scope,['all','active'],true))throw new OrderError('Invalid order list.');
     $offset=filter_var($offset,FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>1000000]]);
     if($offset===false) throw new OrderError('Invalid history offset.');
-    $q=$db->prepare("SELECT order_id FROM dbo.orders WHERE customer_account_id=? AND order_source='online' ORDER BY order_id DESC OFFSET ? ROWS FETCH NEXT 21 ROWS ONLY");
+    $active=$scope==='active'?" AND order_status IN ('received','preparing','ready')":'';
+    $q=$db->prepare("SELECT order_id FROM dbo.orders WHERE customer_account_id=? AND order_source='online'$active ORDER BY order_id DESC OFFSET ? ROWS FETCH NEXT 21 ROWS ONLY");
     $q->bindValue(1,$customerId,PDO::PARAM_INT);$q->bindValue(2,$offset,PDO::PARAM_INT);$q->execute();$ids=$q->fetchAll(PDO::FETCH_COLUMN);
     return ['orders'=>array_map(fn($id)=>online_order($db,$customerId,(int)$id),array_slice($ids,0,20)),
         'next_offset'=>count($ids)>20?$offset+20:null];
@@ -166,7 +169,9 @@ function online_submit(PDO $db,int $customerId,array $input): array
     $fulfillment=$input['fulfillment']??null;$method=$input['payment_method']??null;
     if(!in_array($fulfillment,['pickup','delivery'],true)) throw new OrderError('Choose pickup or delivery request.');
     if(!is_string($method)||$method===''||strlen($method)>10) throw new OrderError('Choose a payment method.');
-    $address=$fulfillment==='delivery'?orders_text($input['address']??null,500,true):null;
+    $lalamove=$fulfillment==='delivery'&&($input['delivery_flow']??null)==='lalamove-v1';
+    $address=$fulfillment==='delivery'&&!$lalamove?orders_text($input['address']??null,500,true):null;
+    $booking=isset($input['booking_image'])?delivery_booking_input($input['booking_image']):null;
     $contact=$fulfillment==='delivery'?orders_text($input['contact']??null,30,true):$account['contact_number'];
     if(!preg_match('/\A[+0-9() .-]{5,30}\z/',$contact)) throw new OrderError('Enter a valid contact number.');
     // Include only submitted values in the retry hash; profile edits must not create duplicate orders.
@@ -174,12 +179,21 @@ function online_submit(PDO $db,int $customerId,array $input): array
     $version = $input['payment_qr_version'] ?? null;
     $hashParts = [$lines,$expected,$fulfillment,$method,$address,$fulfillment==='delivery'?$contact:null];
     if ($receipt !== null || $version !== null) $hashParts[] = [$version,$receipt['hash'] ?? null];
+    if($lalamove||array_key_exists('delivery_flow',$input))$hashParts[]=['deliveryFlow'=>$input['delivery_flow']??null,'configVersion'=>$input['delivery_config_version']??null,'bookingHash'=>$booking['hash']??null];
     $hash=hash('sha256',json_encode($hashParts,JSON_THROW_ON_ERROR));
     $q=$db->prepare('SELECT order_id,CONVERT(varchar(64),submission_hash,2) request_hash FROM dbo.orders WHERE customer_account_id=? AND submission_key=?');$q->execute([$customerId,$key]);$old=$q->fetch();
     if($old) {
         if(!hash_equals(strtolower($old['request_hash']),$hash)) throw new OrderError('Submission key already used for a different order.',409);
         return ['order'=>online_order($db,$customerId,(int)$old['order_id']),'replayed'=>true];
     }
+    $delivery=null;
+    if($fulfillment==='delivery'){
+        if(!$lalamove)throw new OrderError('Delivery now uses customer-booked Lalamove pickup. Reload checkout and review the instructions.',409,'delivery_flow_changed');
+        if(!$booking)throw new OrderError('Upload your Lalamove booking screenshot before placing a delivery order.',422,'delivery_booking_required');
+        $delivery=delivery_settings($db);
+        if(!$delivery['available'])throw new OrderError('Cafe pickup details are unavailable. Choose Pickup or contact the cafe.',422,'delivery_unavailable');
+        if(!is_string($input['delivery_config_version']??null)||!hash_equals($delivery['version'],$input['delivery_config_version']))throw new OrderError('The cafe pickup details changed. Review the latest address and your Lalamove booking before ordering.',409,'delivery_details_changed');
+    }elseif($booking)throw new OrderError('A Lalamove booking belongs to a delivery request, not a pickup order.');
     orders_require_customer_quantities($lines);
     ordering_require_open($db);
     // Existing submissions can still be recovered with their original payment choice.
@@ -199,7 +213,9 @@ function online_submit(PDO $db,int $customerId,array $input): array
         $menu=$catalog[$line['menu_item_id']];
         $q->execute([$id,$index+1,$line['menu_item_id'],$menu['item_name'],$menu['category'],$line['unit_price'],$line['quantity'],menu_custom_json($line["customization"]),$line['notes']]);
     }
-    $db->prepare('INSERT dbo.order_fulfillments(order_id,fulfillment_type,recipient_name,contact_snapshot,address_snapshot) VALUES(?,?,?,?,?)')->execute([$id,$fulfillment,$account['full_name'],$contact,$address]);
+    $db->prepare('INSERT dbo.order_fulfillments(order_id,fulfillment_type,recipient_name,contact_snapshot,address_snapshot,delivery_provider,pickup_address_snapshot,cafe_phone_snapshot,cafe_facebook_snapshot) VALUES(?,?,?,?,?,?,?,?,?)')
+        ->execute([$id,$fulfillment,$account['full_name'],$contact,$address,$delivery?'lalamove':null,$delivery['address']??null,$delivery['phone']??null,$delivery['facebook']??null]);
+    if($booking)$db->prepare('INSERT dbo.online_delivery_bookings(order_id,image_mime,image_bytes,image_hash) VALUES(?,?,CONVERT(varbinary(max),?,2),CONVERT(binary(32),?,2))')->execute([$id,$booking['mime'],bin2hex($booking['bytes']),$booking['hash']]);
     $db->prepare("INSERT dbo.order_status_history(order_id,to_status) VALUES(?,'received')")->execute([$id]);
     $db->prepare('INSERT dbo.online_payment_receipts(order_id,payment_method,qr_version,image_mime,image_bytes,image_hash) VALUES(?,?,?,?,CONVERT(varbinary(max),?,2),CONVERT(binary(32),?,2))')
         ->execute([$id,$method,$version,$receipt['mime'],bin2hex($receipt['bytes']),$receipt['hash']]);

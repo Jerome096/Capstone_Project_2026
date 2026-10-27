@@ -4,7 +4,7 @@ function selectedOnlinePayment() {
   return document.querySelector('input[name="paymentMethod"]:checked')?.value || "";
 }
 function onlinePaymentReady() {
-  return !checkoutPayment.loading && !checkoutPayment.receiptBusy && checkoutPayment.qrLoaded &&
+  return (!window.QuvoDelivery||QuvoDelivery.ready()) && !checkoutPayment.loading && !checkoutPayment.receiptBusy && checkoutPayment.qrLoaded &&
     Boolean(checkoutPayment.methods[selectedOnlinePayment()]?.available && checkoutPayment.receipt) &&
     checkoutPayment.receiptCents===Math.round(getCartSubtotal()*100);
 }

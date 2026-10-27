@@ -110,6 +110,7 @@ function clearSessionApprovalTimer() {
   state.sessionApprovalTimer = null;
 }
 function lockGuestMenu() {
+  window.QuvoDineWifi?.reset();
   window.QuvoReadyAlerts?.reset();
   if (typeof resetGuestAssistance === "function") resetGuestAssistance();
   const paymentDialog = document.getElementById("cashierPaymentDialog");

@@ -166,3 +166,7 @@ h1, h2 { font-family: var(--dine-serif); font-weight: 400; letter-spacing: -.035
 .dine-menu-toolbar .category-tabs { flex:1 1 680px; }
 .dine-menu-toolbar .category-btn { flex:0 0 auto; white-space:nowrap; }
 @media(max-width:720px){.dine-menu-toolbar .category-tabs{flex-basis:auto;}}
+@media(max-width:720px){
+  .dine-menu-toolbar .category-tabs{flex:0 0 auto;flex-flow:row nowrap;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+  .dine-menu-toolbar .category-btn{flex:0 0 auto;width:auto;min-width:max-content;white-space:nowrap;word-break:normal;overflow-wrap:normal;}
+}

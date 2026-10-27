@@ -4,6 +4,11 @@
   margin-top: 14px;
 }
 
+.tracking-order-switcher { margin-bottom:16px; padding:18px; border:1px solid var(--line); border-radius:20px; background:var(--surface,#fffefb); }
+.tracking-order-switcher label { display:block; margin-bottom:8px; font-size:14px; color:var(--ink); }
+.tracking-order-switcher select { display:block; width:100%; min-width:0; min-height:44px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--surface,#fffefb); color:var(--ink); font:inherit; }
+@media(max-width:600px){.tracking-order-switcher{padding:14px;}.tracking-order-switcher select{font-size:16px;}}
+
 .timeline-item {
   display: grid;
   grid-template-columns: auto 1fr;

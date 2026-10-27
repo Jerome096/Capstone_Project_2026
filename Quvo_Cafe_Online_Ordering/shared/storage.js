@@ -1,6 +1,6 @@
 // SQL is authoritative for accepted orders. Account-scoped browser storage keeps
 // cart drafts and the original unconfirmed submission across refresh/restart.
-const online = {csrf:"",revision:0,busy:false,pending:null,generation:0,poll:null,loading:false,nextOffset:null,selectedId:null,error:""};
+const online = {csrf:"",revision:0,busy:false,pending:null,generation:0,poll:null,loading:false,nextOffset:null,historyLoaded:false,selectedId:null,activeOrders:[],historyDetailId:null,error:""};
 async function onlineApi(input=null,query="session") {
   const token=online.csrf;
   const response=await fetch("api/index.php?view="+query,{
@@ -51,11 +51,22 @@ function restoreOnlinePending(){
   }
 }
 function onlineCartLocked(){return online.busy||Boolean(online.pending);}
+function onlineSelectedOrderKey(){return 'quvo_online_tracking_v1_'+state.onlineCustomer.id;}
+function rememberOnlineOrder(id){
+  online.selectedId=id===null?null:String(id);
+  if(!state.onlineCustomer)return;
+  try{if(online.selectedId)localStorage.setItem(onlineSelectedOrderKey(),online.selectedId);else localStorage.removeItem(onlineSelectedOrderKey());}catch{}
+}
+function restoreOnlineSelectedOrder(){
+  online.selectedId=null;
+  try{const id=localStorage.getItem(onlineSelectedOrderKey());if(/^[1-9][0-9]{0,18}$/.test(id||''))online.selectedId=id;}catch{}
+}
 function resetOnlineView(target='screenHome'){
   window.QuvoReadyAlerts?.reset();
   window.QuvoStorefront?.cancelSelection();
+  window.QuvoDelivery?.clear();
   checkoutPayment.request++;checkoutPayment.methods={};checkoutPayment.loading=false;checkoutPayment.qrLoaded=false;clearOnlinePaymentReceipt();renderOnlinePaymentOptions();
-  online.generation++;clearTimeout(online.poll);online.poll=null;online.pending=null;online.selectedId=null;online.error="";online.nextOffset=null;
+  online.generation++;clearTimeout(online.poll);online.poll=null;online.pending=null;online.selectedId=null;online.activeOrders=[];online.historyDetailId=null;online.error="";online.nextOffset=null;online.historyLoaded=false;
   state.onlineCustomer=null;state.customerName="";state.order=null;state.onlineOrders=[];state.cart=[];
   state.selectedCategory="All";state.searchTerm="";document.getElementById('menuSearch').value='';
   closeItemModal();renderCategories();renderMenu();renderCart();renderHistory();renderTracking();
@@ -64,7 +75,8 @@ function resetOnlineView(target='screenHome'){
 }
 async function enterOnlineAccount(account){
   online.generation++;state.onlineCustomer=account;state.customerName=account.name;
-  restoreOnlinePending();configureMenuHeader();renderAccount();prefillDeliveryDetails(true);renderCart();
+  restoreOnlineSelectedOrder();
+  restoreOnlinePending();await window.QuvoPendingProofs?.restore();configureMenuHeader();renderAccount();prefillDeliveryDetails(true);renderCart();
   showScreen("screenMenu");
   await Promise.all([refreshOnlineMenu().catch(error=>showToast(error.message)),refreshOnlineOrders(),refreshOnlinePayment()]);
   const selectionHandled=await window.QuvoStorefront?.finishSignIn();

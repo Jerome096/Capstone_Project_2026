@@ -61,12 +61,12 @@ function account_unique(PDO $db, string $username, int $except = 0): void
 }
 
 // Called inside a transaction. Admin accounts cannot be changed through staff actions.
-function account_staff(PDO $db, int $id): array
+function account_staff(PDO $db, int $id, bool $includeDeleted = false): array
 {
     $q = $db->prepare(
-        "SELECT s.staff_id, s.is_active FROM dbo.staff_users s WITH (UPDLOCK, HOLDLOCK) JOIN dbo.roles r ON r.role_id=s.role_id WHERE s.staff_id=? AND r.role_name = 'Staff'",
+        "SELECT s.staff_id, s.is_active FROM dbo.staff_users s WITH (UPDLOCK, HOLDLOCK) JOIN dbo.roles r ON r.role_id=s.role_id WHERE s.staff_id=? AND r.role_name = 'Staff' AND (?=1 OR NOT EXISTS (SELECT 1 FROM dbo.system_audit_log d WHERE d.entity_type='staff_user' AND d.action='staff_account_deleted' AND d.entity_key=CONVERT(nvarchar(100),s.staff_id)))",
     );
-    $q->execute([$id]);
+    $q->execute([$id, $includeDeleted ? 1 : 0]);
     $row = $q->fetch();
     if (!$row) {
         throw new AccountInputError("Staff account not found. Refresh the list.");
@@ -78,7 +78,7 @@ function account_list(PDO $db): array
 {
     return $db
         ->query(
-            "SELECT s.staff_id, s.full_name, s.username, r.role_name, s.is_active FROM dbo.staff_users s JOIN dbo.roles r ON r.role_id=s.role_id WHERE r.role_name = 'Staff' ORDER BY s.is_active DESC, s.full_name, s.staff_id",
+            "SELECT s.staff_id, s.full_name, s.username, r.role_name, s.is_active FROM dbo.staff_users s JOIN dbo.roles r ON r.role_id=s.role_id WHERE r.role_name = 'Staff' AND NOT EXISTS (SELECT 1 FROM dbo.system_audit_log d WHERE d.entity_type='staff_user' AND d.action='staff_account_deleted' AND d.entity_key=CONVERT(nvarchar(100),s.staff_id)) ORDER BY s.is_active DESC, s.full_name, s.staff_id",
         )
         ->fetchAll();
 }
@@ -109,15 +109,30 @@ function account_change(PDO $db, array $actor, array $input): array
             "credential_stamp" => hash("sha256", $hash ?? $oldHash),
         ];
     }
-    if (!in_array($action, ["create", "update", "status"], true)) {
+    if (!in_array($action, ["create", "update", "status", "delete"], true)) {
         throw new AccountInputError("Unknown account action.");
     }
     $id = filter_var($input["staff_id"] ?? 0, FILTER_VALIDATE_INT);
+    if ($action === "delete" && ($actor["role"] ?? "") !== "admin") {
+        throw new AccountInputError("Only an admin can delete a staff account.");
+    }
     if ($action !== "create") {
         if (!$id || $id < 1 || $id === (int) $actor["staff_id"]) {
             throw new AccountInputError("Choose a staff account.");
         }
-        account_staff($db, $id);
+        account_staff($db, $id, $action === "delete");
+    }
+    if ($action === "delete") {
+        // Retain the staff row for historic payments, stock movements and reports.
+        // The deletion marker prevents listing, editing and reactivation afterward.
+        $db->prepare("UPDATE dbo.staff_users SET is_active=0, updated_at=SYSUTCDATETIME() WHERE staff_id=?")
+            ->execute([$id]);
+        $db->prepare("INSERT dbo.system_audit_log(actor_staff_id,action,entity_type,entity_key,details_json) SELECT ?,'staff_account_deleted','staff_user',?,? WHERE NOT EXISTS (SELECT 1 FROM dbo.system_audit_log WHERE entity_type='staff_user' AND action='staff_account_deleted' AND entity_key=?)")
+            ->execute([$actor["staff_id"], (string) $id, '{"historyRetained":true}', (string) $id]);
+        return [
+            "message" => "Staff account deleted. Sign-in is blocked and past records are retained.",
+            "deleted_staff_id" => $id,
+        ];
     }
     if ($action === "status") {
         if (!is_bool($input["active"] ?? null)) {

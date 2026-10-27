@@ -14,19 +14,21 @@ try {
         $view=$_GET['view']??'session';
         if($view==='ordering') {ordering_assert_backend(true);quvo_json(['ok'=>true,'ordering'=>ordering_status($db)]);}
         if ($view==='payment-qr') payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null),'quvo-payment-qr',isset($_GET['download']));
+        if($view==='delivery-settings') quvo_json(['ok'=>true,'delivery'=>delivery_settings($db)]);
         if($view==='session') quvo_json(['ok'=>true,'csrf'=>$csrf,'account'=>$account?online_public_account($db,$account):null]);
         if($view==='menu') quvo_json(['ok'=>true,'csrf'=>$csrf,'items'=>online_menu($db)]);
         if($view==='about') quvo_json(['ok'=>true,'content'=>website_content_read($db)['content']]);
         if(!$account) throw new OrderError('Please sign in first.',401);
         if ($view==='payments') quvo_json(['ok'=>true,'methods'=>payment_qr_methods($db)]);
         if ($view==='receipt') payment_send_image(payment_receipt_image($db,orders_id($_GET['id']??null),(int)$account['customer_account_id']),'payment-receipt');
+        if($view==='delivery-booking') payment_send_image(delivery_booking_image($db,orders_id($_GET['id']??null),(int)$account['customer_account_id']),'lalamove-booking');
         if($view==='orders') {
-            $result=isset($_GET['id'])?['order'=>online_order($db,(int)$account['customer_account_id'],orders_id($_GET['id']))]:online_orders($db,(int)$account['customer_account_id'],$_GET['offset']??0);
+            $result=isset($_GET['id'])?['order'=>online_order($db,(int)$account['customer_account_id'],orders_id($_GET['id']))]:online_orders($db,(int)$account['customer_account_id'],$_GET['offset']??0,$_GET['scope']??'all');
             quvo_json(['ok'=>true,'csrf'=>$csrf]+$result);
         }
         throw new OrderError('Unknown view.',404);
     }
-    $input=orders_input(4194304);$action=$input['action']??null;
+    $input=orders_input(6291456);$action=$input['action']??null;
     if($action==='logout') {
         $_SESSION=[];session_regenerate_id(true);$csrf=online_start_session();
         quvo_json(['ok'=>true,'csrf'=>$csrf]);

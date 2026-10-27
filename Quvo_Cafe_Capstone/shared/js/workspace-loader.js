@@ -8,6 +8,7 @@ const QUVO_SCREEN_FRAGMENTS = [
   "admin/menu-management/menu-management.fragment.html",
   "admin/website-content/website-content.fragment.html",
   "admin/operating-hours/operating-hours.fragment.html",
+  "admin/wifi-settings/wifi-settings.fragment.html",
   "admin/records/records.fragment.html",
   "admin/sales-history/sales-history.fragment.html",
   "admin/accounts/accounts.fragment.html",
@@ -47,6 +48,7 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "cashier/menu/pos-sql.js",
   "cashier/sessions/sessions.js",
   "cashier/orders/orders.js",
+  "shared/js/delivery-proof.js",
   "cashier/orders/sql-orders.js",
   "shared/js/thermal-print.js",
   "cashier/orders/preparation-tickets.js",
@@ -57,6 +59,7 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "admin/menu-management/menu-management.js",
   "admin/website-content/website-content.js",
   "admin/operating-hours/operating-hours.js",
+  "admin/wifi-settings/wifi-settings.js",
   "admin/records/records.js",
   "login/login.js",
   "admin/sales-history/sales-history.js",
@@ -83,7 +86,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=menu-categories-1";
+    script.src = quvoPath(path) + "?v=menu-unique-name-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

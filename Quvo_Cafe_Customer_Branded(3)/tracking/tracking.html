@@ -19,6 +19,15 @@
   <label class="summary-card" hidden>Orders for this visit
     <select id="dineOrderSelect" aria-label="Choose an order to track"></select>
   </label>
+  <details class="dine-wifi-note" id="dineWifiNote" hidden>
+    <summary>Café Wi-Fi<span>View Wi-Fi name and password</span></summary>
+    <p id="dineWifiStatus" class="small-copy" role="status"></p>
+    <div id="dineWifiFields" hidden>
+      <label for="dineWifiName">Wi-Fi name</label><div class="dine-wifi-row"><input id="dineWifiName" type="text" readonly autocomplete="off"><button class="secondary-btn" type="button" data-copy-wifi="dineWifiName">Copy name</button></div>
+      <label for="dineWifiPassword">Wi-Fi password</label><div class="dine-wifi-row"><input id="dineWifiPassword" type="text" readonly autocomplete="off"><button class="secondary-btn" type="button" data-copy-wifi="dineWifiPassword">Copy password</button></div>
+    </div>
+    <button class="secondary-btn" id="dineWifiRetry" type="button">Refresh Wi-Fi details</button>
+  </details>
   <section class="timeline" id="statusTimeline"></section>
   <div class="tracking-details" id="trackingDetails"></div>
   <div aria-live="polite" class="live-update-card">

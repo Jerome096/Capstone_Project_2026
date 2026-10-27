@@ -56,12 +56,14 @@ function getFilteredMenuItems() {
 // Presentation only: reuse the online menu's artwork when an item has no uploaded photo.
 function dineMenuArt(item) {
   if (QuvoMenuCategories.isFood(item.category)) return "food-plate";
+  if (item.category === "hot-coffee") return "hot-coffee";
   if (/matcha/i.test(item.name)) return "matcha";
-  return item.category === "hot-coffee" || /hot|espresso|cappuccino/i.test(item.name) ? "hot-coffee" : "iced-coffee";
+  return "iced-coffee";
 }
 
 function dineMenuPhoto(item) {
   if (item.imageUrl) return QuvoMenuOptions.photoHTML(item);
+  const categoryArt=window.QuvoCategoryArt?.render(item.category);if(categoryArt)return categoryArt;
   return `<img class="dine-menu-art" src="assets/menu-art/${dineMenuArt(item)}.svg" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
 }
 
@@ -85,8 +87,10 @@ function renderMenu() {
     return;
   }
 
-  menuList.innerHTML = items
+  const rows=state.selectedCategory==='All'?QuvoMenuCategories.filters(items).filter(category=>category!=='All'&&items.some(item=>item.category===category)).flatMap(category=>[category,...items.filter(item=>item.category===category)]):items;
+  menuList.innerHTML = rows
     .map((item) => {
+      if(typeof item==='string')return '<h2 class="menu-category-heading" data-menu-category-heading="'+escapeCustomerHtml(item)+'">'+escapeCustomerHtml(QuvoMenuCategories.label(item))+'</h2>';
       return `
         <article class="menu-card clickable-card dine-menu-card" role="button" tabindex="0" data-card-item-id="${escapeCustomerHtml(item.id)}" aria-label="Customize ${escapeCustomerHtml(item.name)}">
           <div class="item-icon dine-product-image dine-art-${dineMenuArt(item)}">${dineMenuPhoto(item)}</div>

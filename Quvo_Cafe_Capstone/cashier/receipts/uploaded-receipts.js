@@ -51,6 +51,11 @@
       '<div class="uploaded-receipt-image-frame" id="uploadedReceiptImageFrame" hidden><img id="uploadedReceiptImage" class="uploaded-receipt-image" alt="Customer payment receipt for ' + attribute(item.order_number) + '" hidden /></div>' +
       '<div class="uploaded-receipt-image-actions"><button type="button" class="btn light uploaded-receipt-retry" id="uploadedReceiptImageRetry" hidden>Retry image</button>' +
       '<a class="btn light" href="' + attribute(url) + '" target="_blank" rel="noopener">Open full image</a></div>';
+    if(item.fulfillment_type==='delivery'||Number(item.has_delivery_booking)===1){
+      const section=document.createElement("section");section.className="uploaded-booking-section";
+      section.innerHTML='<h3>Lalamove booking screenshot</h3><p class="helper-text" role="status">Loading customer booking details…</p><img class="uploaded-receipt-image" alt="Customer Lalamove booking screenshot" hidden><div class="uploaded-receipt-image-actions"><button type="button" class="btn light" data-booking-retry hidden>Retry booking image</button><a class="btn light" data-booking-link target="_blank" rel="noopener noreferrer" hidden>Open full booking image</a></div>';
+      preview.append(section);QuvoStaffDeliveryProof.load(section,item.order_id);
+    }
     const image = node("uploadedReceiptImage"), frame = node("uploadedReceiptImageFrame"), status = node("uploadedReceiptImageStatus"), retry = node("uploadedReceiptImageRetry");
     image.onload = () => {
       if (!image.isConnected || model.previewKey !== key) return;

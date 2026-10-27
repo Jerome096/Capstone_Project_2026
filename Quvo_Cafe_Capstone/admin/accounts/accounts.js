@@ -2,6 +2,7 @@ let accountRows = [];
 let accountBusy = false;
 let accountLoading = false;
 let accountInitialized = false;
+let accountListVersion = 0;
 const accountElement = (id) => document.getElementById(id);
 
 async function accountRequest(data) {
@@ -14,7 +15,12 @@ async function accountRequest(data) {
       : {},
     ...(data ? { body: JSON.stringify(data) } : {}),
   });
-  const result = await response.json();
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("The server returned an invalid account response. Refresh the page and try again.");
+  }
   if (!response.ok || !result.ok)
     throw new Error(result.error || "Account request failed.");
   return result;
@@ -40,12 +46,18 @@ function accountSetBusy(busy) {
   });
 }
 
-function confirmAccountChange(title, message) {
+function confirmAccountChange(title, message, deleting = false, onConfirm = null) {
   const dialog = accountElement("accountConfirmDialog");
+  if (dialog.open) return Promise.resolve(false);
   accountElement("accountConfirmTitle").textContent = title;
   accountElement("accountConfirmText").textContent = message;
+  accountElement("accountConfirmSave").textContent = deleting ? "Delete account" : "Confirm";
+  accountElement("accountConfirmSave").classList.toggle("accounts-delete", deleting);
+  accountElement("accountConfirmCancel").textContent = deleting ? "Cancel" : "Go back";
+  accountError("accountConfirmError", "");
   return new Promise((resolve) => {
     let settled = false;
+    let submitting = false;
     const finish = (accepted) => {
       if (settled) return;
       settled = true;
@@ -55,11 +67,28 @@ function confirmAccountChange(title, message) {
       dialog.oncancel = null;
       resolve(accepted);
     };
-    accountElement("accountConfirmSave").onclick = () => finish(true);
-    accountElement("accountConfirmCancel").onclick = () => finish(false);
+    accountElement("accountConfirmSave").onclick = async () => {
+      if (submitting) return;
+      if (!onConfirm) { finish(true); return; }
+      submitting = true;
+      accountError("accountConfirmError", "");
+      accountSetBusy(true);
+      accountElement("accountConfirmSave").textContent = "Deleting...";
+      try {
+        await onConfirm();
+        finish(true);
+      } catch (error) {
+        accountError("accountConfirmError", error.message);
+      } finally {
+        submitting = false;
+        accountSetBusy(false);
+        accountElement("accountConfirmSave").textContent = deleting ? "Delete account" : "Confirm";
+      }
+    };
+    accountElement("accountConfirmCancel").onclick = () => { if (!submitting) finish(false); };
     dialog.oncancel = (event) => {
       event.preventDefault();
-      finish(false);
+      if (!submitting) finish(false);
     };
     dialog.showModal();
     accountElement("accountConfirmCancel").focus();
@@ -130,7 +159,37 @@ function renderStaffAccounts() {
         accountSetBusy(false);
       }
     });
-    wrap.append(edit, status);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn light accounts-delete";
+    remove.textContent = "Delete";
+    remove.setAttribute("aria-label", "Delete staff account for " + staff.full_name);
+    remove.addEventListener("click", async () => {
+      if (accountBusy) return;
+      await confirmAccountChange(
+        "Delete staff account?",
+        staff.full_name + " (" + staff.username + ")\n" +
+          "This removes the account from the staff list and blocks sign-in, including existing sessions on their next protected request.\n" +
+          "Past orders, payments and stock records will be kept. This account cannot be restored from this screen.",
+        true,
+        async () => {
+          // Invalidate earlier list requests so they cannot restore a deleted row.
+          accountListVersion++;
+          const id = Number(staff.staff_id);
+          const result = await accountRequest({ action: "delete", staff_id: id });
+          if (Number(result.deleted_staff_id) !== id || !Array.isArray(result.staff)) {
+            throw new Error("The server has not confirmed deletion. Re-upload the complete staff-account update, then refresh this page.");
+          }
+          if (result.staff.some((row) => Number(row.staff_id) === id)) {
+            throw new Error("The account is still listed. Refresh and try again.");
+          }
+          accountRows = result.staff;
+          renderStaffAccounts();
+          accountNotice(result.message);
+        },
+      );
+    });
+    wrap.append(edit, status, remove);
     actions.append(wrap);
   });
 }
@@ -138,8 +197,10 @@ function renderStaffAccounts() {
 async function loadStaffAccounts() {
   if (accountLoading) return;
   accountLoading = true;
+  const version = ++accountListVersion;
   try {
     const result = await accountRequest();
+    if (version !== accountListVersion) return;
     accountRows = result.staff;
     window.QUVO_SESSION = result.user;
     accountElement("currentUsernameLabel").textContent = result.user.username;

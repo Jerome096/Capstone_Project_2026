@@ -51,6 +51,7 @@ function showScreen(screen) {
 
   if (screen === "websiteContent") window.QuvoWebsiteContent?.load();
   if (screen === "operatingHours") window.QuvoOperatingHours?.load();
+  if (screen === "wifiSettings") window.QuvoWifiSettings?.load();
 
   if (screen === "accounts") {
     renderAccountForm();

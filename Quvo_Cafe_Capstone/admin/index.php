@@ -25,17 +25,18 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../cashier/menu/menu.css?v=menu-categories-1" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css" />
   <link rel="stylesheet" href="../cashier/orders/orders.css?v=order-stock-notice-1" />
-  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=pos-payment-methods-1" />
-  <link rel="stylesheet" href="../cashier/receipts/uploaded-receipts.css?v=online-receipt-uploads-1" />
+  <link rel="stylesheet" href="../cashier/receipts/receipts.css?v=guest-wifi-1" />
+  <link rel="stylesheet" href="../cashier/receipts/uploaded-receipts.css?v=guest-wifi-1" />
   <link rel="stylesheet" href="../cashier/alerts/alerts.css?v=staff-alerts-1" />
   <link rel="stylesheet" href="../admin/reports/reports.css?v=pos-payment-methods-1" />
-  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=desktop-menu-editor-1" />
+  <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=admin-menu-no-autofill-1" />
   <link rel="stylesheet" href="../admin/website-content/website-content.css?v=home-about-editor-1" />
   <link rel="stylesheet" href="../admin/operating-hours/operating-hours.css?v=logout-grace-1" />
+  <link rel="stylesheet" href="../admin/wifi-settings/wifi-settings.css?v=guest-wifi-1" />
   <link rel="stylesheet" href="../admin/records/records.css?v=pos-payment-methods-1" />
   <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
-  <link rel="stylesheet" href="../admin/accounts/accounts.css" />
-  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=inventory-layout-2" />
+  <link rel="stylesheet" href="../admin/accounts/accounts.css?v=staff-account-delete-2" />
+  <link rel="stylesheet" href="../admin/inventory/inventory.css?v=tablet-stock-keyboard-1" />
   <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
   <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
   <link rel="stylesheet" href="../shared/css/menu-options.css?v=sizes-checkbox-addons-1" />
@@ -48,7 +49,7 @@ if (empty($_SESSION["admin_confirmed"])) {
       base: "../",
       portal: "admin",
       initialScreen: "reports",
-      allowedScreens: ["reports", "menuAdmin", "websiteContent", "operatingHours", "records", "salesHistory", "accounts", "inventory"],
+      allowedScreens: ["reports", "menuAdmin", "websiteContent", "operatingHours", "wifiSettings", "records", "salesHistory", "accounts", "inventory"],
       allowedRoles: ["admin"],
       roleLabel: "Administrator",
       loginUrl: "../login/login.php",
@@ -79,6 +80,7 @@ if (empty($_SESSION["admin_confirmed"])) {
 <button class="nav-item" data-admin-screen="menuAdmin"><i data-lucide="square-pen"></i><span>Menu edit</span></button>
 <button class="nav-item" data-admin-screen="websiteContent"><i data-lucide="notebook-pen"></i><span>Website content</span></button>
 <button class="nav-item" data-admin-screen="operatingHours"><i data-lucide="clock-3"></i><span>Operating hours</span></button>
+<button class="nav-item" data-admin-screen="wifiSettings"><i data-lucide="wifi"></i><span>Guest Wi-Fi</span></button>
 <button class="nav-item" data-admin-screen="records"><i data-lucide="history"></i><span>Records</span></button>
 <button class="nav-item" data-admin-screen="salesHistory"><i data-lucide="calendar-days"></i><span>Sales history</span></button>
 <button class="nav-item" data-admin-screen="accounts"><i data-lucide="user-cog"></i><span>Accounts</span></button>
@@ -110,6 +112,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=menu-categories-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=menu-unique-name-1"></script>
 </body>
 </html>

@@ -192,7 +192,9 @@
   function keepFocusedFieldVisible() {
     const field = document.activeElement;
     if (!activeModal?.contains(field) || !field.matches("input, select, textarea")) return;
-    const scroll = field.closest(".workspace-modal-scroll");
+    const pane = field.closest(".workspace-modal-scroll");
+    const scroll = pane && /auto|scroll/.test(getComputedStyle(pane).overflowY)
+      ? pane : field.closest(".workspace-modal-card");
     if (!scroll) return;
     const bounds = scroll.getBoundingClientRect();
     const group = field.closest(".amount-field");

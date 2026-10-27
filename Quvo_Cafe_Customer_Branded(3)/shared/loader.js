@@ -2,6 +2,7 @@
 (async function loadCustomerApp() {
   const scripts = [
     "shared/menu-categories.js",
+    "shared/category-art.js",
     "shared/menu-options.js",
     "shared/ordering-status.js",
     "shared/order-ready-alerts.js",
@@ -19,6 +20,7 @@
     "checkout/checkout.js",
     "menu/customization.js",
     "tracking/tracking.js",
+    "dine-in/wifi.js",
     "shared/bootstrap.js",
   ];
   try {
@@ -39,7 +41,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=menu-categories-1";
+        script.src = src + "?v=category-specific-art-3";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

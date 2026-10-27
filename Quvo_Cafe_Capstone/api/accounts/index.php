@@ -38,6 +38,14 @@ try {
     }
     $db->beginTransaction();
     $result = account_change($db, $actor, $input);
+    if (($input["action"] ?? "") === "delete") {
+        $result["staff"] = account_list($db);
+        foreach ($result["staff"] as $staff) {
+            if ((int) $staff["staff_id"] === (int) $result["deleted_staff_id"]) {
+                throw new RuntimeException("Deleted staff account is still listed.");
+            }
+        }
+    }
     $db->commit();
     if (isset($result["credential_stamp"])) {
         $_SESSION["credential_stamp"] = $result["credential_stamp"];

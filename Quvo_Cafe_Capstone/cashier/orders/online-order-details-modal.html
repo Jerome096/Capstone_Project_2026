@@ -5,10 +5,18 @@
   <p class="eyebrow">Online order details</p>
   <h2 id="onlineOrderDetailsTitle"></h2>
   <dl id="onlineOrderCustomerDetails" class="online-order-customer"></dl>
+  <p class="helper-text" id="onlineOrderDetailsStatus" role="status"></p>
   <section class="online-order-proof" aria-labelledby="onlineOrderProofTitle">
     <h3 id="onlineOrderProofTitle">Payment receipt</h3>
     <p class="helper-text" id="onlineOrderProofStatus">No receipt image available.</p>
     <img id="onlineOrderProofImage" alt="Customer payment receipt" hidden />
   </section>
   <p class="helper-text">Verify the payment in the receiving account before confirming it.</p>
+  <section class="online-order-proof" id="onlineOrderBookingSection" aria-labelledby="onlineOrderBookingTitle" hidden>
+    <h3 id="onlineOrderBookingTitle">Lalamove booking screenshot</h3>
+    <p class="helper-text" id="onlineOrderBookingStatus" role="status">Loading the customer's booking screenshot…</p>
+    <img id="onlineOrderBookingImage" alt="Customer Lalamove booking screenshot" hidden>
+    <div class="card-actions"><button type="button" class="btn light" data-booking-retry hidden>Retry booking image</button><a class="btn light" data-booking-link target="_blank" rel="noopener noreferrer" hidden>Open full booking image</a></div>
+    <p class="helper-text">The customer books and pays the courier separately. Coordinate the pickup time and verify the rider details.</p>
+  </section>
 </dialog>

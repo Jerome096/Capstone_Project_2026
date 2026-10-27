@@ -102,3 +102,37 @@
 .payment-receipt-remove { align-self: center; min-height: 44px; padding: 10px 16px; }
 .payment-verification-note { padding: 14px 2px 0; }
 @media (max-width: 600px) { .payment-steps { grid-template-columns: 1fr; } .payment-step { padding: 16px; } }
+
+/* Customer-booked courier pickup. Both uploads stay beside the payment QR. */
+.payment-steps { align-items:start; }
+.payment-upload-stack { display:grid; gap:16px; min-width:0; }
+.lalamove-details { padding:20px; gap:20px; background:#fbf8f1; }
+.lalamove-details [hidden] { display:none!important; }
+.delivery-intro h3 { font-size:22px; margin:10px 0 8px; }
+.delivery-intro p { margin:0; color:var(--muted); font-size:13px; line-height:1.7; }
+.delivery-provider-chip { display:inline-block; padding:5px 10px; border-radius:20px; background:#eee4cf; color:#8a6428; font-size:11px; font-weight:600; }
+.cafe-pickup-card { padding:18px; border:1px solid var(--line); border-radius:14px; background:#fffdf9; }
+.cafe-pickup-heading { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.cafe-pickup-heading h4 { margin:5px 0; font-size:19px; }
+.cafe-pickup-heading .secondary-btn { width:auto; flex-shrink:0; font-size:12px; }
+.cafe-pickup-card #deliveryAddress { resize:none; min-height:74px; padding:12px 0; border:0; box-shadow:none; background:transparent; font-size:14px; line-height:1.65; color:var(--text); }
+.delivery-contact-links { display:flex; flex-wrap:wrap; gap:8px; padding-top:8px; }
+.delivery-contact-links .secondary-btn { width:auto; flex:1 1 190px; padding:11px 12px; font-size:12px; text-align:center; }
+.cafe-location-map { overflow:hidden; border:1px solid var(--line); border-radius:12px; margin:0 0 16px; background:#f5f1e7; }
+.cafe-location-map iframe { display:block; width:100%; height:250px; border:0; }
+.delivery-map-link { display:block; padding:12px; color:#936b23; font-size:12px; font-weight:600; text-align:center; }
+.delivery-phone-contact { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; }
+.delivery-phone-contact[hidden] { display:none!important; }
+.delivery-phone-contact > div { flex:1; min-width:0; }
+.delivery-phone-contact label { display:block; color:var(--muted); font-size:11px; margin-bottom:4px; }
+.delivery-phone-contact #deliveryPhone { width:100%; padding:0; border:0; background:transparent; box-shadow:none; color:var(--text); font-size:16px; font-weight:600; }
+.delivery-phone-contact .secondary-btn { width:auto; flex-shrink:0; min-height:44px; padding:10px 12px; font-size:12px; }
+.delivery-how h4 { font-size:15px; margin:0 0 12px; }
+.delivery-how ol { padding-left:22px; margin:0 0 14px; }
+.delivery-how li { padding:0 0 10px 4px; font-size:13px; line-height:1.7; color:var(--muted); }
+.delivery-how li strong { color:var(--text); }
+.delivery-lalamove-link { color:#936b23; font-weight:600; font-size:13px; }
+.delivery-fee-note { margin:14px 0 0; padding:12px 14px; border-radius:10px; background:#eee7da; color:var(--muted); font-size:12px; line-height:1.7; }
+.delivery-booking-step[hidden] { display:none!important; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media(max-width:600px){.lalamove-details{padding:16px;}.delivery-intro h3{font-size:20px;}.cafe-pickup-card{padding:14px;}.cafe-pickup-heading{flex-wrap:wrap;}.cafe-pickup-heading .secondary-btn{min-height:44px;}.delivery-how li{font-size:12px;}}

@@ -4,6 +4,7 @@ require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/guest.php";
 require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/orders.php";
 require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/menu.php";
 require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/ordering.php";
+require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/wifi-settings.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {
@@ -65,6 +66,7 @@ try {
         }
     }
     $session = dining_guest_session($db, $id, $token);
+    if($method==='GET'&&($_GET['view']??'')==='wifi')quvo_json(['ok'=>true,'wifi'=>wifi_guest_details($db,$id,$token)]);
     if (in_array($_GET["view"] ?? "", ["menu","browse-menu"], true)) {
         // Old browse links must respect the same cashier approval as the menu.
         if (!(bool) $table["is_active"] || !$session || $session['status'] !== 'active') {

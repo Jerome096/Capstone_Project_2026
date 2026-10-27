@@ -1,0 +1,15 @@
+<section class="screen" id="wifiSettings">
+  <div class="admin-page-note"><i data-lucide="wifi"></i><span>Guest Wi-Fi details become available to dine-in customers after the cashier confirms payment.</span></div>
+  <section class="wifi-settings-card">
+    <div class="eyebrow">Dine-in guest note</div><h2>Guest Wi-Fi</h2>
+    <p class="helper-text">Enter the exact Wi-Fi name and password used by the café. Saving this note does not change your router settings.</p>
+    <p id="wifiSettingsStatus" class="helper-text" role="status">Open this module to load saved Wi-Fi details.</p>
+    <p id="wifiSettingsError" class="inventory-form-error" role="alert"></p>
+    <form id="wifiSettingsForm" autocomplete="off">
+      <label for="wifiNetworkName">Wi-Fi name<input id="wifiNetworkName" name="guest-wifi-name" type="text" maxlength="100" autocomplete="off" required placeholder="Enter the café Wi-Fi name"></label>
+      <label for="wifiNetworkPassword">Wi-Fi password<input id="wifiNetworkPassword" name="guest-wifi-password" type="password" maxlength="128" autocomplete="new-password" required placeholder="Enter the Wi-Fi password"></label>
+      <button id="toggleWifiPassword" class="btn light" type="button" aria-pressed="false">Show password</button>
+      <div class="wifi-settings-actions"><button id="reloadWifiSettings" class="btn light" type="button">Reload saved details</button><button id="saveWifiSettings" class="btn dark" type="submit">Save Wi-Fi details</button></div>
+    </form>
+  </section>
+</section>

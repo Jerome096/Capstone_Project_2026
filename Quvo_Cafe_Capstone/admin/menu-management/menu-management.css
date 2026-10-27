@@ -1,4 +1,10 @@
 /* Styles for menuAdmin; shared controls remain in shared/css. */
+.admin-menu-filters { display:grid; grid-template-columns:minmax(160px,220px) minmax(0,1fr) auto; align-items:end; gap:12px; margin:16px 0 8px; }
+.admin-menu-filters label { display:grid; gap:7px; min-width:0; font-size:12px; color:var(--q-ink-500,#756c60); }
+.admin-menu-filters input,.admin-menu-filters select { min-width:0; width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--q-border,#e7d8c6); border-radius:10px; background:var(--q-surface,#fffdf9); color:var(--q-ink-950,#191714); font:inherit; }
+.admin-menu-filters .btn { min-height:44px; }
+.admin-menu-result-count { margin:0 0 12px; }
+@media(max-width:700px){.admin-menu-filters{grid-template-columns:1fr;}.admin-menu-filters input,.admin-menu-filters select{font-size:16px;}}
 
 .admin-menu-layout {
   display: grid;

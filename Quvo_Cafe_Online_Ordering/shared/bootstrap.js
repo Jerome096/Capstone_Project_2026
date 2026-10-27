@@ -1,5 +1,5 @@
 async function initializeCustomerApp() {
-  const initialPublicScreen=QuvoStorefront.publicScreen();
+  const initialScreen=QuvoStorefront.initialScreen();
   QuvoStorefront.bind();
   renderCategories();
   renderMenu();
@@ -10,6 +10,7 @@ async function initializeCustomerApp() {
   bindRegisterEvents();
   bindMenuEvents();
   bindNavigationEvents();
+  bindTrackingEvents();
   bindCustomizationEvents();
   bindCheckoutEvents();
   bindCartEvents();
@@ -20,6 +21,7 @@ async function initializeCustomerApp() {
   window.QuvoOrdering?.start();
   startOnlineFlow();
   const [session]=await Promise.allSettled([onlineApi(),refreshOnlineMenu(),QuvoStorefront.loadAbout()]);
-  if(session.status==='fulfilled'&&session.value.account){await enterOnlineAccount(session.value.account);if(initialPublicScreen!=='screenHome')showScreen(initialPublicScreen);}
+  if(session.status==='fulfilled'&&session.value.account){await enterOnlineAccount(session.value.account);if(initialScreen!=='screenHome')showScreen(initialScreen);}
+  else if(!onlinePublicScreens.includes(initialScreen))QuvoStorefront.requestLogin(initialScreen);
   else if(session.status==='rejected')showToast('Some account features could not connect. You can still explore the website.');
 }

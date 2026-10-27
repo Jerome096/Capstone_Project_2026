@@ -6,9 +6,13 @@
       <h2>Order status</h2>
     </div>
   </div>
+  <section class="tracking-order-switcher" id="trackingOrderSwitcher" hidden>
+    <label for="trackingOrderSelect">Current orders</label>
+    <select id="trackingOrderSelect" aria-label="Choose a current order to track"></select>
+  </section>
   <section class="order-ticket">
     <div>
-      <p class="eyebrow">Current order</p>
+      <p class="eyebrow" id="trackingOrderContext">Current order</p>
       <h3 id="trackingOrderCode">No order yet</h3>
     </div>
     <div class="tracking-badges">

@@ -151,6 +151,7 @@ const screenText = {
   },
   websiteContent: {eyebrow:"Admin access",title:"Website content",sub:"Edit your cafe story, address, opening hours and contact details"},
   operatingHours: {eyebrow:"Admin access",title:"Operating hours",sub:"Set store hours and future business-day schedules for sales and reports"},
+  wifiSettings: {eyebrow:"Admin access",title:"Guest Wi-Fi",sub:"Edit the Wi-Fi note shown to dine-in customers after payment"},
   menuAdmin: {
     eyebrow: "Admin access",
     title: "Menu customization",
@@ -188,6 +189,7 @@ const ADMIN_SCREENS = [
   "menuAdmin",
   "websiteContent",
   "operatingHours",
+  "wifiSettings",
   "records",
   "salesHistory",
   "accounts",

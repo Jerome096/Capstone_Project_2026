@@ -66,6 +66,11 @@ function menu_save(PDO $db,array $input):array {
             }
         }
     }
+    // inventory_lock serializes menu saves/removals, including two admins adding
+    // the same name at once. Explicit CI collation also covers case-sensitive DBs.
+    $q=$db->prepare('SELECT TOP (1) m.menu_item_id FROM dbo.menu_items m WITH(UPDLOCK,HOLDLOCK) WHERE m.category=? AND m.menu_item_id<>? AND LTRIM(RTRIM(m.item_name)) COLLATE Latin1_General_100_CI_AS=CONVERT(nvarchar(100),?) COLLATE Latin1_General_100_CI_AS AND '.menu_active_condition());
+    $q->execute([$category,$id??0,$name]);$duplicate=$q->fetchColumn();$q->closeCursor();
+    if($duplicate!==false)throw new OrderError('An item with this name already exists in this category. Choose a different name or category.',409,'duplicate_menu_name');
     $json=$hasGroups?json_encode($groups,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):($old['option_groups_json']??null);
     if($id===null){
         $q=$db->prepare('INSERT dbo.menu_items(item_name,category,price,is_available,option_groups_json) OUTPUT INSERTED.menu_item_id VALUES(?,?,?,?,?)');

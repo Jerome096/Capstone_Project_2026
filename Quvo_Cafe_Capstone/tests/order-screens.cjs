@@ -25,6 +25,7 @@ const context = vm.createContext({
   window:{confirm:()=>true,prompt:()=>"Customer requested cancellation",QUVO_CSRF:"test"},QUVO_AUTH:{getSession:()=>({role:staffRole})},
   state:{orders:[],receipts:[],accessMode:"dineIn",sessionApproved:true,cart:[]},
   quvoPath:p=>p, escapeHtml:escape,escapeCustomerHtml:escape,
+  QuvoStaffDeliveryProof:{load(){}},
   renderOrders(){},renderReceipts(){},renderStats(){},renderCart(){},renderTracking(){},showToast(){},showScreen(){},
   lucide:{createIcons(){}},setInterval(){},
   isOrderPaymentConfirmed:order=>order.paid===true||order.paymentStatus==='confirmed',
@@ -64,7 +65,7 @@ run(read("Quvo_Cafe_Customer_Branded(3)/orders/dine-in-orders.js"));
   assert.doesNotMatch(run("renderSqlOrderCard(state.orders[0])"), /View customer details/);
   run("sqlOrders.known.set('91', {...sqlOrders.known.get('12'), order_id:'91', order_source:'online', contact_snapshot:'09123456789', fulfillment_type:'delivery', address_snapshot:'<Address>', preferred_payment_method:'GCash'})");
   assert.match(run("renderSqlOrderCard(sqlMapOrder(sqlOrders.known.get('91')))"), /View customer details/);
-  run("openOnlineOrderDetails('91')");
+  await run("openOnlineOrderDetails('91')");
   assert.equal(el("onlineOrderDetailsModal").open,true);
   assert.match(el("onlineOrderCustomerDetails").innerHTML,/09123456789/);
   assert.match(el("onlineOrderCustomerDetails").innerHTML,/&lt;Address&gt;/);

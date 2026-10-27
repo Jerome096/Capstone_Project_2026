@@ -27,7 +27,7 @@ function sqlMapOrder(row) {
     id: "sql" + row.order_id, sqlId: row.order_id, persisted: true, number: row.order_number,
     table: row.table_name, customerName: row.customer_name, total: Number(row.total_amount),
     time: sqlDate(row.created_at), stage: row.order_status, source: row.order_source === "online" ? "online" : row.order_source === "walk_in" ? "manual" : "qr",
-    fulfillment: row.fulfillment_type === "delivery" ? "Delivery request" : "Pickup",
+    fulfillment: row.fulfillment_type === "delivery" ? (row.delivery_provider === "lalamove" ? "Customer-booked Lalamove" : "Delivery request") : "Pickup",
     paid: row.payment_status === "paid", paymentStatus: row.payment_status === "paid" ? "confirmed" : "pending",
     paymentMethod: row.payment_method_label || row.payment_method, amountReceived: Number(row.amount_received || 0),
     change: Number(row.change_amount || 0), gcashReference: row.payment_reference || "",
@@ -218,7 +218,7 @@ function renderSqlOrderCard(order) {
     '</strong><span class="table-chip">' + e(order.table) + '</span></div><p class="order-context">Customer: ' +
     e(order.customerName) + '</p>' + (row.order_source === "online" ?
       '<p class="order-context">Online · ' + e(order.fulfillment) + '<br>Contact: ' + e(row.contact_snapshot || "") +
-      (row.address_snapshot ? '<br>Address: ' + e(row.address_snapshot) : "") +
+      (row.pickup_address_snapshot ? '<br>Café pickup: ' + e(row.pickup_address_snapshot) : row.address_snapshot ? '<br>Address: ' + e(row.address_snapshot) : "") +
       '<br>Payment method: ' + e(row.preferred_payment_label || row.preferred_payment_method || "Cash") + '</p>' : "") +
     '<div class="order-total">' + sqlMoney(row.total_amount) +
     '</div><div class="order-payment ' + (order.paid ? "confirmed" : "pending") + '">' +
@@ -230,19 +230,29 @@ function renderSqlOrderCard(order) {
     '</div><p class="helper-text">' + e(order.time) + '</p><div class="card-actions">' + actions + "</div></article>";
 }
 // Show the saved order information without changing its payment or preparation status.
-function openOnlineOrderDetails(id) {
+async function openOnlineOrderDetails(id) {
   const row = sqlOrders.known.get(String(id));
   if (!row || row.order_source !== "online") return;
+  const modal=document.getElementById('onlineOrderDetailsModal'),request=(sqlOrders.detailsRequest||0)+1;
+  sqlOrders.detailsRequest=request;
+  const current=()=>modal.open&&sqlOrders.detailsRequest===request;
+  const renderDetails=row=>{
   const field = (label, value) => '<div><dt>' + escapeHtml(label) + '</dt><dd>' +
     escapeHtml(value || "Not provided") + '</dd></div>';
   document.getElementById("onlineOrderDetailsTitle").textContent = row.order_number;
   document.getElementById("onlineOrderCustomerDetails").innerHTML =
     field("Customer", row.customer_name) + field("Recipient", row.recipient_name || row.customer_name) +
     field("Contact number", row.contact_snapshot) +
-    field("Fulfillment", row.fulfillment_type === "delivery" ? "Delivery request" : "Pickup") +
-    (row.fulfillment_type === "delivery" ? field("Delivery address", row.address_snapshot) : "") +
+    field("Fulfillment", row.fulfillment_type === "delivery" ? (row.delivery_provider === "lalamove" ? "Customer-booked Lalamove" : "Delivery request") : "Pickup") +
+    (row.pickup_address_snapshot ? field("Café pickup address", row.pickup_address_snapshot) + field("Café phone", row.cafe_phone_snapshot) : row.fulfillment_type === "delivery" ? field("Delivery address", row.address_snapshot) : "") +
     field("Payment method", row.preferred_payment_label || row.preferred_payment_method) + field("Total", sqlMoney(row.total_amount));
-  document.getElementById("onlineOrderDetailsModal").showModal();
+  };
+  renderDetails(row);
+  const bookingSection=document.getElementById('onlineOrderBookingSection');
+  const showBooking=row=>{bookingSection.hidden=row.fulfillment_type!=='delivery'&&Number(row.has_delivery_booking)!==1;if(!bookingSection.hidden)QuvoStaffDeliveryProof.load(bookingSection,row.order_id);};
+  showBooking(row);
+  if(!modal.open)modal.showModal();
+  modal.scrollTop=0;
   const proof=document.getElementById("onlineOrderProofImage");
   const proofStatus=document.getElementById("onlineOrderProofStatus");
   proof.hidden=true;proof.removeAttribute("src");
@@ -252,6 +262,14 @@ function openOnlineOrderDetails(id) {
     proof.onerror=()=>{proof.hidden=true;proofStatus.textContent="The receipt could not load. Close this popup and try again.";};
     proof.src=quvoPath("api/orders/index.php?receipt="+encodeURIComponent(row.order_id));
   }
+  const detailsStatus=document.getElementById('onlineOrderDetailsStatus');detailsStatus.textContent='Refreshing saved order details…';
+  try{
+    const result=await sqlOrderApi(null,'?id='+encodeURIComponent(row.order_id));if(!current())return;
+    const latest=result.order;if(!latest||String(latest.order_id)!==String(row.order_id))throw new Error('Order details could not refresh.');
+    sqlOrders.known.set(String(latest.order_id),latest);renderDetails(latest);
+    if(bookingSection.hidden&&(latest.fulfillment_type==='delivery'||Number(latest.has_delivery_booking)===1))showBooking(latest);
+    detailsStatus.textContent='';
+  }catch{if(current())detailsStatus.textContent='Could not refresh order details. Showing the last loaded details; the booking image is checked separately.';}
 }
 function sqlStockNoticeLines(notice) {
   const quantity=value=>new Intl.NumberFormat('en-PH',{maximumFractionDigits:3}).format(Number(value));

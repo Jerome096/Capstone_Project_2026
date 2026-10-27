@@ -38,11 +38,14 @@
     return `<svg viewBox="0 0 400 300" aria-hidden="true">${defs}${background}${drawing}</svg>`;
   }
   const publicScreens={home:'screenHome',menu:'screenMenu',about:'screenAbout'};
-  let pendingSelection=null,aboutRequest=0;
+  const privateScreens={track:'screenTracking',orders:'screenHistory',cart:'screenCart',account:'screenAccount'};
+  const screenFromHash=()=>({...publicScreens,...privateScreens})[location.hash.slice(1)]||'screenHome';
+  let pendingSelection=null,pendingDestination=null,aboutRequest=0;
   function productArt(item){
     if(item.imageUrl)return QuvoMenuOptions.photoHTML(item);
+    const categoryArt=window.QuvoCategoryArt?.render(item.category);if(categoryArt)return categoryArt;
     const food=QuvoMenuCategories.isFood(item.category),matcha=/matcha/i.test(item.name);
-    return art({...item,id:matcha?'matcha':item.id,art:food?'plate':item.category==='hot-coffee'||/hot|espresso|cappuccino/i.test(item.name)?'hot':'iced',tone:matcha?'#829b53':food?'#d9a52f':'#bc9369'});
+    return art({...item,id:matcha?'matcha':item.id,art:food?'plate':item.category==='hot-coffee'?'hot':'iced',tone:matcha?'#829b53':food?'#d9a52f':'#bc9369'});
   }
   function card(item){
     const e=escapeCustomerHtml,bg=QuvoMenuCategories.isFood(item.category)?'#ebe7dc':/matcha/i.test(item.name)?'#e8ecdf':'#eee7da';
@@ -88,7 +91,8 @@
     updateCart();
   }
   function updateCart(){const badge=$('#headerCartCount');if(badge){const count=state.cart.reduce((sum,row)=>sum+row.quantity,0);badge.textContent=count;badge.hidden=count===0;}}
-  function requestLogin(){
+  function requestLogin(destination){
+    if(Object.values(privateScreens).includes(destination))pendingDestination=destination;
     const dialog=$('#onlineAuthDialog');if(!dialog)return;
     $('#onlineAuthContext').textContent=pendingSelection?'Sign in to add your selected item to your order.':'Sign in to order your favorites.';
     if(!dialog.open)dialog.showModal();document.body.classList.add('storefront-auth-open');
@@ -96,9 +100,9 @@
   function rememberSelection(selection){pendingSelection=selection;}
   function cancelSelection(){pendingSelection=null;}
   async function finishSignIn(){
-    const selection=pendingSelection;pendingSelection=null;
+    const selection=pendingSelection,destination=pendingDestination;pendingSelection=null;pendingDestination=null;
     $('#onlineAuthDialog')?.close();document.body.classList.remove('storefront-auth-open');syncAccount();
-    if(!selection)return false;
+    if(!selection){if(destination){showScreen(destination);return true;}return false;}
     const item=CUSTOMER_DATA.menuItems.find(row=>row.id===selection.itemId);
     if(!item){showToast('Your selected item is no longer available. Please choose another.');return true;}
     if(onlineCartLocked()){showToast('Retry your saved order before adding another item.');return true;}
@@ -110,7 +114,7 @@
   }
   function screenChanged(screenId){
     syncAccount();document.querySelectorAll('[data-site-page]').forEach(link=>{const active=link.dataset.sitePage===screenId;link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
-    const route=Object.keys(publicScreens).find(key=>publicScreens[key]===screenId);
+    const routes={...publicScreens,...privateScreens},route=Object.keys(routes).find(key=>routes[key]===screenId);
     if(route&&location.hash!=='#'+route)history.replaceState(null,'','#'+route);
     document.querySelectorAll('.storefront-account[open]').forEach(details=>details.removeAttribute('open'));
     if(['screenHome','screenAbout'].includes(screenId))loadAbout();
@@ -118,16 +122,16 @@
   function bind(){
     paintIcons();$('#storefrontYear').textContent=new Date().getFullYear();
     const dialog=$('#onlineAuthDialog');
-    for(const id of ['closeOnlineAuth','browseWithoutLogin'])$('#'+id).addEventListener('click',()=>{pendingSelection=null;dialog.close();});
-    dialog.addEventListener('close',()=>{pendingSelection=null;document.body.classList.remove('storefront-auth-open');});
+    for(const id of ['closeOnlineAuth','browseWithoutLogin'])$('#'+id).addEventListener('click',()=>{pendingSelection=null;pendingDestination=null;dialog.close();});
+    dialog.addEventListener('close',()=>{pendingSelection=null;pendingDestination=null;document.body.classList.remove('storefront-auth-open');});
     dialog.addEventListener('click',event=>{if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)dialog.close();}});
     $('#headerSignOut').addEventListener('click',()=>logoutOnlineCustomer());
     document.addEventListener('click',event=>{const cardNode=event.target.closest('[data-card-item-id]');if(cardNode)openItemModal(cardNode.dataset.cardItemId);});
-    window.addEventListener('hashchange',()=>{const next=publicScreens[location.hash.slice(1)];if(next)showScreen(next);});
+    window.addEventListener('hashchange',()=>showScreen(screenFromHash()));
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&['screenHome','screenAbout'].includes(state.currentScreen))loadAbout();});
     $('#menuSort').addEventListener('change',renderMenu);
     document.querySelectorAll('[data-auth-tab]').forEach(button=>button.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const tab=state.authMode==='login'?'register':'login';switchAuthTab(tab);document.getElementById(tab==='login'?'loginTabBtn':'registerTabBtn').focus();}}));
   }
-  window.QuvoStorefront={card,renderFeatured,loadAbout,syncAccount,updateCart,requestLogin,rememberSelection,cancelSelection,finishSignIn,screenChanged,bind,publicScreen:()=>publicScreens[location.hash.slice(1)]||'screenHome'};
+  window.QuvoStorefront={card,renderFeatured,loadAbout,syncAccount,updateCart,requestLogin,rememberSelection,cancelSelection,finishSignIn,screenChanged,bind,initialScreen:screenFromHash,publicScreen:()=>publicScreens[location.hash.slice(1)]||'screenHome'};
 
 })();

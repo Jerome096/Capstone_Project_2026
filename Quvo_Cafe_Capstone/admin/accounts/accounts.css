@@ -55,6 +55,17 @@
   align-items: center;
   flex-wrap: wrap;
 }
+#accounts .btn.accounts-delete {
+  background: #fae9e4;
+  border: 1px solid #ecc5b9;
+  color: #9b3628;
+}
+#accounts .btn.accounts-delete:hover {
+  background: #f4d8cf;
+}
+#accounts .accounts-actions .btn {
+  min-height: 40px;
+}
 #accounts .accounts-dialog-actions {
   justify-content: flex-end;
   margin-top: 18px;

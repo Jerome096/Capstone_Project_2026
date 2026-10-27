@@ -133,13 +133,16 @@ function orders_header_sql(): string
         COALESCE(am.display_name,p.payment_method) AS payment_method_label,
         CASE WHEN EXISTS(SELECT 1 FROM dbo.online_payment_receipts pr WHERE pr.order_id=o.order_id) THEN 1 ELSE 0 END AS has_payment_receipt,
         COALESCE(t.table_name,CASE WHEN o.order_source='walk_in' THEN 'Counter' WHEN f.fulfillment_type='delivery' THEN 'Online delivery' ELSE 'Online pickup' END) AS table_name,
-        f.fulfillment_type,f.recipient_name,f.contact_snapshot,f.address_snapshot,p.payment_id,p.payment_method,p.amount_applied,p.amount_received,
+        f.fulfillment_type,f.recipient_name,f.contact_snapshot,f.address_snapshot,
+        f.delivery_provider,f.pickup_address_snapshot,f.cafe_phone_snapshot,f.cafe_facebook_snapshot,
+        CASE WHEN dbk.order_id IS NOT NULL THEN 1 ELSE 0 END has_delivery_booking,dbk.uploaded_at delivery_booking_uploaded_at,p.payment_id,p.payment_method,p.amount_applied,p.amount_received,
         p.change_amount,p.payment_reference,p.received_by_staff_id,p.paid_at,approver.full_name AS approved_by_name
         FROM dbo.orders o
         LEFT JOIN dbo.kitchen_ticket_readiness k ON k.order_id=o.order_id
         LEFT JOIN dbo.customer_sessions s ON s.session_id=o.session_id
         LEFT JOIN dbo.cafe_tables t ON t.table_id=s.table_id
         LEFT JOIN dbo.order_fulfillments f ON f.order_id=o.order_id
+        LEFT JOIN dbo.online_delivery_bookings dbk ON dbk.order_id=o.order_id
         LEFT JOIN dbo.payments p ON p.order_id=o.order_id
         LEFT JOIN dbo.online_payment_methods pm ON pm.payment_method=o.preferred_payment_method
         LEFT JOIN dbo.online_payment_methods am ON am.payment_method=p.payment_method

@@ -110,7 +110,7 @@
             >0</span
           >
         </h2>
-        <p>Create accounts, edit details, reset passwords or deactivate access.</p>
+        <p>Create accounts, edit details, reset passwords, deactivate or delete access.</p>
       </div>
       <div class="accounts-actions">
         <button
@@ -226,10 +226,12 @@
     id="accountConfirmDialog"
     class="accounts-dialog accounts-confirm"
     aria-labelledby="accountConfirmTitle"
+    aria-describedby="accountConfirmText"
   >
     <div class="eyebrow">Confirm changes</div>
     <h2 id="accountConfirmTitle">Save these changes?</h2>
     <p id="accountConfirmText"></p>
+    <div id="accountConfirmError" class="admin-error hidden" role="alert"></div>
     <div class="accounts-dialog-actions">
       <button
         type="button"
