@@ -42,6 +42,24 @@ function dining_session_timing_sql(string $where): string
         WHERE $where";
 }
 
+// Staff see the same inactivity clock used by the guest API and expiry worker.
+function dining_staff_sessions(PDO $db, string $status = 'open', int $offset = 0): array
+{
+    if (!in_array($status, ['open','all','pending','active','closed','rejected','cancelled'], true) || $offset < 0) {
+        throw new DiningError('Invalid session list.');
+    }
+    $filter = $status === 'open' ? "s.status IN ('pending','active')" : ($status === 'all' ? '1=1' : 's.status=?');
+    $sql = 'SELECT timing.*,t.table_name,u.full_name AS reviewed_by FROM (' . dining_session_timing_sql($filter) . ') timing
+        JOIN dbo.customer_sessions s ON s.session_id=timing.session_id
+        JOIN dbo.cafe_tables t ON t.table_id=s.table_id
+        LEFT JOIN dbo.staff_users u ON u.staff_id=s.reviewed_by_staff_id
+        ORDER BY timing.session_id DESC OFFSET ? ROWS FETCH NEXT 50 ROWS ONLY';
+    $q = $db->prepare($sql); $i = 1;
+    if (!in_array($status, ['open','all'], true)) $q->bindValue($i++, $status);
+    $q->bindValue($i, $offset, PDO::PARAM_INT); $q->execute();
+    $rows = $q->fetchAll(); $q->closeCursor(); return $rows;
+}
+
 // Caller holds the table lock; payment also locks that table before it can be saved.
 function dining_cancel_unpaid_orders(PDO $db, int $sessionId, ?int $actor, string $reason): void
 {

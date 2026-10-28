@@ -35,8 +35,8 @@ function preparationTicketMarkup(order,ticket) {
         (notes.length?'<p>'+e([...new Set(notes)].join(' · '))+'</p>':'')+'</div>';
     }).join('')+'</div><footer>Approved for preparation</footer></section>';
 }
-function buildPreparationTicketsDocument(order) {
-  const tickets=splitPreparationItems(order);
+function buildPreparationTicketsDocument(order,department=null) {
+  const tickets=splitPreparationItems(order).filter(ticket=>!department||ticket.name===department);
   return buildThermalPrintDocument(order.number+' staff tickets',tickets.map(ticket=>preparationTicketMarkup(order,ticket)).join(''));
 }
 function openPreparationTickets(order) {
@@ -48,21 +48,24 @@ function openPreparationTickets(order) {
     tickets.length?'Payment approved. Only the '+tickets[0].name.toLowerCase()+' ticket is needed for this order.':'This order has no preparation items.';
   document.getElementById('preparationTicketsPreview').innerHTML=tickets.map(ticket=>preparationTicketMarkup(order,ticket)).join('');
   document.getElementById('preparationTicketsPrint').disabled=!tickets.length;
+  document.getElementById('preparationTicketsPrint').textContent=tickets.length===2?'Print both tickets':'Print ticket';
+  ['DRINKS','KITCHEN'].forEach(department=>{
+    const button=document.getElementById('preparationTickets'+department);
+    if(button)button.hidden=tickets.length!==2;
+  });
   document.getElementById('preparationTicketsModal').showModal();
 }
 function openPreparationTicketsForOrder(id) {
   const order=state.orders.find(entry=>String(entry.id)===String(id));if(order)openPreparationTickets(order);
 }
-function printPreparationTickets() {
-  const order=preparationTickets.order;if(!order||!splitPreparationItems(order).length)return;
-  if(preparationTickets.frame)preparationTickets.frame.remove();
-  const frame=printThermalDocument(buildPreparationTicketsDocument(order),'Printable staff tickets',()=>{
-    if(preparationTickets.frame===frame)preparationTickets.frame=null;
-  });
-  preparationTickets.frame=frame;
+function printPreparationTickets(department=null) {
+  const order=preparationTickets.order;if(!order||!splitPreparationItems(order).some(ticket=>!department||ticket.name===department))return;
+  const frame=printThermalDocument(buildPreparationTicketsDocument(order,department),'Printable staff tickets',()=>{preparationTickets.frame=null;});
+  preparationTickets.frame=frame?.isConnected?frame:null;
 }
 function bindPreparationTickets() {
-  document.getElementById('preparationTicketsPrint').addEventListener('click',printPreparationTickets);
+  document.getElementById('preparationTicketsPrint').addEventListener('click',()=>printPreparationTickets());
+  ['DRINKS','KITCHEN'].forEach(department=>document.getElementById('preparationTickets'+department).addEventListener('click',()=>printPreparationTickets(department)));
   document.getElementById('preparationTicketsLater').addEventListener('click',()=>document.getElementById('preparationTicketsModal').close());
   document.getElementById('preparationTicketsModal').addEventListener('close',()=>{preparationTickets.order=null;});
 }

@@ -26,6 +26,8 @@ try {
     $b=online_register($db,[...$input,'email'=>"other-$tag@example.invalid"]);$otherId=(int)$b['customer_account_id'];
     $a=online_update_profile($db,$id,[...$input,'name'=>'Updated name','email'=>"updated-$tag@example.invalid",'address'=>'Updated address']);
     check(online_public_account($db,$a)['address']==='Updated address','profile and address updated');
+    $a=online_update_profile($db,$id,['name'=>'Updated name','email'=>"updated-$tag@example.invalid",'contact'=>'09123456789']);
+    check(online_public_account($db,$a)['address']==='Updated address','profile save without retired address field preserves saved address');
     rejected(fn()=>online_change_password($db,$id,['current_password'=>'wrong','password'=>'Replacement-123']),422,'password change checks old password');
     $a=online_change_password($db,$id,['current_password'=>$input['password'],'password'=>'Replacement-123']);
     check(password_verify('Replacement-123',$a['password_hash']),'password change persisted');

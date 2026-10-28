@@ -47,12 +47,6 @@ try {
         throw new DiningError("Unknown list.");
     }
     $status = $_GET["status"] ?? "open";
-    $filter =
-        $status === "open"
-            ? "s.status IN ('pending','active')"
-            : ($status === "all"
-                ? "1=1"
-                : "s.status=?");
     if (
         !in_array(
             $status,
@@ -62,17 +56,7 @@ try {
     ) {
         throw new DiningError("Invalid status.");
     }
-    $q = $db->prepare("SELECT s.session_id,s.guest_name,s.status,s.requested_at,s.reviewed_at,s.ended_at,t.table_name,
-        u.full_name AS reviewed_by FROM dbo.customer_sessions s JOIN dbo.cafe_tables t ON t.table_id=s.table_id
-        LEFT JOIN dbo.staff_users u ON u.staff_id=s.reviewed_by_staff_id WHERE $filter
-        ORDER BY s.session_id DESC OFFSET ? ROWS FETCH NEXT 50 ROWS ONLY");
-    $i = 1;
-    if (!in_array($status, ["open", "all"], true)) {
-        $q->bindValue($i++, $status);
-    }
-    $q->bindValue($i, $offset, PDO::PARAM_INT);
-    $q->execute();
-    $rows = $q->fetchAll();
+    $rows = dining_staff_sessions($db, $status, $offset);
     $counts = $db
         ->query("SELECT status,COUNT(*) AS total FROM dbo.customer_sessions GROUP BY status")
         ->fetchAll();

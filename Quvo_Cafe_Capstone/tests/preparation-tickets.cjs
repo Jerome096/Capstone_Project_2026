@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const elements=new Map();
-const el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',disabled:false,showModal(){this.open=true;}});return elements.get(id);};
+const el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',disabled:false,removeAttribute(name){delete this[name]},showModal(){this.open=true;}});return elements.get(id);};
 const escape=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const ctx=vm.createContext({console,Date,JSON,Set,Number,String,window:{QUVO_SESSION:{full_name:'Cashier test'}},state:{menu:[],orders:[]},document:{getElementById:el},escapeHtml:escape,normalizeName:value=>value.toLowerCase()});
 const run=code=>vm.runInContext(code,ctx);
@@ -19,11 +19,17 @@ assert.match(drinks,/DRINKS TICKET/);assert.match(food,/KITCHEN TICKET/);assert.
 assert.match(run('buildPreparationTicketsDocument(order)'),/break-after:page/);
 assert.match(run('buildPreparationTicketsDocument(order)'),/size:58mm 200mm/);
 assert.match(run('buildPreparationTicketsDocument(order)'),/width:48mm/);
+assert.doesNotMatch(run('buildPreparationTicketsDocument(order,"DRINKS")'),/KITCHEN TICKET|No sauce/);
+assert.doesNotMatch(run('buildPreparationTicketsDocument(order,"KITCHEN")'),/DRINKS TICKET|50% sugar/);
 ctx.receipt={orderNumber:'QVO-1',customerName:'<Guest>',date:'2026-10-13',time:'7:30 PM',status:'served',source:'Walk-in / POS',location:'Counter',items:[{name:'<Coffee>',qty:2,price:150,note:'No sugar'}],total:300,paymentMethod:'Cash',amountReceived:350,change:50};
 const payment=run('buildThermalReceiptDocument(receipt)');assert.match(payment,/&lt;Guest&gt;/);assert.match(payment,/&lt;Coffee&gt;/);assert.match(payment,/₱300\.00/);assert.match(payment,/₱50\.00/);assert.match(payment,/Walk-in \/ POS/);
 run('openPreparationTickets(order)');assert.equal(el('preparationTicketsModal').open,true);assert.match(el('preparationTicketsSummary').textContent,/one ticket for drinks and one for food/);
 for(const source of ['manual','qr','online']){order.source=source;run('openPreparationTickets(order)');assert.match(el('preparationTicketsPreview').innerHTML,/Approved for preparation/);}
 assert.equal(run('splitPreparationItems({...order,items:[order.items[0]]}).length'),1);assert.equal(run('splitPreparationItems({...order,items:[order.items[2]]}).length'),1);
+let printed;
+ctx.printThermalDocument=(html,title,cleanup)=>{printed={html,title};cleanup();return null;};
+run('printPreparationTickets()');assert.match(printed.html,/DRINKS TICKET/);assert.match(printed.html,/KITCHEN TICKET/);
+run('printPreparationTickets("DRINKS")');assert.match(printed.html,/DRINKS TICKET/);assert.doesNotMatch(printed.html,/KITCHEN TICKET/);
 elements.clear();run('openPreparationTickets({...order,paid:false})');assert.equal(elements.size,0,'unpaid orders cannot print approval tickets');
 assert.equal(run('preparationReprintMarkup({...order,paid:false})'),'');
 console.log('PASS: exact drinks/food split, quantities and notes, escaped customer/item text, all order sources, separate print pages, single-department tickets, and unpaid guard.');

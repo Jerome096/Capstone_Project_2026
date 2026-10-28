@@ -116,7 +116,8 @@ function online_update_profile(PDO $db,int $id,array $input): array
     online_account($db,$id,true);
     [$name,$email,$contact,$address]=online_profile_values($input);
     $db->prepare('UPDATE dbo.customer_accounts SET full_name=?,email=?,contact_number=?,updated_at=SYSUTCDATETIME() WHERE customer_account_id=?')->execute([$name,$email,$contact,$id]);
-    online_save_address($db,$id,$address,$contact);
+    // New profile forms omit this retired field. Preserve legacy saved data.
+    if(array_key_exists('address',$input)) online_save_address($db,$id,$address,$contact);
     return online_account($db,$id);
 }
 

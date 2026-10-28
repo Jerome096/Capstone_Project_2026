@@ -265,6 +265,9 @@
 .preparation-tickets-modal { box-sizing: border-box; width: 680px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 40px); overflow: auto; padding: 24px; border: 1px solid #e7d8c6; border-radius: 20px; background: #fffdf9; color: #191714; }
 .preparation-tickets-modal::backdrop { background: #19171466; }
 .preparation-tickets-modal h2 { margin: 8px 0; }
+.preparation-tickets-modal .modal-actions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px; }
+.preparation-tickets-modal .modal-actions button { min-height:44px; }
+.preparation-tickets-modal [hidden] { display:none!important; }
 .preparation-tickets-preview { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 16px; margin: 18px 0; }
 .prep-ticket { padding: 18px; background: white; border: 1px dashed #d4c7b3; font: 12px/1.5 Arial,sans-serif; color: #191714; }
 .prep-ticket header { text-align: center; border-bottom: 1px dashed #d4c7b3; padding-bottom: 12px; margin-bottom: 12px; }

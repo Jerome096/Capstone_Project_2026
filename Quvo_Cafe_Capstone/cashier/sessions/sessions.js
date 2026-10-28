@@ -6,7 +6,34 @@ const diningSessionState = {
   busy: false,
   changing: false,
   revision: 0,
+  timerInterval: null,
 };
+function diningTimerNow() { return performance.now(); }
+function diningTimerDisplay(session, now = diningTimerNow()) {
+  if (session.status === 'pending') return {value:'Not started',note:'Starts after approval',tone:'pending'};
+  if (session.status !== 'active') return {value:'—',note:'Session ended',tone:'ended'};
+  const age = Math.max(0, now - session.clockReceivedAt);
+  if (!Number.isFinite(age) || age > 15000 || session.idle_remaining_seconds == null || session.idle_remaining_seconds === '' || !Number.isFinite(Number(session.idle_remaining_seconds))) {
+    return {value:'Syncing…',note:'Refreshing session status',tone:'stale'};
+  }
+  if (Number(session.idle_paused) === 1) return {value:'Paused',note:'Paid orders waiting to be served',tone:'paused'};
+  const remaining = Math.max(0, Math.ceil(Number(session.idle_remaining_seconds) - age / 1000));
+  return {value:String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'),
+    note:remaining ? 'Time left without activity' : 'Checking session expiry…',tone:remaining<=60?'urgent':remaining<=120?'warning':'running'};
+}
+function updateDiningSessionTimers() {
+  const now = diningTimerNow();
+  const sessions = new Map(state.sessions.map(session=>[String(Number(session.session_id)),session]));
+  document.querySelectorAll('#sessionRows [data-session-timer]').forEach(node=>{
+    const session = sessions.get(node.dataset.sessionTimer); if (!session) return;
+    const timer = diningTimerDisplay(session, now);
+    node.className = 'dining-session-timer is-'+timer.tone;
+    const value = node.querySelector('.dining-timer-value'), note = node.querySelector('.dining-timer-note');
+    if (value.textContent !== timer.value) value.textContent = timer.value;
+    if (note.textContent !== timer.note) note.textContent = timer.note;
+    node.setAttribute('aria-label',session.table_name+': '+timer.value+'. '+timer.note);
+  });
+}
 async function diningApi(resource, input, query = "") {
   const response = await fetch(quvoPath("api/dining/index.php") + "?resource=" + resource + query, {
     method: input ? "POST" : "GET",
@@ -40,8 +67,10 @@ async function loadSessions() {
       "&status=" + diningSessionState.filter + "&offset=" + diningSessionState.offset,
     );
     if (revision !== diningSessionState.revision) return;
+    const receivedAt = diningTimerNow();
     state.sessions = data.sessions.map((s) => ({
       ...s,
+      clockReceivedAt: receivedAt,
       id: s.session_id,
       customer: s.guest_name,
       table: s.table_name,
@@ -91,14 +120,16 @@ function renderSessions() {
         const actions =
           s.status === "pending" ? ["approve", "reject"] : s.status === "active" ? ["close"] : [];
         return `<div class="table-row session-row">
-      <div class="customer-name">${escapeHtml(s.guest_name)}<div class="guest">Guest · #${Number(s.session_id)}</div></div>
-      <div>${escapeHtml(s.table_name)}</div>
-      <div class="time-cell">${escapeHtml(diningDate(s.requested_at))}</div>
-      <div><span class="pill ${s.status === "active" ? "active-pill" : s.status === "pending" ? "pending-pill" : "neutral-pill"}">${escapeHtml(capitalize(s.status))}</span></div>
+      <div class="customer-name" data-label="Customer">${escapeHtml(s.guest_name)}<div class="guest">Guest · #${Number(s.session_id)}</div></div>
+      <div data-label="Table">${escapeHtml(s.table_name)}</div>
+      <div class="time-cell" data-label="Requested">${escapeHtml(diningDate(s.requested_at))}</div>
+      <div data-label="Status"><span class="pill ${s.status === "active" ? "active-pill" : s.status === "pending" ? "pending-pill" : "neutral-pill"}">${escapeHtml(capitalize(s.status))}</span></div>
+      <div data-label="Session timer"><div class="dining-session-timer" data-session-timer="${Number(s.session_id)}" role="timer" aria-live="off"><span class="dining-timer-value"></span><small class="dining-timer-note"></small></div></div>
       <div class="actions">${actions.map((action) => `<button class="btn ${action === "approve" ? "dark" : "red-outline"}" data-session-action="${action}" data-session-id="${Number(s.session_id)}">${capitalize(action)}</button>`).join("") || "—"}</div>
     </div>`;
       })
       .join("") || '<p class="helper-text dining-empty">No sessions in this view.</p>';
+  updateDiningSessionTimers();
 }
 async function changeDiningSession(id, action) {
   if (diningSessionState.changing) return;
@@ -130,6 +161,12 @@ function bindDiningSessions() {
     setInterval(() => { if (!document.hidden) loadSessions(); }, 5000);
     return;
   }
+  if (!diningSessionState.timerInterval) diningSessionState.timerInterval = setInterval(() => {
+    if (!document.hidden) updateDiningSessionTimers();
+  }, 1000);
+  document.addEventListener('visibilitychange',()=>{
+    if (!document.hidden) { updateDiningSessionTimers(); loadSessions(); }
+  });
   document.getElementById("sessionRows").addEventListener("click", (event) => {
     const button = event.target.closest("[data-session-action]");
     if (button) changeDiningSession(Number(button.dataset.sessionId), button.dataset.sessionAction);

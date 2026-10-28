@@ -4,9 +4,11 @@
   <h2 id="preparationTicketsTitle">Print staff tickets?</h2>
   <p id="preparationTicketsSummary" class="helper-text"></p>
   <div id="preparationTicketsPreview" class="preparation-tickets-preview"></div>
-  <p class="helper-text">Staff prepare drinks through the cashier workflow; food goes to the kitchen. Each ticket starts on a separate page. Select the MP211 printer with 58 mm paper, actual size (100%), and no headers or footers.</p>
+  <p class="helper-text">Print directly using your 58 mm printer service. Drinks and kitchen use separate pages; Copies: 1 prints one of each ticket. After printing or cancelling, you return here automatically. Selecting Save as PDF in the system print screen saves a file instead of printing.</p>
   <div class="modal-actions">
     <button class="btn light" type="button" id="preparationTicketsLater">Not now</button>
+    <button class="btn light" type="button" id="preparationTicketsDRINKS" hidden>Print drinks</button>
+    <button class="btn light" type="button" id="preparationTicketsKITCHEN" hidden>Print kitchen</button>
     <button class="btn dark" type="button" id="preparationTicketsPrint">Print tickets</button>
   </div>
 </dialog>

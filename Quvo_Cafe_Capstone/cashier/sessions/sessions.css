@@ -50,7 +50,33 @@
   overflow-x: auto;
 }
 #sessions .list-card {
-  min-width: 760px;
+  min-width: 940px;
+}
+#sessions .table-row { grid-template-columns:1.3fr .7fr 1.4fr .7fr 1.4fr 1fr; }
+#sessions .dining-session-timer { display:grid;gap:4px;justify-items:start;min-width:0; }
+#sessions .dining-timer-value { display:inline-flex;align-items:center;padding:5px 10px;border-radius:9px;background:#e7f1eb;color:#28553c;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.25; }
+#sessions .dining-timer-note { color:#817565;font-size:11px;line-height:1.4; }
+#sessions .is-warning .dining-timer-value { background:#fff0cf;color:#8a5b06; }
+#sessions .is-urgent .dining-timer-value { background:#fbe8e3;color:#a13628; }
+#sessions .is-paused .dining-timer-value { background:#eee8db;color:#765a22;font-size:13px; }
+#sessions .is-pending .dining-timer-value,#sessions .is-ended .dining-timer-value,#sessions .is-stale .dining-timer-value { background:#f0ede8;color:#766e65;font-size:13px; }
+#sessions .session-row { align-items:center;padding-block:12px; }
+#sessions .session-row .actions { display:flex;flex-wrap:wrap;gap:8px; }
+@media (max-width:900px) {
+  #sessions .list-card { min-width:0;border:0;background:transparent;box-shadow:none; }
+  #sessions .table-header { display:none; }
+  #sessions .session-row { display:grid;grid-template-columns:1fr 1fr;grid-template-areas:'customer customer' 'table status' 'requested requested' 'timer timer' 'actions actions';gap:14px;padding:16px;margin-bottom:12px;border:1px solid #e5d7c6;border-radius:14px;background:#fffdf9; }
+  #sessions .session-row > div { min-width:0; }
+  #sessions .session-row > div::before { content:attr(data-label);display:block;margin-bottom:5px;font-size:10px;letter-spacing:.8px;text-transform:uppercase;font-weight:500;color:#8b7c68; }
+  #sessions .session-row > div:nth-child(1) { grid-area:customer; }
+  #sessions .session-row > div:nth-child(2) { grid-area:table; }
+  #sessions .session-row > div:nth-child(3) { grid-area:requested;display:block; }
+  #sessions .session-row > div:nth-child(4) { grid-area:status; }
+  #sessions .session-row > div:nth-child(5) { grid-area:timer;padding:12px;border-radius:10px;background:#f8f4ed; }
+  #sessions .session-row > div:nth-child(6) { grid-area:actions;display:flex;justify-content:flex-end; }
+  #sessions .session-row .actions::before { content:none; }
+  #sessions .session-row .actions .btn { min-height:44px; }
+  #sessions .dining-timer-value { font-size:19px; }
 }
 #sessionNotice {
   color: #8b3c21;

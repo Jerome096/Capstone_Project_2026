@@ -12,8 +12,6 @@ const profileEmail = document.getElementById("profileEmail");
 
 const profileContact = document.getElementById("profileContact");
 
-const profileAddress = document.getElementById("profileAddress");
-
 const profileError = document.getElementById("profileError");
 
 const profileSuccess = document.getElementById("profileSuccess");
@@ -54,7 +52,6 @@ function renderAccount() {
   profileName.value = customer.name || "";
   profileEmail.value = customer.email || "";
   profileContact.value = customer.contact || "";
-  profileAddress.value = customer.address || "";
 
   profileError.textContent = "";
   profileSuccess.textContent = "";
@@ -65,7 +62,7 @@ function renderAccount() {
 async function handleProfileUpdate(event){
   event.preventDefault();if(!state.onlineCustomer)return;
   await onlineForm(profileForm,profileError,async()=>{
-    const result=await onlineApi({action:"profile",name:profileName.value.trim(),email:profileEmail.value.trim(),contact:profileContact.value.trim(),address:profileAddress.value.trim()});
+    const result=await onlineApi({action:"profile",name:profileName.value.trim(),email:profileEmail.value.trim(),contact:profileContact.value.trim()});
     state.onlineCustomer=result.account;state.customerName=result.account.name;
     configureMenuHeader();renderAccount();prefillDeliveryDetails(true);profileSuccess.textContent="Profile changes saved.";
   });

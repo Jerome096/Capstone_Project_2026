@@ -8,7 +8,7 @@ async function handleRegister(event){
     if(!online.csrf)await onlineApi();
     const result=await onlineApi({action:"register",name:document.getElementById("registerName").value.trim(),
       email:document.getElementById("registerEmail").value.trim(),contact:document.getElementById("registerContact").value.trim(),
-      address:document.getElementById("registerAddress").value.trim(),password});
+      password});
     registerForm.reset();const selectionHandled=await enterOnlineAccount(result.account);if(!selectionHandled)showToast("Account created.");
   });
 }
