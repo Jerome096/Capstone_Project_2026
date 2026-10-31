@@ -1,4 +1,19 @@
-# Local editor caches and machine-specific scheduled-task backups.
+# Local caches and private mail configuration.
 **/.vs/
 **/QuvoCafe-ExpireDiningSessions-backup-*.xml
 **/config/mail.local.php
+
+# Keep the application checkout focused on runtime and operational setup.
+**/docs/
+**/tests/
+*.md
+!**/LICENSE.md
+!**/LICENCE.md
+!**/NOTICE.md
+**/PROJECT_STRUCTURE.txt
+**/.editorconfig
+**/.prettierignore
+**/.prettierrc*
+*.zip
+/Quvo_Cafe_Capstone/database/export-manifest.json
+/Quvo_Cafe_Capstone/database/maintenance/clear-test-stock-movement-log.sql
