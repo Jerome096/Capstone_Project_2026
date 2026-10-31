@@ -12,7 +12,7 @@ if (
 if (str_starts_with($path, "/customer/") || str_starts_with($path, "/online/") || str_starts_with($path, "/kitchen/")) {
     $online = str_starts_with($path, "/online/");
     $kitchen = str_starts_with($path, "/kitchen/");
-    $root = realpath(__DIR__ . ($kitchen ? "/../kitchen" : ($online ? "/../Quvo_Cafe_Online_Ordering" : "/../Quvo_Cafe_Customer_Branded(3)")));
+    $root = realpath(__DIR__ . ($kitchen ? "/../kitchen" : ($online ? "/../Quvo_Cafe_Online_Ordering" : "/../Quvo_Cafe_Dine-In_Ordering")));
     $relative = substr($path, $kitchen ? 9 : ($online ? 8 : 10)) ?: "index.html";
     $file = realpath($root . "/" . $relative);
     if (

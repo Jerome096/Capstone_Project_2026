@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/online.php';
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/ordering.php';
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/website-content.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/online.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/ordering.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/website-content.php';
 if($_SERVER['REQUEST_METHOD']==='GET'&&($_GET['view']??'')==='menu-image'){try{menu_image_send(quvo_db(),$_GET['id']??null,$_GET['version']??null);}catch(Throwable $error){orders_error(null,$error);}}
 $csrf=online_start_session();$db=null;
 try {

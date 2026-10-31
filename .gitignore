@@ -15,5 +15,5 @@
 **/.prettierignore
 **/.prettierrc*
 *.zip
-/Quvo_Cafe_Capstone/database/export-manifest.json
-/Quvo_Cafe_Capstone/database/maintenance/clear-test-stock-movement-log.sql
+/Quvo_Cafe_Staff_Admin_Operations/database/export-manifest.json
+/Quvo_Cafe_Staff_Admin_Operations/database/maintenance/clear-test-stock-movement-log.sql

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/guest.php";
-require_once __DIR__ . "/../../Quvo_Cafe_Capstone/includes/orders.php";
-require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/menu.php";
-require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/ordering.php";
-require_once __DIR__."/../../Quvo_Cafe_Capstone/includes/wifi-settings.php";
+require_once __DIR__ . "/../../Quvo_Cafe_Staff_Admin_Operations/includes/guest.php";
+require_once __DIR__ . "/../../Quvo_Cafe_Staff_Admin_Operations/includes/orders.php";
+require_once __DIR__."/../../Quvo_Cafe_Staff_Admin_Operations/includes/menu.php";
+require_once __DIR__."/../../Quvo_Cafe_Staff_Admin_Operations/includes/ordering.php";
+require_once __DIR__."/../../Quvo_Cafe_Staff_Admin_Operations/includes/wifi-settings.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {

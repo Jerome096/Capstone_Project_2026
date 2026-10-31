@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/guest.php';
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/assistance.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/guest.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/assistance.php';
 $csrf=quvo_start_guest_session(); $db=null;
 try {
     $method=$_SERVER['REQUEST_METHOD'];

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/auth.php';
-require_once __DIR__.'/../../Quvo_Cafe_Capstone/includes/kitchen.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/auth.php';
+require_once __DIR__.'/../../Quvo_Cafe_Staff_Admin_Operations/includes/kitchen.php';
 $db=null;
 try{
     quvo_start_session();
