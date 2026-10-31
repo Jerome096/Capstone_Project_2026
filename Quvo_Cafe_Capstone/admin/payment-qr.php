@@ -12,7 +12,7 @@ if (empty($_SESSION['admin_confirmed'])) {header('Location: index.php');exit;}
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
   <link rel="stylesheet" href="payment-qr.css" />
   <?php echo quvo_bootstrap($user); ?>
-  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=cafe-orders-board-3" />
+  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=reports-no-graph-4" />
 </head>
 <body class="quvo-cafe-ui">
   <main class="payment-qr-admin">

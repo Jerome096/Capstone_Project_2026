@@ -13,12 +13,13 @@ migration is required. The update contains no private database or Gmail config.
 
 The new overview reads `reportsSql.data`, exactly the report already fetched by
 the Reports module. It displays total revenue, paid orders, average paid order,
-completed orders, revenue by time block and up to four top-selling items. It
+completed orders and up to four top-selling items. It
 does not calculate new accounting totals. The original full tables, date and
 period controls, previous-period comparisons and payment breakdown remain below.
-When loading or when a request fails, the overview clears its previous values
-and chart. Empty reports display an empty state instead of a fabricated trend.
-The chart is labeled in pesos and retains the full numeric tables for access.
+When loading or when a request fails, the overview clears its previous values.
+The Sales overview graph is removed. Revenue by time block remains available
+in the original numeric report tables, alongside the period comparisons and
+payment breakdown. Empty reports display their normal empty states.
 
 ## Orders
 

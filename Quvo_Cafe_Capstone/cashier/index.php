@@ -52,7 +52,7 @@ $_SESSION["operations_portal"] = "cashier";
       loginUrl: window.QUVO_CONFIG.loginUrl
     });
   </script>
-  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=cafe-orders-board-3" />
+  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=reports-no-graph-4" />
 </head>
 <body class="logged-in workspace-loading quvo-cafe-ui">
   <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-label="Loading workspace">
@@ -100,6 +100,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=cafe-orders-board-3"></script>
+  <script src="../shared/js/workspace-loader.js?v=reports-no-graph-4"></script>
 </body>
 </html>

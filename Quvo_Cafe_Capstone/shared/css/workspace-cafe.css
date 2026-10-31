@@ -82,11 +82,9 @@
   .quvo-cafe-ui .cafe-report-metric label { font-size:12px;display:block; }
   .quvo-cafe-ui .cafe-report-metric strong { display:block;font:36px/1.2 var(--q-font-brand);font-weight:400;margin:14px 0 10px;overflow-wrap:anywhere; }
   .quvo-cafe-ui .cafe-report-metric small { font-size:11px;color:var(--muted); }
-  .quvo-cafe-ui .cafe-report-overview { display:grid;grid-template-columns:1.65fr 1fr;gap:21px;margin-bottom:23px; }
+  .quvo-cafe-ui .cafe-report-overview { display:grid;grid-template-columns:minmax(0,1fr);gap:21px;margin-bottom:23px; }
   .quvo-cafe-ui .cafe-report-overview > section { min-width:0;background:var(--q-surface);border:1px solid var(--q-border);border-radius:15px;padding:23px; }
   .quvo-cafe-ui .cafe-report-overview h2 { font:27px/1.2 var(--q-font-brand);letter-spacing:-.7px;margin:7px 0 20px; }
-  .quvo-cafe-ui .cafe-report-chart { width:100%;height:auto;display:block;max-height:270px; }
-  .quvo-cafe-ui .cafe-report-chart text { fill:#7b8370;font:11px "Segoe UI",Arial,sans-serif; }
   .quvo-cafe-ui .cafe-report-favorite { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #eeece4;font-size:13px; }
   .quvo-cafe-ui .cafe-report-favorite:last-child { border-bottom:0; }
   .quvo-cafe-ui .cafe-report-favorite b { font-weight:500;font:24px var(--q-font-brand); }
@@ -158,7 +156,6 @@
   .quvo-cafe-ui .sidebar .nav-item { min-height:47px;font-size:14px; }
   .quvo-cafe-ui .sidebar .nav-section-label { display:block; }
   .quvo-cafe-ui .cafe-page-heading h1 { font-size:42px; }
-  .quvo-cafe-ui .cafe-report-overview { grid-template-columns:1.35fr 1fr; }
   .quvo-cafe-ui .cafe-report-metric { padding:18px; }
   .quvo-cafe-ui .cafe-report-metric strong { font-size:clamp(21px,6.3vw,29px);letter-spacing:-.6px;white-space:nowrap; }
   .quvo-cafe-ui .workspace-menu-toggle { border-radius:50%;background:var(--q-surface);width:44px;min-width:44px;height:44px;padding:10px; }
