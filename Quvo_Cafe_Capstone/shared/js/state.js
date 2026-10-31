@@ -131,12 +131,12 @@ const screenText = {
   },
   sessions: {
     eyebrow: "Dine-in QR",
-    title: "Session Approvals",
+    title: "Sessions",
     sub: "Review and approve incoming dine-in session requests",
   },
   orders: {
     eyebrow: "Kanban board",
-    title: "Order Management",
+    title: "Orders",
     sub: "Track and advance order status across kitchen stages",
   },
   receipts: {
@@ -146,7 +146,7 @@ const screenText = {
   },
   reports: {
     eyebrow: "Analytics",
-    title: "Reports",
+    title: "System Reports",
     sub: "Current shift performance summary",
   },
   websiteContent: {eyebrow:"Admin access",title:"Website content",sub:"Edit your cafe story, address, opening hours and contact details"},
@@ -154,7 +154,7 @@ const screenText = {
   wifiSettings: {eyebrow:"Admin access",title:"Guest Wi-Fi",sub:"Edit the Wi-Fi note shown to dine-in customers after payment"},
   menuAdmin: {
     eyebrow: "Admin access",
-    title: "Menu customization",
+    title: "Menu edit",
     sub: "Edit menu items, prices, categories, and availability",
   },
   records: {

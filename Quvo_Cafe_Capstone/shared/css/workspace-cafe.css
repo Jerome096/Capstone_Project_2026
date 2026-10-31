@@ -1,0 +1,207 @@
+/* Shared customer-inspired visual language. Screen-only so thermal output stays independent. */
+@media screen {
+  body.quvo-cafe-ui {
+    --q-canvas:#f7f5ef;--q-surface:#fffefb;--q-surface-soft:#f7f5ef;--q-surface-muted:#f0eee5;
+    --q-border:#e3e1d6;--q-border-strong:#cdcdbd;--q-ink-950:#1c211c;--q-ink-900:#242b22;
+    --q-ink-700:#555e4e;--q-ink-600:#666e5e;--q-ink-500:#75796d;--q-ink-400:#858b7b;
+    --q-sidebar:#fffefb;--q-sidebar-hover:#f0eee5;--q-sidebar-active:#1c211c;
+    --q-brand-500:#a8813d;--q-brand-600:#a8813d;--q-brand-700:#81622e;
+    --q-success:#42654b;--q-success-bg:#e9f0e7;--q-warning:#89642d;--q-warning-bg:#f7efdc;
+    --q-font-sans:"Segoe UI",Arial,sans-serif;--q-font-brand:Georgia,"Times New Roman",serif;
+    --q-shadow-xs:none;--q-shadow-sm:none;--shadow:none;--q-page-gutter:36px;
+    --white:var(--q-surface);--surface:var(--q-surface-soft);--card:var(--q-surface);--text:var(--q-ink-950);--muted:var(--q-ink-500);--border:var(--q-border);
+    background:var(--q-canvas);color:var(--text);font-family:var(--q-font-sans);font-size:14px;
+  }
+  .quvo-cafe-ui button,.quvo-cafe-ui input,.quvo-cafe-ui select,.quvo-cafe-ui textarea { font-family:var(--q-font-sans); }
+  .quvo-cafe-ui button:focus-visible,.quvo-cafe-ui a:focus-visible { outline:3px solid #b69a5e;outline-offset:3px; }
+  .quvo-cafe-ui .sidebar { background:var(--q-surface);border-right:1px solid var(--q-border);box-shadow:none; }
+  .quvo-cafe-ui .sidebar .brand { min-height:114px;padding:26px 22px;column-gap:11px;grid-template-columns:45px minmax(0,1fr); }
+  .quvo-cafe-ui .brand-mark-image { width:45px;height:49px;border-radius:11px;background:#12120f;box-shadow:none; }
+  .quvo-cafe-ui .brand-name { display:block;color:var(--text);font:27px/1.1 var(--q-font-brand);letter-spacing:-1px;white-space:nowrap; }
+  .quvo-cafe-ui .brand-sub { display:block;font-size:8px;color:var(--q-brand-600);letter-spacing:.15em;margin-top:6px; }
+  .quvo-cafe-ui .sidebar .nav { gap:5px;padding:0 18px 16px;scrollbar-color:#d6d8cb transparent; }
+  .quvo-cafe-ui .sidebar .nav-item { display:grid;grid-template-columns:19px minmax(0,1fr) auto;justify-items:stretch;min-height:45px;padding:10px 13px;border-radius:9px;font-size:12px;font-weight:500;color:#646c5c; }
+  .quvo-cafe-ui .sidebar .nav-item span:not(.nav-badge) { display:block; }
+  .quvo-cafe-ui .sidebar .nav-item:hover { background:#f0eee5;color:var(--text); }
+  .quvo-cafe-ui .sidebar .nav-item.active { background:#1c211c;color:#fffefb;box-shadow:none; }
+  .quvo-cafe-ui .sidebar .nav-item.active svg { color:#e8eadf; }
+  .quvo-cafe-ui .sidebar .nav-section-label { display:block;color:#858b7b;font-size:9px;letter-spacing:.15em;margin:15px 12px 8px; }
+  .quvo-cafe-ui .sidebar .nav-divider { border-color:var(--q-border);margin:16px 9px 2px; }
+  .quvo-cafe-ui .sidebar .portal-badge { display:none; }
+  .quvo-cafe-ui .sidebar .admin-mode-indicator { display:block;color:#64725c;background:#edf1e5;border-color:#dfe7d5;font-size:10px; }
+  .quvo-cafe-ui .nav-badge { background:#52634d;color:#fff;box-shadow:none; }
+  .quvo-cafe-ui .staff-session-card { display:grid;grid-template-columns:35px minmax(0,1fr) 36px;justify-items:stretch;align-items:center;gap:9px;background:transparent;border:0;border-top:1px solid var(--q-border);border-radius:0;margin:12px 22px 0;padding:17px 0; }
+  .quvo-cafe-ui .staff-session-copy { display:grid; }
+  .quvo-cafe-ui .staff-session-copy strong { color:var(--text);font-size:11px; }
+  .quvo-cafe-ui .staff-session-copy span { color:var(--muted);font-size:9px;letter-spacing:0;text-transform:none; }
+  .quvo-cafe-ui .staff-session-avatar,.quvo-cafe-ui .topbar-user-avatar { background:#eadfc3;color:#6b552a;border:0; }
+  .quvo-cafe-ui .staff-logout-button { color:#747c69;width:36px;height:40px; }
+  .quvo-cafe-ui .staff-logout-button:hover { color:var(--text);background:#efeee5; }
+  .quvo-cafe-ui .eod-panel { background:transparent;border-color:var(--q-border);padding:8px 20px 18px; }
+  .quvo-cafe-ui .eod-button { min-height:44px;background:#f0eee5;color:#555e4e;border:1px solid var(--q-border);border-radius:9px;font-size:12px; }
+  .quvo-cafe-ui .main { background:var(--q-canvas); }
+  .quvo-cafe-ui .topbar { min-height:77px;margin-bottom:0;padding:16px var(--q-page-gutter);background:#f7f5eff5;border-bottom:1px solid var(--q-border);box-shadow:none; }
+  .quvo-cafe-ui .cafe-breadcrumb { display:flex;align-items:center;gap:10px;min-width:0;color:var(--muted);font-size:11px; }
+  .quvo-cafe-ui .cafe-breadcrumb-current { color:var(--text); }
+  .quvo-cafe-ui .cafe-page-heading { padding:34px var(--q-page-gutter) 25px;min-width:0; }
+  .quvo-cafe-ui .cafe-page-heading h1 { font:46px/1.14 var(--q-font-brand);font-weight:400;letter-spacing:-1.6px;margin:9px 0 10px;overflow-wrap:anywhere; }
+  .quvo-cafe-ui .cafe-page-heading p { color:var(--muted);font-size:13px;line-height:1.65;margin:0; }
+  .quvo-cafe-ui .cafe-workspace-footer { display:flex;justify-content:space-between;align-items:center;gap:15px;margin:0 var(--q-page-gutter);padding:20px 0 25px;border-top:1px solid var(--q-border);font-size:11px;color:var(--muted); }
+  .quvo-cafe-ui .cafe-workspace-footer > :first-child { font:17px var(--q-font-brand); }
+  .quvo-cafe-ui .eyebrow { color:var(--q-brand-600);font-size:10px;letter-spacing:.15em;font-weight:700; }
+  .quvo-cafe-ui .clock,.quvo-cafe-ui .system-status { border:0;background:none;box-shadow:none;padding:0 6px;color:var(--muted);font-size:11px; }
+  .quvo-cafe-ui .topbar-user { border:1px solid var(--q-border);box-shadow:none;background:var(--q-surface); }
+  .quvo-cafe-ui .ordering-control { margin:0 var(--q-page-gutter) 24px;padding:15px 19px;background:#eff1e7;border:1px solid #dfe5d4;border-radius:12px; }
+  .quvo-cafe-ui .ordering-control[data-ordering-state="paused"],.quvo-cafe-ui .ordering-control[data-ordering-state="unknown"] { background:#f8f1e4;border-color:#e7dbc3; }
+  .quvo-cafe-ui .ordering-control strong { font-size:13px;font-weight:600; }
+  .quvo-cafe-ui .ordering-control strong::before { width:7px;height:7px; }
+  .quvo-cafe-ui .ordering-control p { font-size:12px;color:#707965; }
+  .quvo-cafe-ui .ordering-control button { min-height:44px;font-size:11px;font-weight:600;background:#fffefba6;color:#49533f;border:1px solid #d8dfcd;border-radius:8px; }
+  .quvo-cafe-ui .btn { min-height:44px;height:auto;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:600;box-shadow:none;line-height:1.4; }
+  .quvo-cafe-ui .btn.dark,.quvo-cafe-ui .btn.green { background:#1c211c;color:#fffef9;border:1px solid #1c211c; }
+  .quvo-cafe-ui .btn.dark:hover,.quvo-cafe-ui .btn.green:hover { background:#343e30; }
+  .quvo-cafe-ui .btn.light { background:var(--q-surface);color:#555e4e;border:1px solid var(--q-border); }
+  .quvo-cafe-ui .btn.red-outline { color:#9e493c;border-color:#e4bdb1;background:var(--q-surface); }
+  .quvo-cafe-ui :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea) { color:var(--text);background:var(--q-surface);border-color:var(--q-border);border-radius:8px;font-size:14px;min-height:44px; }
+  .quvo-cafe-ui :is(input,textarea,select):focus-visible { outline:2px solid #a8813d;outline-offset:2px; }
+  .quvo-cafe-ui label { color:#626b59; }
+  .quvo-cafe-ui .search-box { min-height:44px;height:auto;border-radius:8px;background:var(--q-surface); }
+  .quvo-cafe-ui .search-box input { border:0;min-width:0; }
+  .quvo-cafe-ui :is(.filter,.report-period-controls .btn) { border-radius:22px;min-height:42px;padding-inline:16px; }
+  .quvo-cafe-ui .filter.active,.quvo-cafe-ui .report-period-controls [aria-pressed="true"] { background:#1c211c;border-color:#1c211c;color:#fffefb; }
+  .quvo-cafe-ui :is(.stat-card,.activity-panel,.dashboard-stock-panel,.report-table-card,.menu-admin-panel,.admin-menu-panel,.account-card,.inventory-main-card,.inventory-side-card,.record-panel,.sales-table-card,.sales-history-card,.receipt-list-panel,.receipt-preview-panel,.pos-cart,.pos-menu,.wifi-card,.hours-card,.website-card) { background:var(--q-surface);border:1px solid var(--q-border);border-radius:15px;box-shadow:none; }
+  .quvo-cafe-ui :is(.admin-toolbar,.section-head,.inventory-toolbar,.accounts-toolbar) h2,.quvo-cafe-ui :is(.activity-panel,.dashboard-stock-panel,.report-table-card,.account-card,.inventory-main-card,.inventory-side-card) > h2 { font:27px/1.2 var(--q-font-brand);font-weight:400;letter-spacing:-.7px; }
+  .quvo-cafe-ui :is(.helper-text,.modal-sub,.inventory-field-hint,.accounts-help) { color:var(--muted);font-size:12px;line-height:1.65; }
+  .quvo-cafe-ui .admin-page-note { background:#f1f0e8;color:#757b6a;border:1px solid var(--q-border);border-radius:9px;font-size:12px;padding:11px 14px;margin-bottom:20px; }
+  .quvo-cafe-ui .stats-grid,.quvo-cafe-ui .cafe-report-metrics { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:23px; }
+  .quvo-cafe-ui .stat-card { min-height:142px;padding:22px; }
+  .quvo-cafe-ui .stat-label { font-size:12px;text-transform:none;letter-spacing:0;max-width:calc(100% - 28px); }
+  .quvo-cafe-ui .stat-value { font:38px/1.1 var(--q-font-brand);font-weight:400;margin-top:22px; }
+  .quvo-cafe-ui .stat-icon { background:transparent;color:var(--q-brand-600);width:24px;height:24px;right:18px;top:20px; }
+  .quvo-cafe-ui .cafe-report-metric { background:var(--q-surface);border:1px solid var(--q-border);border-radius:14px;padding:21px;min-width:0; }
+  .quvo-cafe-ui .cafe-report-metric label { font-size:12px;display:block; }
+  .quvo-cafe-ui .cafe-report-metric strong { display:block;font:36px/1.2 var(--q-font-brand);font-weight:400;margin:14px 0 10px;overflow-wrap:anywhere; }
+  .quvo-cafe-ui .cafe-report-metric small { font-size:11px;color:var(--muted); }
+  .quvo-cafe-ui .cafe-report-overview { display:grid;grid-template-columns:1.65fr 1fr;gap:21px;margin-bottom:23px; }
+  .quvo-cafe-ui .cafe-report-overview > section { min-width:0;background:var(--q-surface);border:1px solid var(--q-border);border-radius:15px;padding:23px; }
+  .quvo-cafe-ui .cafe-report-overview h2 { font:27px/1.2 var(--q-font-brand);letter-spacing:-.7px;margin:7px 0 20px; }
+  .quvo-cafe-ui .cafe-report-chart { width:100%;height:auto;display:block;max-height:270px; }
+  .quvo-cafe-ui .cafe-report-chart text { fill:#7b8370;font:11px "Segoe UI",Arial,sans-serif; }
+  .quvo-cafe-ui .cafe-report-favorite { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #eeece4;font-size:13px; }
+  .quvo-cafe-ui .cafe-report-favorite:last-child { border-bottom:0; }
+  .quvo-cafe-ui .cafe-report-favorite b { font-weight:500;font:24px var(--q-font-brand); }
+  .quvo-cafe-ui .cafe-report-favorite small { display:block;font-size:11px;color:var(--muted);margin-top:4px; }
+  .quvo-cafe-ui .cafe-empty { padding:24px 0;color:var(--muted);font-size:13px; }
+  .quvo-cafe-ui :is(.table-header,.report-sheet-table th,.inventory-header,.accounts-staff-table th,.menu-admin-table th) { background:#f1f0e8;color:#79816e;font-size:11px;letter-spacing:.08em;font-weight:600;border-color:var(--q-border); }
+  .quvo-cafe-ui :is(.table-row,.report-sheet-table td,.inventory-row,.accounts-staff-table td,.menu-admin-table td) { font-size:13px;line-height:1.5;border-color:var(--q-border); }
+  .quvo-cafe-ui :is(.table-header,.table-row) { min-height:50px; }
+  .quvo-cafe-ui .cafe-order-toolbar { display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:14px;margin:17px 0 22px; }
+  .quvo-cafe-ui .cafe-order-search { min-height:44px;display:flex;align-items:center;gap:8px;background:var(--q-surface);border:1px solid var(--q-border);border-radius:8px;padding:0 12px; }
+  .quvo-cafe-ui .cafe-order-search input { border:0;outline:0;background:transparent;font-size:12px;min-width:0;width:195px; }
+  .quvo-cafe-ui .cafe-order-search svg { width:17px;height:17px;color:var(--muted); }
+  .quvo-cafe-ui .order-card { padding:21px;border:1px solid var(--q-border);border-radius:15px;box-shadow:none;background:var(--q-surface);min-width:0; }
+  .quvo-cafe-ui .order-card .order-top > strong,.quvo-cafe-ui .order-number { font-size:14px;color:var(--text); }
+  .quvo-cafe-ui .order-context { color:#737c67;font-size:12px;line-height:1.7; }
+  .quvo-cafe-ui .order-context b { color:var(--text);font-weight:600; }
+  .quvo-cafe-ui .order-total { font-size:19px;color:var(--text);margin-block:15px; }
+  .quvo-cafe-ui .order-payment { font-size:12px;border-radius:8px;line-height:1.6; }
+  .quvo-cafe-ui .order-payment.pending { background:#f8f0df;border-color:#eadfc4;color:#876b35; }
+  .quvo-cafe-ui .order-payment.confirmed { background:#edf1e7;border-color:#dce5d3;color:#4d6b43; }
+  .quvo-cafe-ui .item-list { border-color:var(--q-border);padding-block:14px;margin-block:16px; }
+  .quvo-cafe-ui .item-row { font-size:12px;line-height:1.5; }
+  .quvo-cafe-ui .item-note { font-size:11px;color:var(--muted); }
+  .quvo-cafe-ui .table-chip { font-size:10px;background:#f0f0e7;color:#68745c;border:0; }
+  .quvo-cafe-ui :is(.edit-card,.checkout-card,.admin-access-card,.item-modal-card,.inventory-modal-card,.eod-card,.payment-review-card,.receipt-success-card,dialog) { background:var(--q-surface);border-color:var(--q-border);border-radius:18px;color:var(--text); }
+  .quvo-cafe-ui :is(.edit-card,.checkout-card,.admin-access-card,.item-modal-card,.inventory-modal-card,.eod-card,.payment-review-card,.receipt-success-card,dialog) h2 { font:29px/1.2 var(--q-font-brand);font-weight:400;letter-spacing:-.6px; }
+  .quvo-cafe-ui .modal-backdrop, .quvo-cafe-ui dialog::backdrop { background:#1823188a;backdrop-filter:blur(3px); }
+  .quvo-cafe-ui .modal-close,.quvo-cafe-ui .workspace-nav-close { border-radius:50%;color:var(--text);background:var(--q-surface);border:1px solid var(--q-border); }
+  .quvo-cafe-ui .workspace-modal-card .modal-actions { background:var(--q-surface); }
+  .quvo-cafe-ui .dashboard-layout { grid-template-columns:1fr; }
+  .quvo-cafe-ui .dashboard-side-column { display:grid;grid-template-columns:1fr 1fr;gap:21px;align-items:start; }
+  .quvo-cafe-ui .activity-panel,.quvo-cafe-ui .dashboard-stock-panel { padding:24px;margin:0; }
+  .quvo-cafe-ui .payment-qr-admin { max-width:1120px; }
+  .quvo-cafe-ui .qr-page-heading h1 { font:46px/1.15 var(--q-font-brand);font-weight:400;letter-spacing:-1.5px; }
+  .quvo-cafe-ui .qr-card-heading h2 { font:27px var(--q-font-brand);font-weight:400; }
+  .quvo-cafe-ui .payment-qr-card { background:var(--q-surface);border-color:var(--q-border);border-radius:15px;box-shadow:none; }
+  .quvo-cafe-ui .payment-qr-card button,.quvo-cafe-ui #addPaymentMethodOpen { background:#1c211c;border-radius:8px;font-weight:600; }
+  .quvo-cafe-ui .qr-remove-actions { flex-wrap:wrap;gap:10px; }
+  .quvo-cafe-ui .payment-qr-card .qr-remove-actions button { flex:1 1 125px;min-height:44px;padding:10px 12px;line-height:1.4;margin:0;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none; }
+  .quvo-cafe-ui .payment-qr-card .qr-secondary-button { background:#f7efdc;color:#805d22;border:1px solid #decba3; }
+  .quvo-cafe-ui .payment-qr-card .qr-secondary-button:hover { background:#eee1c4;color:#65471a; }
+  .quvo-cafe-ui .payment-qr-card .qr-danger-button { background:#9f4639;color:#fff;border:1px solid #9f4639; }
+  .quvo-cafe-ui .payment-qr-card .qr-danger-button:hover { background:#853b31;border-color:#853b31;color:#fff; }
+  .quvo-cafe-ui .login-screen { background:var(--q-canvas); }
+  .quvo-cafe-ui .login-shell { border-radius:22px;border-color:var(--q-border);box-shadow:0 20px 70px #2831200d; }
+  .quvo-cafe-ui .login-visual { background-color:#263022; }
+  .quvo-cafe-ui .login-visual h2 { font-family:var(--q-font-brand);font-weight:400;letter-spacing:-1px; }
+  .quvo-cafe-ui .login-card { background:var(--q-surface); }
+  .quvo-cafe-ui .login-card h1 { font:43px/1.1 var(--q-font-brand);font-weight:400;letter-spacing:-1.3px; }
+  .quvo-cafe-ui .login-role-option { border-color:var(--q-border);background:var(--q-surface);border-radius:9px; }
+  .quvo-cafe-ui .login-role-option.active { background:#edf0e5;border-color:#b5c0a6;box-shadow:none; }
+  .quvo-cafe-ui .login-role-option svg { color:#708361; }
+  .quvo-cafe-ui .login-form input { background:var(--q-surface); }
+  .quvo-cafe-ui [hidden] { display:none!important; }
+}
+@media screen and (min-width:1181px) {
+  .quvo-cafe-ui .sidebar { width:248px; }
+  .quvo-cafe-ui .main { margin-left:248px; }
+}
+@media screen and (max-width:1450px) {
+}
+@media screen and (max-width:1180px) {
+  body.quvo-cafe-ui { --q-page-gutter:25px; }
+  .quvo-cafe-ui .topbar { display:grid;grid-template-columns:auto minmax(0,1fr);min-height:72px;gap:16px; }
+  .quvo-cafe-ui .cafe-breadcrumb { font-size:12px; }
+  .quvo-cafe-ui .sidebar .brand { padding-right:56px;grid-template-columns:45px minmax(0,1fr); }
+  .quvo-cafe-ui .sidebar .brand-name { font-size:25px; }
+  .quvo-cafe-ui .sidebar .nav { padding:0 16px 15px; }
+  .quvo-cafe-ui .sidebar .nav-item { min-height:47px;font-size:14px; }
+  .quvo-cafe-ui .sidebar .nav-section-label { display:block; }
+  .quvo-cafe-ui .cafe-page-heading h1 { font-size:42px; }
+  .quvo-cafe-ui .cafe-report-overview { grid-template-columns:1.35fr 1fr; }
+  .quvo-cafe-ui .cafe-report-metric { padding:18px; }
+  .quvo-cafe-ui .cafe-report-metric strong { font-size:clamp(21px,6.3vw,29px);letter-spacing:-.6px;white-space:nowrap; }
+  .quvo-cafe-ui .workspace-menu-toggle { border-radius:50%;background:var(--q-surface);width:44px;min-width:44px;height:44px;padding:10px; }
+  .quvo-cafe-ui .workspace-menu-toggle > span:not(.workspace-menu-badge) { display:none; }
+}
+@media screen and (max-width:760px) {
+  body.quvo-cafe-ui { --q-page-gutter:19px; }
+  .quvo-cafe-ui .topbar { min-height:69px;padding-block:12px; }
+  .quvo-cafe-ui .cafe-page-heading { padding-top:27px;padding-bottom:23px; }
+  .quvo-cafe-ui .cafe-page-heading h1 { font-size:35px;letter-spacing:-1.2px; }
+  .quvo-cafe-ui .cafe-page-heading p { font-size:12px; }
+  .quvo-cafe-ui .ordering-control { flex-direction:row;align-items:center;gap:10px;margin-bottom:20px;padding:13px; }
+  .quvo-cafe-ui .ordering-control strong { font-size:11px; }
+  .quvo-cafe-ui .ordering-control p { font-size:11px; }
+  .quvo-cafe-ui .ordering-control button { width:auto;font-size:10px;padding:9px 11px; }
+  .quvo-cafe-ui .stats-grid,.quvo-cafe-ui .cafe-report-metrics { grid-template-columns:repeat(2,minmax(0,1fr));gap:11px; }
+  .quvo-cafe-ui .stat-card { padding:17px;min-height:130px; }
+  .quvo-cafe-ui .stat-label { font-size:11px; }
+  .quvo-cafe-ui .stat-value { font-size:33px; }
+  .quvo-cafe-ui .stat-icon { right:12px;top:15px; }
+  .quvo-cafe-ui .cafe-report-metric { padding:16px; }
+  .quvo-cafe-ui .cafe-report-metric label { font-size:11px; }
+  .quvo-cafe-ui .cafe-report-metric strong { font-size:clamp(21px,6.3vw,29px);letter-spacing:-.6px;white-space:nowrap; }
+  .quvo-cafe-ui .cafe-report-metric small { font-size:10px; }
+  .quvo-cafe-ui .cafe-report-metric strong[data-wide-value] { font-size:20px;letter-spacing:-.8px; }
+  .quvo-cafe-ui .cafe-report-overview,.quvo-cafe-ui .dashboard-side-column { grid-template-columns:minmax(0,1fr);gap:17px; }
+  .quvo-cafe-ui .cafe-report-overview>section { padding:18px; }
+  .quvo-cafe-ui .cafe-order-search { width:100%; }
+  .quvo-cafe-ui .cafe-order-search input { width:100%; }
+  .quvo-cafe-ui .order-card { padding:19px; }
+  .quvo-cafe-ui .qr-page-heading h1 { font-size:35px; }
+  .quvo-cafe-ui .payment-qr-admin { padding-inline:19px; }
+  .quvo-cafe-ui .payment-qr-grid { grid-template-columns:minmax(0,1fr); }
+  .quvo-cafe-ui :is(.workspace-modal-card input,.workspace-modal-card select,.workspace-modal-card textarea,.login-form input) { font-size:16px; }
+}
+
+@media screen {
+ .quvo-cafe-ui .cafe-stage-board { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:18px;overflow:visible;scroll-snap-type:none;padding-bottom:0; }
+ .quvo-cafe-ui .cafe-stage-board .column-head { min-height:45px;height:auto;background:#ecefe3;border:1px solid #e0e5d5;color:#4f6145;border-radius:10px;padding:12px 14px; }
+ .quvo-cafe-ui .cafe-stage-board .kanban-column { min-width:0; }
+ .quvo-cafe-ui .cafe-stage-board .order-card { overflow-wrap:anywhere; }
+ .quvo-cafe-ui .cafe-stage-board .order-top { flex-wrap:wrap;gap:8px; }
+}
+@media screen and (max-width:760px) {
+ .quvo-cafe-ui .cafe-stage-board { grid-template-columns:minmax(0,1fr);gap:25px; }
+}

@@ -1,3 +1,4 @@
+const cafeOrderView = {search:''};
 function renderOrders() {
   const pending = state.orders.filter(order => order.stage === "received").length;
   globalThis.QUVO_WORKSPACE?.setNotificationCount("orders", pending);
@@ -10,11 +11,12 @@ function renderOrders() {
 
   board.innerHTML = ["received", "preparing", "ready"]
     .map((stage) => {
-      const orders = state.orders.filter((order) => order.stage === stage);
+      const orders = state.orders.filter((order) => order.stage === stage &&
+        [order.number,order.customerName,order.table].some(value=>String(value||'').toLowerCase().includes(cafeOrderView.search)));
       const meta = stageMeta[stage];
 
       return `
-      <section class="kanban-column">
+      <section class="kanban-column" data-order-column="${stage}">
         <div class="column-head">
           <div class="column-title">
             <span class="dot ${meta.dotClass}"></span>
@@ -23,12 +25,13 @@ function renderOrders() {
           <span class="count-badge ${meta.countClass}">${orders.length}</span>
         </div>
         <div class="order-stack">
-          ${orders.map((order) => renderOrderCard(order, stage)).join("") || `<div class="helper-text">No orders in this stage.</div>`}
+          ${orders.map((order) => renderOrderCard(order, stage)).join("") || `<div class="helper-text">${cafeOrderView.search?'No matching orders in this stage.':'No orders in this stage.'}</div>`}
         </div>
       </section>
     `;
     })
     .join("");
+  window.lucide?.createIcons();
 }
 
 function renderOrderCard(order, stage) {

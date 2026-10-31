@@ -16,6 +16,7 @@ try {
         if ($view==='payment-qr') payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null),'quvo-payment-qr',isset($_GET['download']));
         if($view==='delivery-settings') quvo_json(['ok'=>true,'delivery'=>delivery_settings($db)]);
         if($view==='session') quvo_json(['ok'=>true,'csrf'=>$csrf,'account'=>$account?online_public_account($db,$account):null]);
+        if($view==='registration-status') quvo_json(['ok'=>true,'csrf'=>$csrf,'registration'=>$account?null:online_registration_status($db)]);
         if($view==='menu') quvo_json(['ok'=>true,'csrf'=>$csrf,'items'=>online_menu($db)]);
         if($view==='about') quvo_json(['ok'=>true,'content'=>website_content_read($db)['content']]);
         if(!$account) throw new OrderError('Please sign in first.',401);
@@ -33,14 +34,26 @@ try {
         $_SESSION=[];session_regenerate_id(true);$csrf=online_start_session();
         quvo_json(['ok'=>true,'csrf'=>$csrf]);
     }
-    if(in_array($action,['register','login'],true)) {
+    if(in_array($action,['register','register-resend','register-verify'],true)) {
+        if($account) throw new OrderError('You are already signed in.',409);
+        $ip=$_SERVER['REMOTE_ADDR']??'unknown';
+        if($action==='register-verify') {
+            $row=online_registration_verify($db,$input['code']??null);
+            online_sign_in($row);
+            quvo_json(['ok'=>true,'csrf'=>$_SESSION['csrf'],'account'=>online_public_account($db,$row)],201);
+        }
+        $pending=$action==='register'?online_registration_begin($db,$input,$ip):online_registration_resend($db,$ip);
+        quvo_json(['ok'=>true,'csrf'=>$csrf,'registration'=>$pending],202);
+    }
+    if($action==='login') {
         $attempts=$_SESSION['auth_attempts']??[];$attempts=array_values(array_filter($attempts,fn($time)=>$time>time()-300));
         if(count($attempts)>=10) throw new OrderError('Too many attempts. Please try again in five minutes.',429);
         $attempts[]=time();$_SESSION['auth_attempts']=$attempts;
         $db->beginTransaction();
-        $row=$action==='register'?online_register($db,$input):online_login($db,$input);
+        $row=online_login($db,$input);
         $db->commit();online_sign_in($row);unset($_SESSION['auth_attempts']);
-        quvo_json(['ok'=>true,'csrf'=>$_SESSION['csrf'],'account'=>online_public_account($db,$row)],$action==='register'?201:200);
+        unset($_SESSION['registration_token']);
+        quvo_json(['ok'=>true,'csrf'=>$_SESSION['csrf'],'account'=>online_public_account($db,$row)]);
     }
     if(!$account) throw new OrderError('Please sign in first.',401);
     $id=(int)$account['customer_account_id'];$db->beginTransaction();

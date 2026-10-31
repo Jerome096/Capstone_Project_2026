@@ -66,6 +66,7 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "admin/accounts/accounts.js",
   "admin/inventory/inventory.js",
   "shared/js/helpers.js",
+  "shared/js/workspace-cafe.js",
   "shared/js/bootstrap.js",
 ];
 
@@ -86,7 +87,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=staff-session-timer-1";
+    script.src = quvoPath(path) + "?v=cafe-orders-board-3";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

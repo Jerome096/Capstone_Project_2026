@@ -107,6 +107,7 @@ function renderReports() {
   if (!summary) return;
   const r = reportsSql, data = r.data, settings = reportPeriods[r.period], e = escapeHtml;
   const money = value => new Intl.NumberFormat('en-PH', {style:'currency', currency:'PHP'}).format(Number(value || 0));
+  window.QuvoCafeWorkspace?.renderReportOverview(r);
   for (const [period, option] of Object.entries(reportPeriods)) {
     document.getElementById(option.button).setAttribute('aria-pressed', String(r.period === period));
     document.getElementById(option.control).hidden = r.period !== period;

@@ -47,9 +47,10 @@ quvo_start_session();
   <?php echo quvo_bootstrap(null); ?>
 
   <script src="../shared/js/auth.js"></script>
+  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=cafe-orders-board-3" />
 </head>
 
-<body>
+<body class="quvo-cafe-ui">
 
 <section
   class="login-screen"

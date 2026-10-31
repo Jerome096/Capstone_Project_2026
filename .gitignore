@@ -1,3 +1,4 @@
 # Local editor caches and machine-specific scheduled-task backups.
 **/.vs/
 **/QuvoCafe-ExpireDiningSessions-backup-*.xml
+**/config/mail.local.php

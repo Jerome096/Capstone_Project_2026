@@ -21,6 +21,7 @@ async function initializeCustomerApp() {
   window.QuvoOrdering?.start();
   startOnlineFlow();
   const [session]=await Promise.allSettled([onlineApi(),refreshOnlineMenu(),QuvoStorefront.loadAbout()]);
+  if(session.status==='fulfilled'&&!session.value.account)await restoreRegistration();
   if(session.status==='fulfilled'&&session.value.account){await enterOnlineAccount(session.value.account);if(initialScreen!=='screenHome')showScreen(initialScreen);}
   else if(!onlinePublicScreens.includes(initialScreen))QuvoStorefront.requestLogin(initialScreen);
   else if(session.status==='rejected')showToast('Some account features could not connect. You can still explore the website.');

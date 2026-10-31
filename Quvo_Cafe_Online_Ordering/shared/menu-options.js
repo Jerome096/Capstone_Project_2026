@@ -94,8 +94,9 @@
     if(Array.isArray(snapshots))return snapshots.map(option=>option.label+': '+choiceLabel({pricing:option.pricing},{label:option.value,price:option.price}));
     return [custom?.size,custom?.sugarLevel,custom?.iceLevel].filter(value=>value&&value!=='Not applicable');
   }
-  function photoHTML(item){return item?.imageUrl?'<img class="menu-photo" data-menu-photo src="'+escape(item.imageUrl)+'" alt="'+escape(item.name)+'" loading="lazy" decoding="async">':escape(item?.icon||'\u2615');}
-  function bindPhotos(root=document){for(const image of root.querySelectorAll('img[data-menu-photo]'))image.addEventListener('error',()=>image.replaceWith(document.createTextNode('\u2615')),{once:true});}
+  function fallbackPhoto(item){return window.QuvoCategoryArt?.fallback(item)||escape(item?.icon||'\u2615');}
+  function photoHTML(item){return item?.imageUrl?'<img class="menu-photo" data-menu-photo data-menu-category="'+escape(item.category||'')+'" src="'+escape(item.imageUrl)+'" alt="'+escape(item.name)+'" loading="lazy" decoding="async">':fallbackPhoto(item);}
+  function bindPhotos(root=document){for(const image of root.querySelectorAll('img[data-menu-photo]'))image.addEventListener('error',()=>{const template=document.createElement('template');template.innerHTML=fallbackPhoto({category:image.dataset.menuCategory,name:image.alt});image.replaceWith(template.content);},{once:true});}
   function photo(root,item){root.innerHTML=photoHTML(item);bindPhotos(root);}
   window.QuvoMenuOptions={defaults,groups,render,read,values,valid,savedSelections,summary,photoHTML,photo,bindPhotos,hasPricing,price,priceCents,startingPrice,priceLabel,formatPrice:money};
 })();

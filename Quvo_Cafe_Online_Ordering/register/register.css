@@ -6,3 +6,13 @@
   display: grid;
   gap: 10px;
 }
+
+#registerForm [hidden] { display:none!important; }
+#registerForm .register-fields { border:0;margin:0;padding:0;min-width:0; }
+#registerForm .register-code-heading { font-size:21px;font-weight:600;margin:18px 0 8px; }
+#registerForm .register-code-help { font-size:13px;line-height:1.6;overflow-wrap:anywhere;margin:10px 0; }
+#registerForm .register-code-input { font-size:26px;letter-spacing:.3em;text-align:center;min-height:58px; }
+#registerForm .register-code-actions { display:flex;flex-wrap:wrap;gap:10px;margin-top:16px; }
+#registerForm .register-code-actions button { flex:1 1 140px;min-height:44px;padding:10px 12px;border:1px solid var(--line,#ded6c7);border-radius:7px;background:#f4efe4;color:var(--ink,#1c211b);font:inherit;cursor:pointer; }
+#registerForm .register-code-actions button:disabled { opacity:.6;cursor:default; }
+#registerForm .form-success:empty { display:none; }

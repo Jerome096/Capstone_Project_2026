@@ -77,7 +77,7 @@
       panel=document.createElement('section');panel.className='ordering-control';
       panel.setAttribute('aria-label','Customer ordering');
       panel.innerHTML='<div class="ordering-control-copy"><strong id="orderingControlLabel"></strong><p id="orderingControlDetail" role="status"></p></div><button type="button" id="orderingControlButton"></button>';
-      document.querySelector('.main > .topbar').after(panel);
+      (document.querySelector('.main > .cafe-page-heading')||document.querySelector('.main > .topbar')).after(panel);
       label=panel.querySelector('strong');detail=panel.querySelector('p');button=panel.querySelector('button');
       confirmation=document.createElement('dialog');confirmation.className='ordering-confirmation';
       confirmation.setAttribute('aria-labelledby','orderingConfirmTitle');

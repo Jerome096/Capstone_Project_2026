@@ -41,7 +41,7 @@
     for (const src of scripts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = src + "?v=category-specific-art-3";
+        script.src = src + "?v=category-popup-art-1";
         script.onload = resolve;
         script.onerror = () => reject(new Error("Unable to load " + src));
         document.body.append(script);

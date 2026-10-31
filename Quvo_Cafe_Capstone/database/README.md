@@ -337,3 +337,9 @@ network name/password in that admin module. Paid active dine-in visits can then
 open the Wi-Fi note in tracking. Existing orders, accounts and settings are
 preserved, and repeating the migration retains saved Wi-Fi details. See
 `../docs/GUEST_WIFI.md`.
+
+Run `25_registration_email_otp.sql` before deploying online registration email
+verification. The migration adds pending-code/rate-limit tables and a nullable
+email-verification timestamp; existing accounts remain usable. Configure Gmail
+SMTP privately using `config/mail.example.php` as a template. See
+`../docs/REGISTRATION_EMAIL_OTP.md` for installation and verification steps.

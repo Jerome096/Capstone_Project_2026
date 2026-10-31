@@ -6,6 +6,7 @@ require_once __DIR__.'/orders.php';
 require_once __DIR__.'/auth.php';
 require_once __DIR__.'/payment-images.php';
 require_once __DIR__.'/delivery.php';
+require_once __DIR__.'/registration.php';
 
 function online_start_session(): string
 {

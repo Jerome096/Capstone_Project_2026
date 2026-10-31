@@ -6,7 +6,7 @@ async function onlineApi(input=null,query="session") {
   const response=await fetch("api/index.php?view="+query,{
     method:input?"POST":"GET",credentials:"same-origin",cache:"no-store",
     headers:{"Content-Type":"application/json","X-CSRF-Token":token},
-    signal:AbortSignal.timeout(15000),...(input?{body:JSON.stringify(input)}:{})
+    signal:AbortSignal.timeout(['register','register-resend'].includes(input?.action)?45000:15000),...(input?{body:JSON.stringify(input)}:{})
   });
   let result;
   try {result=await response.json();} catch {throw new Error("Could not contact online ordering. Open this page through the PHP server.");}
@@ -74,6 +74,7 @@ function resetOnlineView(target='screenHome'){
   showScreen(target);
 }
 async function enterOnlineAccount(account){
+  registerForm.reset();setRegistrationPending(null);
   online.generation++;state.onlineCustomer=account;state.customerName=account.name;
   restoreOnlineSelectedOrder();
   restoreOnlinePending();await window.QuvoPendingProofs?.restore();configureMenuHeader();renderAccount();prefillDeliveryDetails(true);renderCart();
