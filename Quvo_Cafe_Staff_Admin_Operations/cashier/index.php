@@ -26,13 +26,13 @@ $_SESSION["operations_portal"] = "cashier";
   <link rel="stylesheet" href="../admin/operating-hours/operating-hours.css?v=logout-grace-1" />
   <link rel="stylesheet" href="../admin/menu-management/menu-management.css?v=admin-menu-no-autofill-1" />
   <link rel="stylesheet" href="../admin/records/records.css?v=pos-payment-methods-1" />
-  <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
+  <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=cashier-password-only-1" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css?v=staff-account-delete-2" />
   <link rel="stylesheet" href="../admin/inventory/inventory.css?v=tablet-stock-keyboard-1" />
   <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
   <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
   <link rel="stylesheet" href="../shared/css/menu-options.css?v=sizes-checkbox-addons-1" />
-  <link rel="stylesheet" href="../shared/css/ordering-control.css?v=ordering-confirmation-1" />
+  <link rel="stylesheet" href="../shared/css/ordering-control.css?v=cashier-password-only-1" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
 <script src="../shared/js/auth.js"></script>
@@ -40,8 +40,8 @@ $_SESSION["operations_portal"] = "cashier";
     window.QUVO_CONFIG = {
       base: "../",
       portal: "cashier",
-      initialScreen: "dashboard",
-      allowedScreens: ["dashboard", "menu", "sessions", "orders", "receipts", "alerts"],
+      initialScreen: "menu",
+      allowedScreens: ["menu", "sessions", "orders", "receipts", "alerts"],
       allowedRoles: ["admin", "staff"],
       roleLabel: "Staff",
       loginUrl: "../login/login.php",
@@ -53,8 +53,10 @@ $_SESSION["operations_portal"] = "cashier";
     });
   </script>
   <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=reports-no-graph-4" />
+  <link rel="stylesheet" href="../shared/css/cashier-approval.css?v=cashier-password-only-1" />
+  <link rel="stylesheet" href="../cashier/menu/operations.css?v=menu-fill-space-1" />
 </head>
-<body class="logged-in workspace-loading quvo-cafe-ui">
+<body class="logged-in workspace-loading quvo-cafe-ui quvo-operations-ui">
   <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-label="Loading workspace">
     <span class="workspace-spinner" aria-hidden="true"></span>
     <p>Preparing workspace</p>
@@ -68,8 +70,7 @@ $_SESSION["operations_portal"] = "cashier";
     <nav class="nav">
 
 <div class="nav-section-label nav-section-label-first">Operations</div>
-<button class="nav-item active" data-screen="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
-<button class="nav-item" data-screen="menu"><i data-lucide="utensils"></i><span>Menu</span></button>
+<button class="nav-item active" data-screen="menu"><i data-lucide="utensils"></i><span>Menu</span></button>
 <button class="nav-item" data-screen="sessions"><i data-lucide="users"></i><span>Sessions</span><span class="nav-badge" id="sidebarSessionCount" title="Sessions awaiting approval" hidden>0</span></button>
 <button class="nav-item" data-screen="orders"><i data-lucide="clipboard-list"></i><span>Orders</span><span class="nav-badge" id="sidebarOrderCount" title="Orders awaiting payment collection or approval" hidden>0</span></button>
 <button class="nav-item" data-screen="receipts"><i data-lucide="receipt-text"></i><span>Receipts</span></button>
@@ -85,7 +86,7 @@ $_SESSION["operations_portal"] = "cashier";
       <div class="staff-session-copy"><strong id="staffSessionName">Staff</strong><span id="staffSessionRole">Staff</span></div>
       <button aria-label="Log out" class="staff-logout-button" id="logoutBtn" type="button"><i data-lucide="log-out"></i></button>
     </div>
-    <div class="eod-panel"><button class="eod-button" id="openEodBtn"><i data-lucide="calendar-check-2"></i><span>End of day</span></button></div>
+    <div class="eod-panel"><button type="button" class="eod-button" id="openCashierPayoutBtn"><i data-lucide="wallet"></i><span>Cash expense / payout</span></button><button class="eod-button" id="openEodBtn"><i data-lucide="calendar-check-2"></i><span>End of day</span></button></div>
   </aside>
   <main class="main">
     <header class="topbar">
@@ -100,6 +101,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=reports-no-graph-4"></script>
+  <script src="../shared/js/workspace-loader.js?v=menu-fill-space-1"></script>
 </body>
 </html>

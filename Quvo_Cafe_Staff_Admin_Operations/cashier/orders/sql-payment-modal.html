@@ -8,10 +8,12 @@
     <form id="sqlPaymentForm">
       <div class="amount-field">
         <label for="sqlPaymentMethod">Payment method</label>
-        <select id="sqlPaymentMethod"><option>Cash</option><option>GCash</option><option>PayMaya</option></select>
+        <select id="sqlPaymentMethod"><option value="Cash">Cash</option></select>
         <div id="sqlOnlinePaymentMethod" class="sql-selected-payment" hidden></div>
+        <div id="sqlPaymentMethodsControl"><p id="sqlPaymentMethodsStatus" class="helper-text" role="status" aria-live="polite"></p><button type="button" class="btn light" id="sqlPaymentMethodsRefresh">Refresh payment methods</button></div>
       </div>
-      <p class="helper-text" id="sqlOnlinePaymentHelp" hidden>Review the customer's receipt in View customer details and verify the full payment reached the café's account before approving.</p>
+      <p class="helper-text" id="sqlOnlinePaymentHelp" hidden>Review the customer's uploaded receipt and verify the full payment reached the café's account before approving. An uploaded image alone does not confirm payment.</p>
+      <p id="sqlSubmittedReference" class="helper-text" hidden></p>
       <div id="sqlCashFields">
         <div class="amount-field">
           <label for="sqlAmountReceived">Amount received</label>

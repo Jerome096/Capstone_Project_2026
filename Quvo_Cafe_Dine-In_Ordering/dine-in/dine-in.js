@@ -30,7 +30,7 @@ function renderGuestIdleNotice() {
   notice.hidden = state.accessMode !== "dineIn" || !guestIdleClock || !state.sessionApproved;
   if (notice.hidden) return;
   if (guestIdleClock.paused) {
-    notice.textContent = "Session timer paused while your paid orders are being prepared or served.";
+    notice.textContent = "Session timer paused while a QR payment is under review or paid orders are being prepared or served.";
     return;
   }
   const remaining = Math.max(0, Math.ceil(guestIdleClock.remaining - (Date.now() - guestIdleClock.received) / 1000));
@@ -162,6 +162,11 @@ async function applyGuestSession(data, generation) {
     configureMenuHeader();
     if (!wasApproved) showScreen("screenMenu");
     await refreshDineOrders();
+    if (!wasApproved && state.order &&
+        ["received", "preparing", "ready"].includes(state.order.order_status) &&
+        !dineOrders.pending && !state.cart.length) {
+      showScreen("screenTracking");
+    }
     if (typeof refreshGuestAssistance === "function") await refreshGuestAssistance();
   } else if (data.table.active && guestSessionStatus === "pending") {
     lockGuestMenu();
@@ -180,6 +185,8 @@ async function applyGuestSession(data, generation) {
       guestActionError ||
       (!data.table.active
         ? "This table is not accepting requests. Please ask staff."
+        : Number(data.session?.request_expired)===1
+          ? "Your unapproved request expired. Please request staff approval again."
         : guestSessionStatus === "rejected"
           ? "Your request was declined. Please speak to a staff member."
           : data.session?.idle_expired_at

@@ -31,7 +31,7 @@ try {
         );
     }
     $id = (int) $table["table_id"];
-    $token = $_SESSION["tables"][$id] ?? null;
+    $token = quvo_guest_table_token($db,$id);
     dining_expire_sessions($db, $id);
     if ($method === "POST") {
         if (!hash_equals($csrf, $_SERVER["HTTP_X_CSRF_TOKEN"] ?? "")) {
@@ -62,6 +62,7 @@ try {
         $db->commit();
         if (($input["action"] ?? "") === "request") {
             $_SESSION["tables"][$id] = $token;
+            quvo_guest_remember_visit($id,$token);
             $_SESSION["last_request"] = time();
         }
     }

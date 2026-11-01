@@ -179,15 +179,18 @@ function online_submit(PDO $db,int $customerId,array $input): array
     // Include only submitted values in the retry hash; profile edits must not create duplicate orders.
     $receipt = isset($input['receipt_image']) ? payment_receipt_input($input['receipt_image']) : null;
     $version = $input['payment_qr_version'] ?? null;
+    $customerReference=orders_text($input['payment_reference']??'',100);
     $hashParts = [$lines,$expected,$fulfillment,$method,$address,$fulfillment==='delivery'?$contact:null];
     if ($receipt !== null || $version !== null) $hashParts[] = [$version,$receipt['hash'] ?? null];
     if($lalamove||array_key_exists('delivery_flow',$input))$hashParts[]=['deliveryFlow'=>$input['delivery_flow']??null,'configVersion'=>$input['delivery_config_version']??null,'bookingHash'=>$booking['hash']??null];
+    if($customerReference!=='')$hashParts[]=['customerReference',$customerReference];
     $hash=hash('sha256',json_encode($hashParts,JSON_THROW_ON_ERROR));
     $q=$db->prepare('SELECT order_id,CONVERT(varchar(64),submission_hash,2) request_hash FROM dbo.orders WHERE customer_account_id=? AND submission_key=?');$q->execute([$customerId,$key]);$old=$q->fetch();
     if($old) {
         if(!hash_equals(strtolower($old['request_hash']),$hash)) throw new OrderError('Submission key already used for a different order.',409);
         return ['order'=>online_order($db,$customerId,(int)$old['order_id']),'replayed'=>true];
     }
+    payment_validate_customer_reference($db,$customerReference);
     $delivery=null;
     if($fulfillment==='delivery'){
         if(!$lalamove)throw new OrderError('Delivery now uses customer-booked Lalamove pickup. Reload checkout and review the instructions.',409,'delivery_flow_changed');
@@ -201,6 +204,7 @@ function online_submit(PDO $db,int $customerId,array $input): array
     // Existing submissions can still be recovered with their original payment choice.
     if($method==='Cash') throw new OrderError('Choose an available online payment method.');
     $paymentMethod=payment_active_method($db,$method);
+    if(!(bool)$paymentMethod['online_enabled'])throw new OrderError('This payment method is available in-store only. Choose another online payment method.',422,'payment_unavailable');
     $q=$db->prepare('SELECT CONVERT(varchar(36),qr_version) FROM dbo.payment_qr_codes WITH (HOLDLOCK) WHERE payment_method=?');
     $q->execute([$method]);$currentVersion=$q->fetchColumn();$q->closeCursor();
     if (!$currentVersion) throw new OrderError($paymentMethod['display_name'].' payment is unavailable. Its QR code has not been configured.',422,'payment_unavailable');
@@ -219,7 +223,6 @@ function online_submit(PDO $db,int $customerId,array $input): array
         ->execute([$id,$fulfillment,$account['full_name'],$contact,$address,$delivery?'lalamove':null,$delivery['address']??null,$delivery['phone']??null,$delivery['facebook']??null]);
     if($booking)$db->prepare('INSERT dbo.online_delivery_bookings(order_id,image_mime,image_bytes,image_hash) VALUES(?,?,CONVERT(varbinary(max),?,2),CONVERT(binary(32),?,2))')->execute([$id,$booking['mime'],bin2hex($booking['bytes']),$booking['hash']]);
     $db->prepare("INSERT dbo.order_status_history(order_id,to_status) VALUES(?,'received')")->execute([$id]);
-    $db->prepare('INSERT dbo.online_payment_receipts(order_id,payment_method,qr_version,image_mime,image_bytes,image_hash) VALUES(?,?,?,?,CONVERT(varbinary(max),?,2),CONVERT(binary(32),?,2))')
-        ->execute([$id,$method,$version,$receipt['mime'],bin2hex($receipt['bytes']),$receipt['hash']]);
+    payment_store_customer_receipt($db,$id,$method,$version,$receipt,$customerReference);
     return ['order'=>online_order($db,$customerId,$id),'replayed'=>false];
 }

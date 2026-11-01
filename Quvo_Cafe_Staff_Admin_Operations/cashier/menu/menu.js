@@ -13,22 +13,70 @@ function bindMenu() {
     activeMenuFilter = button.dataset.filter;
     renderMenu();
   });
+  document.getElementById("posCategoryFilters").addEventListener("change", event => {
+    const select = event.target.closest("select[data-category-group]");
+    if (!select || !select.value) return;
+    const group = select.dataset.categoryGroup;
+    activeMenuFilter = select.value;
+    renderMenu();
+    document.querySelector(`#posCategoryFilters select[data-category-group="${group}"]`)?.focus({ preventScroll: true });
+  });
 
   document.getElementById("menuSearch").addEventListener("input", renderMenu);
   document.getElementById("clearCartBtn").addEventListener("click", clearCart);
   document.getElementById("proceedOrderBtn").addEventListener("click", openCheckoutModal);
 }
 
+function posCategoryGroups(categories) {
+  const groups = [
+    { id: "coffee", label: "Coffee", categories: [] },
+    { id: "drinks", label: "Drinks", categories: [] },
+    { id: "food", label: "Food", categories: [] },
+    { id: "other", label: "Other", categories: [] },
+  ];
+  for (const category of categories.filter(code => code !== "all")) {
+    const index = ["coffee", "hot-coffee", "cold-coffee", "non-coffee"].includes(category) ? 0
+      : QuvoMenuCategories.isDrink(category) ? 1 : QuvoMenuCategories.isFood(category) ? 2 : 3;
+    groups[index].categories.push(category);
+  }
+  return groups.filter(group => group.categories.length);
+}
+
+function renderPosCategoryFilters(groups) {
+  const attr = value => escapeHtml(value).replaceAll('"', "&quot;");
+  const root = document.getElementById("posCategoryFilters");
+  const markup =
+    '<button type="button" class="filter ' + (activeMenuFilter === "all" ? "active" : "") +
+      '" data-filter="all" aria-pressed="' + (activeMenuFilter === "all") + '">All</button>' +
+    groups.map(group => {
+      const groupValue = "group:" + group.id;
+      const selected = activeMenuFilter === groupValue || group.categories.includes(activeMenuFilter);
+      return '<select class="filter pos-category-select ' + (selected ? "active" : "") +
+        '" data-category-group="' + group.id + '" aria-label="' + group.label + ' categories">' +
+        '<option value="" disabled' + (selected ? "" : " selected") + '>' + group.label + '</option>' +
+        '<option value="' + groupValue + '"' + (activeMenuFilter === groupValue ? " selected" : "") + '>All ' + group.label + '</option>' +
+        group.categories.map(category => '<option value="' + attr(category) + '"' +
+          (activeMenuFilter === category ? " selected" : "") + '>' + escapeHtml(QuvoMenuCategories.label(category)) + '</option>').join("") +
+        '</select>';
+    }).join("");
+  if (root.quvoCategoryMarkup !== markup) {
+    root.innerHTML = markup;
+    root.quvoCategoryMarkup = markup;
+  }
+}
+
 function renderMenu() {
   const grid = document.getElementById("menuGrid");
   const categories = QuvoMenuCategories.filters(state.menu, "all");
-  if (!categories.includes(activeMenuFilter)) activeMenuFilter = "all";
-  document.getElementById("posCategoryFilters").innerHTML = categories.map(category => '<button type="button" class="filter '+(category===activeMenuFilter?'active':'')+'" data-filter="'+escapeHtml(category)+'" aria-pressed="'+(category===activeMenuFilter)+'">'+escapeHtml(category==='all'?'All':QuvoMenuCategories.label(category))+'</button>').join('');
+  const groups = posCategoryGroups(categories);
+  const selectedGroup = groups.find(group => "group:" + group.id === activeMenuFilter);
+  if (!selectedGroup && !categories.includes(activeMenuFilter)) activeMenuFilter = "all";
+  renderPosCategoryFilters(groups);
   const query = document.getElementById("menuSearch")?.value.toLowerCase().trim() || "";
 
   const items = state.menu.filter((item) => {
     const matchesFilter =
-      activeMenuFilter === "all" || item.category === activeMenuFilter;
+      activeMenuFilter === "all" || item.category === activeMenuFilter || Boolean(selectedGroup?.categories.includes(item.category));
     const matchesQuery = item.name.toLowerCase().includes(query);
     return matchesFilter && matchesQuery;
   });

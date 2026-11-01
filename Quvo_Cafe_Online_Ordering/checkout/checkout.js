@@ -49,7 +49,7 @@ async function submitOrder(){
       const cents=state.cart.reduce((sum,item)=>sum+Math.round(item.unitPrice*100)*item.quantity,0);
       const payload={action:"submit",submission_key:key,expected_total:(cents/100).toFixed(2),fulfillment,contact,...delivery,
         payment_method:selectedOnlinePayment(),payment_qr_version:checkoutPayment.methods[selectedOnlinePayment()].version,
-        receipt_image:checkoutPayment.receipt,
+        receipt_image:checkoutPayment.receipt,payment_reference:checkoutPayment.reference.trim(),
         items:state.cart.map(item=>({itemId:item.itemId,quantity:item.quantity,customization:item.customization}))};
       const submission={customerId:state.onlineCustomer.id,payload,cart:structuredClone(state.cart)};
       if(window.QuvoPendingProofs)await QuvoPendingProofs.persist(submission);else saveOnlinePending(submission);

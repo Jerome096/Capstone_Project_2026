@@ -1,0 +1,19 @@
+<dialog id="cashierApprovalDialog" class="cashier-approval-card" aria-labelledby="cashierApprovalTitle">
+  <form id="cashierApprovalForm">
+    <button type="button" class="modal-close" id="cashierApprovalClose" aria-label="Close approval">&times;</button>
+    <div class="eyebrow">Admin approval</div>
+    <h2 id="cashierApprovalTitle">Cash expense / payout</h2>
+    <p class="helper-text" id="cashierApprovalSummary"></p>
+    <div id="cashierPayoutFields">
+      <label>Cash taken from drawer (PHP)<input id="cashierPayoutAmount" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" /></label>
+    </div>
+    <label id="cashierApprovalReasonLabel">Reason<textarea id="cashierApprovalReason" maxlength="1000" required rows="3" placeholder="Explain why this action is needed"></textarea></label>
+    <fieldset>
+      <legend>Admin authorizes this action</legend>
+      <p class="helper-text">The admin checks these details and enters their account password. The cashier stays signed in.</p>
+      <label>Admin password<input id="cashierApprovalPassword" type="password" maxlength="4096" autocomplete="off" required /></label>
+    </fieldset>
+    <p id="cashierApprovalError" class="helper-text" role="alert" aria-live="polite"></p>
+    <div class="modal-actions"><button type="button" class="btn light" id="cashierApprovalCancel">Cancel</button><button type="submit" class="btn dark" id="cashierApprovalSubmit">Approve and record payout</button></div>
+  </form>
+</dialog>

@@ -13,7 +13,7 @@ try {
     $q=$db->prepare('SELECT table_id FROM dbo.cafe_tables WHERE table_code=?'); $q->execute([$code]);
     $tableId=$q->fetchColumn();
     if($tableId===false) throw new OrderError('Table not found.',404);
-    $tableId=(int)$tableId; $token=$_SESSION['tables'][$tableId]??null;
+    $tableId=(int)$tableId; $token=quvo_guest_table_token($db,$tableId);
     dining_expire_sessions($db,$tableId); assistance_expire($db);
     $session=dining_guest_session($db,$tableId,$token);
     if(!$session || $session['status']!=='active') throw new OrderError('An approved dine-in session is required.',403);

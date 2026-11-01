@@ -4,6 +4,8 @@
   const workspaceId=crypto.randomUUID();
   let panel, label, detail, button, confirmation;
   let confirmationAction='', confirmationRevision=null;
+  let openingDraft=null;
+  const openingStorage=()=> 'quvo_cash_opening_v1_'+(window.QUVO_SESSION?.staff_id||'unknown');
   async function request(input) {
     const response=await fetch(quvoPath('api/ordering/index.php'), {
       method:input?'POST':'GET', credentials:'same-origin', cache:'no-store',
@@ -35,11 +37,13 @@
     try {
       if(!status)status=await request();
       status=await request({action:'heartbeat',workspaceId,revision:status.revision});message='';
+      if(status.cashOperation){openingDraft=null;try{sessionStorage.removeItem(openingStorage());}catch{}}
     } catch(error) {status=null;message=error.message||'Could not check ordering status. Reconnect to try again.';}
     finally {busy=false;render();}
   }
-  function confirmChange() {
+  async function confirmChange() {
     if(busy||confirmation.open)return;
+    if(!status){await refresh();if(!status)return;}
     confirmationAction=status?.acceptingOrders?'pause':'start';
     confirmationRevision=status?.revision||null;
     const pausing=confirmationAction==='pause';
@@ -48,6 +52,11 @@
       'Customers will be unable to place new dine-in or online orders. Existing orders will stay saved, and customers can still browse the menu.':
       'Customers will be able to place dine-in and online orders.';
     confirmation.querySelector('[data-confirm-ordering]').textContent=pausing?'Yes, pause orders':'Yes, start orders';
+    const needsOpening=!pausing&&status.cashReady&&!status.cashOperation;
+    const input=confirmation.querySelector('[data-opening-cash]');confirmation.querySelector('[data-opening-fields]').hidden=!needsOpening;input.required=needsOpening;
+    try{openingDraft=JSON.parse(sessionStorage.getItem(openingStorage())||'null');}catch{openingDraft=null;}
+    input.value=needsOpening?(openingDraft?.openingCash||''):'';
+    if(needsOpening)confirmation.querySelector('h2').textContent='Open shared cash drawer';
     confirmation.showModal();
     confirmation.querySelector('[data-cancel-ordering]').focus();
   }
@@ -63,11 +72,14 @@
           return;
         }
       }
-      status=await request({action,workspaceId,revision:revision||status.revision});
+      status=await request({action,workspaceId,revision:revision||status.revision,...(action==='start'&&openingDraft?openingDraft:{})});
+      if(action==='start'){openingDraft=null;try{sessionStorage.removeItem(openingStorage());}catch{}}
     }
     catch(error) {
       message=error.message||'Could not change ordering. Check the current status before trying again.';
+      if(error.code==='cash_opening_closed'){openingDraft=null;try{sessionStorage.removeItem(openingStorage());}catch{}}
       try {status=await request();}catch{status=null;}
+      if(status?.cashOperation){openingDraft=null;try{sessionStorage.removeItem(openingStorage());}catch{}}
     } finally {busy=false;pendingAction='';render();}
   }
   window.QuvoOrderingStaff={
@@ -82,11 +94,16 @@
       confirmation=document.createElement('dialog');confirmation.className='ordering-confirmation';
       confirmation.setAttribute('aria-labelledby','orderingConfirmTitle');
       confirmation.setAttribute('aria-describedby','orderingConfirmDescription');
-      confirmation.innerHTML='<form method="dialog"><h2 id="orderingConfirmTitle"></h2><p id="orderingConfirmDescription"></p><div class="ordering-confirmation-actions"><button type="submit" data-cancel-ordering>Cancel</button><button type="button" data-confirm-ordering></button></div></form>';
+      confirmation.innerHTML='<form method="dialog"><h2 id="orderingConfirmTitle"></h2><p id="orderingConfirmDescription"></p><div data-opening-fields hidden><label>Beginning cash fund (PHP)<input data-opening-cash type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Count the change fund before starting"></label><p>This amount is saved once and locked for this shared operation. Pausing or refreshing does not create another opening fund.</p></div><div class="ordering-confirmation-actions"><button type="submit" formnovalidate data-cancel-ordering>Cancel</button><button type="button" data-confirm-ordering></button></div></form>';
       document.body.append(confirmation);
       confirmation.querySelector('[data-confirm-ordering]').addEventListener('click',()=>{
         if(busy||!confirmation.open)return;
         const action=confirmationAction, revision=confirmationRevision;
+        if(action==='start'&&status?.cashReady&&!status.cashOperation){
+          const input=confirmation.querySelector('[data-opening-cash]');if(input.value===''||!input.reportValidity())return;
+          if(!openingDraft||openingDraft.openingCash!==input.value)openingDraft={openingCash:input.value,operationKey:crypto.randomUUID()};
+          try{sessionStorage.setItem(openingStorage(),JSON.stringify(openingDraft));}catch{message='Could not save opening retry information. Try again before starting.';render();return;}
+        }else openingDraft=null;
         confirmation.close();
         change(action,revision);
       });

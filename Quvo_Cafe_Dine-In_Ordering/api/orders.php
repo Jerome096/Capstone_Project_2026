@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . "/../../Quvo_Cafe_Staff_Admin_Operations/includes/guest.php";
 require_once __DIR__ . "/../../Quvo_Cafe_Staff_Admin_Operations/includes/orders.php";
+require_once __DIR__ . "/../../Quvo_Cafe_Staff_Admin_Operations/includes/payment-images.php";
 $csrf = quvo_start_guest_session();
 $db = null;
 try {
@@ -25,10 +26,10 @@ try {
         throw new OrderError("This table is not registered.", 404);
     }
     $tableId = (int) $tableId;
-    $token = $_SESSION["tables"][$tableId] ?? null;
+    $token = quvo_guest_table_token($db,$tableId);
     dining_expire_sessions($db, $tableId);
     if ($method === "POST") {
-        $input = orders_input(1048576);
+        $input = orders_input(6291456);
         if (($input["action"] ?? "") !== "submit") {
             throw new OrderError("Unknown order action.");
         }
@@ -44,6 +45,15 @@ try {
         throw new OrderError("Your customer session was not found.", 403);
     }
     $sessionId = (int) $session["session_id"];
+    $view=$_GET['view']??'';
+    if($view==='receipt')payment_send_image(payment_receipt_image($db,orders_id($_GET['id']??null),null,$sessionId),'dine-in-payment-receipt');
+    if(in_array($view,['payments','payment-qr'],true)){
+        $q=$db->prepare('SELECT is_active FROM dbo.cafe_tables WHERE table_id=?');$q->execute([$tableId]);$active=(bool)$q->fetchColumn();$q->closeCursor();
+        if(!$active||$session['status']!=='active')throw new OrderError('An active, approved table session is required for QR payments.',403);
+        if($view==='payment-qr')payment_send_image(payment_qr_image($db,$_GET['method']??null,$_GET['version']??null,false),'dine-in-payment-qr',isset($_GET['download']));
+        $methods=array_filter(payment_qr_methods($db,false),fn($entry)=>$entry['available']);
+        quvo_json(['ok'=>true,'csrf'=>$csrf,'methods'=>(object)$methods]);
+    }
     if (isset($_GET["id"])) {
         $order = orders_get($db, orders_id($_GET["id"]), $sessionId);
         unset($order["received_by_staff_id"]);

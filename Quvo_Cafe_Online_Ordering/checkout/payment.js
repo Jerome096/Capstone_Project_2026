@@ -1,5 +1,5 @@
 // Checkout requires a configured QR and a receipt; only the cashier confirms payment.
-const checkoutPayment = {methods:{},receipt:null,receiptCents:null,receiptBusy:false,qrLoaded:false,loading:false,request:0};
+const checkoutPayment = {methods:{},receipt:null,receiptCents:null,reference:"",receiptBusy:false,qrLoaded:false,loading:false,request:0};
 function selectedOnlinePayment() {
   return document.querySelector('input[name="paymentMethod"]:checked')?.value || "";
 }
@@ -43,6 +43,8 @@ function renderOnlinePayment() {
     if (image.getAttribute("src")!==src) {checkoutPayment.qrLoaded=false;image.src=src;download.hidden=true;}
     download.href=paymentQrUrl(method,entry.version,true);
   } else {image.removeAttribute("src");checkoutPayment.qrLoaded=false;}
+  const reference=document.getElementById("onlinePaymentReference"),referenceValue=online.pending?(online.pending.payload.payment_reference||""):checkoutPayment.reference;
+  if(reference.value!==referenceValue)reference.value=referenceValue;reference.disabled=orderingPaused||onlineCartLocked()||checkoutPayment.receiptBusy||checkoutPayment.loading||!entry?.available;
   const receipt=online.pending?.payload.receipt_image || checkoutPayment.receipt;
   const preview=document.getElementById("paymentReceiptPreview");
   preview.hidden=!receipt;if(receipt)preview.src=receipt;else preview.removeAttribute("src");
@@ -73,16 +75,17 @@ async function refreshOnlinePayment() {
     if(request===checkoutPayment.request) {checkoutPayment.loading=false;renderCart();}
   }
 }
-function clearOnlinePaymentReceipt() {
+function clearOnlinePaymentReceipt(keepReference=false) {
   checkoutPayment.receipt=null;
   checkoutPayment.receiptCents=null;
   document.getElementById("onlinePaymentReceipt").value="";
+  if(!keepReference){checkoutPayment.reference="";document.getElementById("onlinePaymentReference").value="";}
 }
 async function chooseOnlineReceipt(event) {
   if(onlineCartLocked() || checkoutPayment.receiptBusy)return;
   const file=event.target.files?.[0];
   // Capture the file before clearing the input so replacing an invalid image is safe.
-  clearOnlinePaymentReceipt();
+  clearOnlinePaymentReceipt(true);
   if(!file)return renderCart();
   const generation=online.generation,method=selectedOnlinePayment(),cents=Math.round(getCartSubtotal()*100);
   checkoutPayment.receiptBusy=true;renderCart();
@@ -94,6 +97,7 @@ async function chooseOnlineReceipt(event) {
   finally {checkoutPayment.receiptBusy=false;renderCart();}
 }
 function bindOnlinePayment() {
+  document.getElementById("onlinePaymentReference").addEventListener("input",event=>{if(!onlineCartLocked())checkoutPayment.reference=event.target.value;});
   document.getElementById("removePaymentReceipt").addEventListener("click",()=>{
     if(onlineCartLocked() || checkoutPayment.receiptBusy)return;
     clearOnlinePaymentReceipt();

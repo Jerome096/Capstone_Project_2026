@@ -23,3 +23,4 @@
 @media(max-width:1180px){.ordering-control{margin:16px 20px 0;}}
 @media(max-width:580px){.ordering-control{margin:12px 14px 0;align-items:stretch;flex-direction:column;}.ordering-control button{width:100%;}}
 @media print{.ordering-control{display:none!important;}}
+.ordering-confirmation [data-opening-fields] label{display:grid;gap:9px;font-size:13px;font-weight:700}.ordering-confirmation [data-opening-cash],#eodCountedCash{box-sizing:border-box;width:100%;min-height:48px;padding:12px;border:1px solid #d9cdb7;border-radius:10px;background:white;color:#211e18;font:16px Arial,sans-serif}.ordering-confirmation [hidden]{display:none!important}#eodSavedDialog #eodPrintSaved{background:#1d291f;color:white}#eodSavedDialog p{overflow-wrap:anywhere}

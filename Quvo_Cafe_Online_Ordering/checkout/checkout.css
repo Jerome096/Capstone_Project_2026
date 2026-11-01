@@ -136,3 +136,5 @@
 .delivery-booking-step[hidden] { display:none!important; }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 @media(max-width:600px){.lalamove-details{padding:16px;}.delivery-intro h3{font-size:20px;}.cafe-pickup-card{padding:14px;}.cafe-pickup-heading{flex-wrap:wrap;}.cafe-pickup-heading .secondary-btn{min-height:44px;}.delivery-how li{font-size:12px;}}
+
+.customer-payment-reference{display:block;font-size:13px;font-weight:600;color:#655b4a;margin:18px 0 10px}.customer-payment-reference small{font-size:11px;font-weight:400;color:#8d774f;margin-left:6px}.customer-payment-reference input{display:block;box-sizing:border-box;width:100%;min-height:46px;margin-top:8px;padding:12px;border:1px solid #dfd6c5;border-radius:11px;background:#fffdfa;color:#1d241c;font:inherit;font-size:16px}.customer-payment-reference input:disabled{background:#f4f1ea;color:#777}.customer-payment-reference input:focus{outline:2px solid #bd8e36;outline-offset:2px}

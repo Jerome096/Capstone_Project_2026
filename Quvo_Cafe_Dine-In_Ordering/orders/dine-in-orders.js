@@ -23,7 +23,7 @@ function restoreDinePending(sessionId, force = false) {
   const sameVisit=dineOrders.sessionId===sessionId&&dineOrders.tableCode===guestTableCode;
   dineOrders.sessionId = sessionId;
   dineOrders.tableCode = guestTableCode;
-  if (!sameVisit) {window.QuvoDineWifi?.reset();dineOrders.rows = [];dineOrders.selected = "";state.order = null;}
+  if (!sameVisit) {window.QuvoDinePayment?.reset();window.QuvoDineWifi?.reset();dineOrders.rows = [];dineOrders.selected = "";state.order = null;}
   dineOrders.pending=null;
   try {
     let durable=null,legacy=null;
@@ -152,6 +152,7 @@ async function submitDineOrder() {
     return;
   }
   if (dineOrders.busy) return;
+  if(!dineOrders.pending&&window.QuvoDinePayment&&!QuvoDinePayment.ready()){showToast("Choose a QR payment method and upload your receipt, or pay at the counter.");return;}
   dineOrders.busy = true;
   const sessionId=dineOrders.sessionId, tableCode=guestTableCode;
   let accepted = false;
@@ -159,6 +160,7 @@ async function submitDineOrder() {
     if (!dineOrders.pending) {
       const payload = {
         action: "submit", submission_key: dineUuid(), expected_total: dineMoneyTotal(),
+        ...(window.QuvoDinePayment?QuvoDinePayment.payload():{}),
         items: state.cart.map(item => ({ itemId: item.itemId, quantity: item.quantity, customization: item.customization })),
       };
       saveDinePending({ sessionId: dineOrders.sessionId, payload, cart: structuredClone(state.cart) });
@@ -173,6 +175,7 @@ async function submitDineOrder() {
     if(dineOrders.sessionId!==sessionId||guestTableCode!==tableCode||!state.sessionApproved)return;
     dineOrders.pending=null;
     state.cart = [];
+    window.QuvoDinePayment?.reset();
     setDineOrder(result.order);
     showScreen("screenTracking");
     if (result.order.payment_status === "unpaid") showCashierPaymentPopup(result.order);
@@ -183,11 +186,12 @@ async function submitDineOrder() {
       try { saveDinePending(null); } catch { dineOrders.pending=null; }
       window.QuvoOrdering?.showClosed(error.message);
       showToast(error.message);
-    } else if (["price_changed", "item_unavailable", "options_changed"].includes(error.code) || [400, 413, 422].includes(error.status)) {
+    } else if (["price_changed", "item_unavailable", "options_changed", "payment_qr_changed", "payment_unavailable"].includes(error.code) || [400, 413, 422].includes(error.status)) {
       try { saveDinePending(null); } catch { dineOrders.pending = null; }
       if (["price_changed", "item_unavailable", "options_changed"].includes(error.code)) {
         try { await refreshDineCartPrices(); } catch { /* The existing cart is kept for review. */ }
       }
+      if(["payment_qr_changed","payment_unavailable"].includes(error.code))await window.QuvoDinePayment?.refresh();
       showToast(error.message + " Review your cart before submitting again.");
     } else {
       showToast(error.message || "Could not confirm the order. Use Retry order.");
@@ -202,17 +206,21 @@ function showCashierPaymentPopup(order) {
   const dialog = document.getElementById("cashierPaymentDialog");
   document.getElementById("cashierPaymentOrderNumber").textContent = order.order_number;
   document.getElementById("cashierPaymentTotal").textContent = formatCurrency(order.total_amount);
-  document.getElementById("cashierPaymentInstruction").textContent =
+  const qr=Number(order.has_payment_receipt)===1;
+  document.getElementById("cashierPaymentTitle").textContent=qr?"Payment awaiting review":"Pay at the cashier";
+  document.getElementById("cashierPaymentInstruction").textContent=qr?
+    "Your receipt was submitted. The cashier will verify your payment before preparation starts. Do not pay again for this order.":
     "Please go to the cashier and show your order number to pay. We will start preparing your order once your payment is confirmed.";
   if (!dialog.open) dialog.showModal();
 }
 
 function renderDineTracking() {
   const order = state.order;
-  const labels = { received: "Waiting for payment", preparing: "Preparing", ready: "Ready", served: "Served", cancelled: "Cancelled" };
+  const qr=Number(order.has_payment_receipt)===1;
+  const labels = { received: qr?"Awaiting payment review":"Waiting for payment", preparing: "Preparing", ready: "Ready", served: "Served", cancelled: "Cancelled" };
   trackingOrderCode.textContent = order.order_number;
-  trackingPayment.textContent = order.payment_status === "paid" ? "Paid · " + order.payment_method :
-    order.payment_status === "not_due" ? "No payment due" : "Unpaid · Pay at cashier";
+  trackingPayment.textContent = order.payment_status === "paid" ? "Paid · " + (order.payment_method_label||order.payment_method) :
+    order.payment_status === "not_due" ? "No payment due" : qr?"QR payment · Awaiting cashier review":"Unpaid · Pay at counter";
   trackingStatus.textContent = labels[order.order_status];
   const stamp = new Date(order.updated_at.replace(" ", "T") + "Z").toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   trackingUpdatedAt.textContent = dineOrders.error || "Last checked " + new Date().toLocaleTimeString() + " · Updated " + stamp;
@@ -222,7 +230,7 @@ function renderDineTracking() {
     ? '<div class="empty-card"><h3>Order cancelled</h3><p>' + escapeCustomerHtml(order.cancellation_reason) + "</p></div>"
     : stages.map((stage, i) => '<article class="timeline-item ' + (i < index ? "done" : i === index ? "current" : "") +
       '"><div class="timeline-dot">' + (i + 1) + "</div><div><h3>" + labels[stage] + "</h3><p>" +
-      ["The cashier will confirm your full payment.", "Staff are preparing your order.", "Your order is ready to serve.", "Your order has been served."][i] +
+      [qr?"Your receipt is awaiting cashier verification.":"Pay at the counter; the cashier will confirm your full payment.", "Staff are preparing your order.", "Your order is ready to serve.", "Your order has been served."][i] +
       "</p></div></article>").join("");
   const row = (label, value) => '<div class="ticket-row"><span>' + escapeCustomerHtml(label) + "</span><strong>" + escapeCustomerHtml(value) + "</strong></div>";
   trackingDetails.innerHTML = '<p class="eyebrow">Order details</p>' + row("Customer", order.customer_name) +
@@ -231,7 +239,8 @@ function renderDineTracking() {
       '<p class="small-copy">' + escapeCustomerHtml(
         [...QuvoMenuOptions.summary(item.customization), item.notes].filter(x => x && x !== "Not applicable").join(" · ")
       ) + "</p>").join("") + row("Total", formatCurrency(order.total_amount)) +
-    (order.payment_status === "paid" ? row("Payment", order.payment_method) +
-      row("Amount received", formatCurrency(order.amount_received)) + row("Change", formatCurrency(order.change_amount)) : "");
+    (order.payment_status === "paid" ? row("Payment", order.payment_method_label||order.payment_method) +
+      row("Amount received", formatCurrency(order.amount_received)) + row("Change", formatCurrency(order.change_amount)) : "")+
+    (qr?'<p class="small-copy">QR method: '+escapeCustomerHtml(order.preferred_payment_label||order.preferred_payment_method)+'</p><a class="small-copy" href="api/orders.php?table='+encodeURIComponent(guestTableCode)+'&amp;view=receipt&amp;id='+encodeURIComponent(order.order_id)+'" target="_blank" rel="noopener">View submitted receipt</a>':'');
   renderDineOrderSelector();
 }

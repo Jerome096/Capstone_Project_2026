@@ -6,6 +6,7 @@
   if (!sidebar || !main || !topbar) return;
 
   const tablet = matchMedia("(max-width: 1180px)");
+  const usesDrawer = () => tablet.matches || window.QUVO_CONFIG?.portal === "cashier";
   const icon = (name) => name === "menu"
     ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
     : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
@@ -125,16 +126,16 @@
   }).observe(screenRoot, { subtree: true, attributes: true, attributeFilter: ["class"] });
 
   function setNavOpen(open, restoreFocus = true) {
-    navOpen = tablet.matches && open;
+    navOpen = usesDrawer() && open;
     document.body.classList.toggle("workspace-nav-open", navOpen);
     toggle.setAttribute("aria-expanded", String(navOpen));
     backdrop.hidden = !navOpen;
-    sidebar.inert = Boolean(activeModal) || (tablet.matches && !navOpen);
+    sidebar.inert = Boolean(activeModal) || (usesDrawer() && !navOpen);
     main.inert = Boolean(activeModal) || navOpen;
-    if (tablet.matches) sidebar.setAttribute("aria-hidden", String(!navOpen));
+    if (usesDrawer()) sidebar.setAttribute("aria-hidden", String(!navOpen));
     else sidebar.removeAttribute("aria-hidden");
     if (navOpen) close.focus({ preventScroll: true });
-    else if (restoreFocus && tablet.matches) toggle.focus({ preventScroll: true });
+    else if (restoreFocus && usesDrawer()) toggle.focus({ preventScroll: true });
     updateNotifications();
   }
   toggle.addEventListener("click", () => setNavOpen(!navOpen));

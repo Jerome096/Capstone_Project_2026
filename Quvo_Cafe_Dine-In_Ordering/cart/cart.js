@@ -21,8 +21,9 @@ function renderCart() {
   totalText.textContent = formatCurrency(subtotal);
 
   const dineIn = state.accessMode === "dineIn";
+  window.QuvoDinePayment?.render();
   submitOrderBtn.disabled = (cartCount === 0 && !(dineIn && dineOrders.pending)) ||
-    (dineIn && (!state.sessionApproved || dineOrders.busy));
+    (dineIn && (!state.sessionApproved || dineOrders.busy || (!dineOrders.pending && window.QuvoDinePayment && !QuvoDinePayment.ready())));
   submitOrderBtn.textContent =
     dineIn && dineOrders.busy ? "Submitting…" : dineIn && dineOrders.pending ? "Retry order" : "Submit order";
   document.getElementById("dineRetryNote").hidden = !(dineIn && dineOrders.pending);

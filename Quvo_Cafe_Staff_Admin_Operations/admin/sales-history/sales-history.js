@@ -1,5 +1,6 @@
 const salesHistorySql={loading:false,request:0,view:null,rows:[],summary:null,nextOffset:null,error:'',hours:null,businessDate:null};
 function bindSalesHistory(){
+  window.QuvoCashHistory?.bind();
   document.querySelectorAll('[data-sales-view]').forEach(button=>button.addEventListener('click',()=>{
     document.querySelectorAll('[data-sales-view]').forEach(entry=>entry.classList.remove('active'));button.classList.add('active');state.activeSalesView=button.dataset.salesView;loadSalesHistory();
   }));
@@ -8,6 +9,7 @@ function bindSalesHistory(){
   if(window.QUVO_CONFIG.allowedScreens.includes('salesHistory'))loadSalesHistory();
 }
 async function loadSalesHistory(append=false){
+  if(!append)window.QuvoCashHistory?.load();
   if(!window.QUVO_CONFIG.allowedScreens.includes('salesHistory'))return;
   const view=state.activeSalesView||'daily';if(salesHistorySql.loading&&salesHistorySql.view===view)return;
   if(append&&salesHistorySql.nextOffset===null)return;

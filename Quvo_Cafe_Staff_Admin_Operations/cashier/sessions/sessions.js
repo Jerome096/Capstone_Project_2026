@@ -16,7 +16,7 @@ function diningTimerDisplay(session, now = diningTimerNow()) {
   if (!Number.isFinite(age) || age > 15000 || session.idle_remaining_seconds == null || session.idle_remaining_seconds === '' || !Number.isFinite(Number(session.idle_remaining_seconds))) {
     return {value:'Syncing…',note:'Refreshing session status',tone:'stale'};
   }
-  if (Number(session.idle_paused) === 1) return {value:'Paused',note:'Paid orders waiting to be served',tone:'paused'};
+  if (Number(session.idle_paused) === 1) return {value:'Paused',note:'QR payment under review or paid orders waiting to be served',tone:'paused'};
   const remaining = Math.max(0, Math.ceil(Number(session.idle_remaining_seconds) - age / 1000));
   return {value:String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'),
     note:remaining ? 'Time left without activity' : 'Checking session expiry…',tone:remaining<=60?'urgent':remaining<=120?'warning':'running'};
@@ -137,7 +137,7 @@ async function changeDiningSession(id, action) {
   if (
     !session ||
     !diningConfirm(
-      `${capitalize(action)} the session for ${session.guest_name} at ${session.table_name}?${action === "close" ? " Customer access will end and unpaid orders will be cancelled. Paid orders must be served first." : ""}`,
+      `${capitalize(action)} the session for ${session.guest_name} at ${session.table_name}?${action === "close" ? " Customer access will end and unpaid counter orders will be cancelled. Review QR payments and serve paid orders first." : ""}`,
     )
   )
     return;

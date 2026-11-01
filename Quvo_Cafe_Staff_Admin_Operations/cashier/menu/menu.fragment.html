@@ -1,10 +1,47 @@
-<section
-  class="screen"
-  id="menu"
->
+<section class="screen" id="menu">
+  <div class="stats-grid">
+    <article class="stat-card">
+      <div class="stat-label">Active order points</div>
+      <div
+        class="stat-value"
+        id="activeTableStat"
+      >
+        0
+      </div>
+      <div class="stat-icon green-soft"><i data-lucide="grid-2x2"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Pending sessions</div>
+      <div
+        class="stat-value"
+        id="pendingSessionsStat"
+      >
+        0
+      </div>
+      <div class="stat-icon amber-soft"><i data-lucide="user-round-check"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Active orders</div>
+      <div
+        class="stat-value"
+        id="activeOrdersStat"
+      >
+        0
+      </div>
+      <div class="stat-icon blue-soft"><i data-lucide="clipboard-check"></i></div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Completed this business day</div>
+      <div
+        class="stat-value"
+        id="completedTodayStat"
+      >
+        0
+      </div>
+      <div class="stat-icon brown-soft"><i data-lucide="circle-check"></i></div>
+    </article>
+  </div>
   <div id="posSqlPendingBanner" class="menu-note" hidden>An order is awaiting confirmation. Retry the same submission before making another order. <button class="btn light" type="button" id="posSqlRetry">Retry POS confirmation</button></div>
-  <div class="pos-layout">
-    <section class="pos-menu-area">
       <div class="menu-toolbar">
         <div class="search-box">
           <i data-lucide="search"></i>
@@ -27,11 +64,8 @@
         POS mode for manual counter orders. Tap an available item to customize and add it
         to the order.
       </div>
-      <div
-        class="menu-grid"
-        id="menuGrid"
-      ></div>
-    </section>
+  <div class="pos-layout">
+    <div class="pos-side-column">
     <aside class="pos-cart">
       <div class="cart-head">
         <div>
@@ -73,7 +107,7 @@
         disabled=""
         id="proceedOrderBtn"
       >
-        Proceed to order
+        Proceed to Payment
       </button>
       <div
         class="paid-state hidden"
@@ -100,5 +134,24 @@
         </button>
       </div>
     </aside>
+      <section class="dashboard-stock-panel" aria-labelledby="dashboardStockTitle">
+        <div class="dashboard-stock-header">
+          <div>
+            <div class="eyebrow">Inventory reminders</div>
+            <h2 id="dashboardStockTitle">Stock alerts <span id="dashboardStockCount" class="dashboard-stock-count">0</span></h2>
+          </div>
+          <button type="button" class="btn light" id="dashboardStockRefresh">Refresh stock alerts</button>
+        </div>
+        <p class="dashboard-stock-copy">Low or zero recorded stock does not stop ordering. Review these materials and mark menu items unavailable when needed.</p>
+        <p id="dashboardStockStatus" class="dashboard-stock-status" role="status">Checking stock levels...</p>
+        <div id="dashboardStockAlerts" class="dashboard-stock-list"></div>
+      </section>
+    </div>
+    <section class="pos-menu-area" aria-label="Menu items">
+      <div
+        class="menu-grid"
+        id="menuGrid"
+      ></div>
+    </section>
   </div>
 </section>

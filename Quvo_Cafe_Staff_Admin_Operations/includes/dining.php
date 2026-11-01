@@ -22,14 +22,18 @@ function dining_table(PDO $db, int $id): array
     return $q->fetch() ?: throw new DiningError("Table not found.");
 }
 
-// Background refreshes only read this clock. Only paid outstanding orders suspend expiry.
+// Background refreshes only read this clock. Paid orders and submitted QR receipts under review suspend expiry.
 // The most recent completed order starts a fresh ten minutes without a browser heartbeat.
 function dining_session_timing_sql(string $where): string
 {
     return "SELECT s.session_id,s.guest_name,s.status,s.requested_at,s.reviewed_at,s.ended_at,
         s.last_activity_at,s.idle_expired_at,
-        CASE WHEN EXISTS (SELECT 1 FROM dbo.orders o JOIN dbo.payments p ON p.order_id=o.order_id
-            WHERE o.session_id=s.session_id AND o.order_status NOT IN ('served','cancelled'))
+        CASE WHEN s.status='cancelled' AND s.reviewed_at IS NULL AND s.ended_by_staff_id IS NULL
+            AND s.ended_at>=DATEADD(minute,15,s.requested_at) THEN 1 ELSE 0 END request_expired,
+        CASE WHEN EXISTS (SELECT 1 FROM dbo.orders o
+            WHERE o.session_id=s.session_id AND o.order_status NOT IN ('served','cancelled')
+            AND (EXISTS(SELECT 1 FROM dbo.payments p WHERE p.order_id=o.order_id)
+              OR EXISTS(SELECT 1 FROM dbo.online_payment_receipts r WHERE r.order_id=o.order_id)))
             THEN 1 ELSE 0 END AS idle_paused,
         DATEDIFF(second,SYSUTCDATETIME(),DATEADD(minute,10,
             CASE WHEN finished.completed_at>COALESCE(s.last_activity_at,s.reviewed_at,s.requested_at)
@@ -63,6 +67,8 @@ function dining_staff_sessions(PDO $db, string $status = 'open', int $offset = 0
 // Caller holds the table lock; payment also locks that table before it can be saved.
 function dining_cancel_unpaid_orders(PDO $db, int $sessionId, ?int $actor, string $reason): void
 {
+    $q=$db->prepare("SELECT TOP 1 o.order_id FROM dbo.orders o JOIN dbo.online_payment_receipts r ON r.order_id=o.order_id WHERE o.session_id=? AND o.order_status<>'cancelled' AND NOT EXISTS(SELECT 1 FROM dbo.payments p WHERE p.order_id=o.order_id)");$q->execute([$sessionId]);$pending=$q->fetchColumn();$q->closeCursor();
+    if($pending)throw new DiningError('Review or void the pending QR payment before closing this table session.');
     $db->prepare("UPDATE o SET order_status='cancelled',cancelled_at=SYSUTCDATETIME(),
         cancelled_by_staff_id=?,cancellation_reason=?,cancellation_source='session',
         updated_at=SYSUTCDATETIME(),updated_by_staff_id=?
@@ -75,10 +81,12 @@ function dining_cancel_unpaid_orders(PDO $db, int $sessionId, ?int $actor, strin
 function dining_expire_table(PDO $db, int $tableId): int
 {
     dining_table($db, $tableId);
+    $q=$db->prepare("UPDATE dbo.customer_sessions SET status='cancelled',ended_at=SYSUTCDATETIME()
+        WHERE table_id=? AND status='pending' AND requested_at<=DATEADD(minute,-15,SYSUTCDATETIME())");
+    $q->execute([$tableId]);$expired=$q->rowCount();$q->closeCursor();
     $q = $db->prepare(dining_session_timing_sql("s.table_id=? AND s.status='active'"));
     $q->execute([$tableId]);
     $sessions = $q->fetchAll();
-    $expired = 0;
     foreach ($sessions as $session) {
         if (!(bool) $session['idle_paused'] && (int) $session['idle_remaining_seconds'] <= 0) {
             dining_cancel_unpaid_orders($db, (int)$session['session_id'], null,
@@ -96,7 +104,7 @@ function dining_expire_table(PDO $db, int $tableId): int
 function dining_expire_sessions(PDO $db, ?int $tableId = null): int
 {
     $tables = $tableId === null
-        ? $db->query("SELECT DISTINCT table_id FROM dbo.customer_sessions WHERE status='active' ORDER BY table_id")
+        ? $db->query("SELECT DISTINCT table_id FROM dbo.customer_sessions WHERE status IN ('pending','active') ORDER BY table_id")
             ->fetchAll(PDO::FETCH_COLUMN)
         : [$tableId];
     $expired = 0;
@@ -212,7 +220,7 @@ function dining_guest_request(PDO $db, int $tableId, string $name, ?string $prev
     if ((int) $q->fetchColumn() > 0) {
         throw new DiningError("This table is already in use. Please ask a staff member.");
     }
-    // The secret stays in the PHP session; only its SHA-256 hash is stored with the visit.
+    // The server issues an opaque browser secret; only its SHA-256 hash is stored with the visit.
     $token = bin2hex(random_bytes(32));
     $q = $db->prepare("INSERT INTO dbo.customer_sessions(table_id,guest_name,guest_token_hash)
         VALUES(?,?,CONVERT(binary(32),?,2))");

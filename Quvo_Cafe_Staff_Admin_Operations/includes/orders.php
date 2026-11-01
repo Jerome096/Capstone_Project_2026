@@ -5,6 +5,8 @@ require_once __DIR__ . "/dining.php";
 require_once __DIR__ . "/inventory.php";
 require_once __DIR__."/menu-options.php";
 require_once __DIR__."/ordering.php";
+require_once __DIR__."/sales-audit-store.php";
+require_once __DIR__."/cash-operations-store.php";
 
 // Business errors are safe to show without exposing database or guest-token details.
 final class OrderError extends RuntimeException
@@ -122,8 +124,14 @@ function orders_require_customer_quantities(array $lines): void
     }
 }
 
-function orders_header_sql(): string
+function orders_customer_reference_ready(PDO $db): bool
 {
+    return (bool)$db->query("SELECT CASE WHEN COL_LENGTH('dbo.online_payment_receipts','customer_reference') IS NULL THEN 0 ELSE 1 END")->fetchColumn();
+}
+
+function orders_header_sql(PDO $db): string
+{
+    $reference=orders_customer_reference_ready($db)?'(SELECT pr.customer_reference FROM dbo.online_payment_receipts pr WHERE pr.order_id=o.order_id)':'CAST(NULL AS nvarchar(100))';
     return "SELECT o.order_id,o.order_number,o.session_id,o.customer_name,o.total_amount,
         o.order_status,o.created_at,o.updated_at,o.cancelled_at,o.cancellation_reason,
         o.order_source,o.customer_account_id,o.preferred_payment_method,k.ready_at AS kitchen_ready_at,
@@ -132,6 +140,7 @@ function orders_header_sql(): string
         COALESCE(pm.display_name,o.preferred_payment_method) AS preferred_payment_label,
         COALESCE(am.display_name,p.payment_method) AS payment_method_label,
         CASE WHEN EXISTS(SELECT 1 FROM dbo.online_payment_receipts pr WHERE pr.order_id=o.order_id) THEN 1 ELSE 0 END AS has_payment_receipt,
+        $reference AS customer_payment_reference,
         COALESCE(t.table_name,CASE WHEN o.order_source='walk_in' THEN 'Counter' WHEN f.fulfillment_type='delivery' THEN 'Online delivery' ELSE 'Online pickup' END) AS table_name,
         f.fulfillment_type,f.recipient_name,f.contact_snapshot,f.address_snapshot,
         f.delivery_provider,f.pickup_address_snapshot,f.cafe_phone_snapshot,f.cafe_facebook_snapshot,
@@ -173,7 +182,7 @@ function orders_public_header(array $row): array
 
 function orders_get(PDO $db, int $id, ?int $sessionId = null): array
 {
-    $query = $db->prepare(orders_header_sql() . " WHERE o.order_id=?" .
+    $query = $db->prepare(orders_header_sql($db) . " WHERE o.order_id=?" .
         ($sessionId !== null ? " AND o.session_id=?" : ""));
     $query->execute($sessionId !== null ? [$id, $sessionId] : [$id]);
     $row = $query->fetch();
@@ -230,7 +239,7 @@ function orders_list(PDO $db, ?int $sessionId, mixed $status, mixed $offset, mix
         $where[] = "o.order_status=?";
         $params[] = $status;
     }
-    $query = $db->prepare(orders_header_sql() . " WHERE " . implode(" AND ", $where) .
+    $query = $db->prepare(orders_header_sql($db) . " WHERE " . implode(" AND ", $where) .
         " ORDER BY o.order_id DESC OFFSET ? ROWS FETCH NEXT 51 ROWS ONLY");
     foreach ($params as $index => $value) {
         $query->bindValue($index + 1, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
@@ -253,7 +262,11 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     }
     $lines = orders_lines($input["items"] ?? null);
     $expectedTotal = orders_cents($input["expected_total"] ?? null);
-    $hash = hash("sha256", json_encode([$lines, $expectedTotal], JSON_THROW_ON_ERROR));
+    require_once __DIR__.'/payment-images.php';
+    $payment=payment_dine_input($input);$hashParts=[$lines,$expectedTotal];
+    if($payment['choice']==='qr')$hashParts[]=['dine-qr-v1',$payment['method'],$payment['version'],$payment['receipt']['hash']];
+    if($payment['reference']!=='')$hashParts[]=['customerReference',$payment['reference']];
+    $hash = hash("sha256", json_encode($hashParts, JSON_THROW_ON_ERROR));
     $table = dining_table($db, $tableId);
     dining_expire_table($db, $tableId);
     $session = dining_guest_session($db, $tableId, $token);
@@ -276,11 +289,13 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
     }
     orders_require_customer_quantities($lines);
     ordering_require_open($db);
+    payment_validate_customer_reference($db,$payment['reference']);
+    payment_dine_validate($db,$payment);
     [$catalog, $total] = orders_catalog($db, $lines, $expectedTotal);
     $query = $db->prepare("INSERT INTO dbo.orders
-        (session_id,customer_name,submission_key,submission_hash,total_amount)
-        OUTPUT INSERTED.order_id VALUES(?,?,?,CONVERT(binary(32),?,2),?)");
-    $query->execute([$sessionId, $session["guest_name"], $key, $hash, orders_money($total)]);
+        (session_id,customer_name,submission_key,submission_hash,total_amount,preferred_payment_method)
+        OUTPUT INSERTED.order_id VALUES(?,?,?,CONVERT(binary(32),?,2),?,?)");
+    $query->execute([$sessionId, $session["guest_name"], $key, $hash, orders_money($total),$payment['method']]);
     $id = (int) $query->fetchColumn();
     $query->closeCursor();
     $itemQuery = $db->prepare("INSERT INTO dbo.order_items
@@ -291,6 +306,9 @@ function orders_submit(PDO $db, int $tableId, ?string $token, array $input): arr
         $itemQuery->execute([$id, $index + 1, $line["menu_item_id"], $menu["item_name"],
             $menu["category"], $line["unit_price"], $line["quantity"],
             menu_custom_json($line["customization"]), $line["notes"]]);
+    }
+    if($payment['choice']==='qr'){
+        payment_store_customer_receipt($db,$id,$payment['method'],$payment['version'],$payment['receipt'],$payment['reference']);
     }
     return ["order" => orders_get($db, $id, $sessionId), "replayed" => false];
 }
@@ -347,7 +365,10 @@ function orders_lock(PDO $db, int $id): array
         dining_table($db, (int) $tableId);
         dining_expire_table($db, (int) $tableId);
     }
-    $query = $db->prepare("SELECT order_id,order_status,total_amount,order_source,preferred_payment_method FROM dbo.orders
+    $reference=orders_customer_reference_ready($db)?'(SELECT r.customer_reference FROM dbo.online_payment_receipts r WHERE r.order_id=orders.order_id)':'CAST(NULL AS nvarchar(100))';
+    $query = $db->prepare("SELECT order_id,order_status,total_amount,order_source,preferred_payment_method,
+        CASE WHEN EXISTS(SELECT 1 FROM dbo.online_payment_receipts r WHERE r.order_id=orders.order_id) THEN 1 ELSE 0 END has_payment_receipt,
+        $reference customer_payment_reference FROM dbo.orders
         WITH (UPDLOCK,HOLDLOCK) WHERE order_id=?");
     $query->execute([$id]);
     return $query->fetch() ?: throw new OrderError("Order not found.", 404);
@@ -358,13 +379,13 @@ function orders_pay(PDO $db, int $actorId, int $id, array $input): array
     inventory_lock($db);
     $order = orders_lock($db, $id);
     $method = $input["payment_method"] ?? null;
-    if (!is_string($method) || (!in_array($method, ["Cash", "GCash", "PayMaya"], true) &&
-        !(in_array($order['order_source'],['online','walk_in'],true) && $method===$order['preferred_payment_method']))) {
+    if (!is_string($method) || $method==='' || strlen($method)>10) {
         throw new OrderError("Choose a payment method valid for this order.");
     }
     $total = orders_cents($order["total_amount"]);
     $received = orders_cents($input["amount_received"] ?? null);
     $reference = orders_text($input["payment_reference"] ?? "", 100);
+    if($reference===''&&$method!=='Cash'&&(bool)$order['has_payment_receipt'])$reference=orders_text($order['customer_payment_reference']??'',100);
     if ($received < $total || ($method !== "Cash" && $received !== $total)
         || ($method === "Cash" && $reference !== "")) {
         throw new OrderError("Record the full payment; cash must cover the total and digital payment must match it.");
@@ -383,12 +404,22 @@ function orders_pay(PDO $db, int $actorId, int $id, array $input): array
     if ($order["order_status"] !== "received") {
         throw new OrderError("Only a received, unpaid order can be paid.", 409);
     }
+    if($order['order_source']==='online'||($order['order_source']==='dine_in'&&(bool)$order['has_payment_receipt'])){
+        // Existing online orders retain their submitted method even if later hidden or removed.
+        if($method!==$order['preferred_payment_method'])throw new OrderError('Approve the QR payment method submitted with this order.');
+    }elseif($method!=='Cash'){
+        require_once __DIR__.'/payment-images.php';
+        payment_active_method($db,$method);
+    }
+    $cashOperation=cash_ops_require_open($db);
     inventory_consume_order($db,$id,$actorId);
     $query = $db->prepare("INSERT INTO dbo.payments
         (order_id,payment_method,amount_applied,amount_received,change_amount,payment_reference,received_by_staff_id)
         VALUES(?,?,?,?,?,?,?)");
     $query->execute([$id, $method, orders_money($total), orders_money($received),
         orders_money($received - $total), $reference === "" ? null : $reference, $actorId]);
+    sales_audit_snapshot_order($db,$id);
+    cash_ops_attach($db,$id,(int)$cashOperation['operation_id']);
     $db->prepare("UPDATE dbo.orders SET order_status='preparing',updated_at=SYSUTCDATETIME(),
         updated_by_staff_id=? WHERE order_id=?")->execute([$actorId, $id]);
     orders_online_history($db, $id, 'received', 'preparing', $actorId);
@@ -419,8 +450,11 @@ function orders_status(PDO $db, int $actorId, int $id, mixed $next): array
     return orders_get($db, $id);
 }
 
-function orders_cancel(PDO $db, array $actor, int $id, mixed $reason): array
+function orders_cancel(PDO $db, array $actor, int $id, mixed $reason, ?array $approver = null): array
 {
+    if (($approver['role'] ?? null) !== 'admin' || empty($approver['credential_stamp'])) {
+        throw new OrderError('An admin must approve this void with their username and password.',403,'admin_approval_required');
+    }
     if (!in_array($actor["role"], ["admin", "staff"], true)) {
         throw new OrderError("Only an Admin or cashier can cancel an unpaid order.", 403);
     }
@@ -432,7 +466,7 @@ function orders_cancel(PDO $db, array $actor, int $id, mixed $reason): array
         throw new OrderError("Paid orders cannot be cancelled; refunds are not supported.", 409);
     }
     if ($order["order_status"] === "cancelled") {
-        return orders_get($db, $id);
+        throw new OrderError('This order is already cancelled. Refresh to see its saved history.',409);
     }
     if ($order["order_status"] !== "received") {
         throw new OrderError("Only an unpaid received order can be cancelled.", 409);
@@ -472,7 +506,7 @@ function orders_remind_ready(PDO $db, array $actor, int $id, mixed $key): array
 function orders_online_history(PDO $db, int $id, ?string $from, string $to, int $actor, ?string $reason=null): void
 {
     $db->prepare("INSERT dbo.order_status_history(order_id,from_status,to_status,changed_by_staff_id,reason)
-        SELECT order_id,?,?,?,? FROM dbo.orders WHERE order_id=? AND order_source='online'")
+        SELECT order_id,?,?,?,? FROM dbo.orders WHERE order_id=?")
         ->execute([$from,$to,$actor,$reason,$id]);
 }
 

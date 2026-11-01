@@ -32,7 +32,7 @@
     const item = model.items.find(item => item.order_id === model.selectedId), preview = node("uploadedReceiptPreview");
     if (!item) {
       model.previewKey = null;
-      preview.innerHTML = '<div class="receipt-empty-preview"><h2>Select an uploaded receipt</h2><p>Choose an online order to view the original image submitted by the customer.</p></div>';
+      preview.innerHTML = '<div class="receipt-empty-preview"><h2>Select an uploaded receipt</h2><p>Choose an order to view the original image submitted by the customer.</p></div>';
       return;
     }
     const key = model.date + "|" + item.order_id;
@@ -43,8 +43,8 @@
     const url = quvoPath("api/orders/index.php?receipt=" + encodeURIComponent(item.order_id));
     const orderStatus = { received: "Received", preparing: "Preparing", ready: "Ready", served: "Served", cancelled: "Canceled" }[item.order_status] || item.order_status;
     preview.innerHTML = '<div class="eyebrow">Customer payment upload</div><h2>' + e(item.order_number) + '</h2>' +
-      '<dl class="uploaded-receipt-details">' + field("Customer", item.customer_name || "Guest") + field("Order status", orderStatus) +
-      field("Payment method", item.payment_method_label || item.payment_method) + field("Order total", money(item.total_amount)) +
+      '<dl class="uploaded-receipt-details">' + field("Customer", item.customer_name || "Guest") + field("Order status", orderStatus) + field("Source",item.order_source==='dine_in'?'Dine-in · '+(item.table_name||'Table'):'Online') +
+      field("Payment method", item.payment_method_label || item.payment_method) + field("Order total", money(item.total_amount)) + field("Customer reference",item.customer_payment_reference||"Not provided") +
       field("Uploaded", timestamp(item.uploaded_at)) + (item.paid_at ? field("Payment confirmed", timestamp(item.paid_at)) : "") +
       (item.order_status === "cancelled" ? field("Canceled", timestamp(item.cancelled_at || item.record_at)) + field("Cancellation reason", item.cancellation_reason || "Not provided") : "") + '</dl>' +
       '<p id="uploadedReceiptImageStatus" class="helper-text" role="status">Loading customer image...</p>' +
@@ -59,7 +59,7 @@
     const image = node("uploadedReceiptImage"), frame = node("uploadedReceiptImageFrame"), status = node("uploadedReceiptImageStatus"), retry = node("uploadedReceiptImageRetry");
     image.onload = () => {
       if (!image.isConnected || model.previewKey !== key) return;
-      image.hidden = false; frame.hidden = false; status.textContent = "Original image submitted with this online order."; retry.hidden = true;
+      image.hidden = false; frame.hidden = false; status.textContent = "Original image submitted with this order."; retry.hidden = true;
     };
     image.onerror = () => {
       if (!image.isConnected || model.previewKey !== key) return;

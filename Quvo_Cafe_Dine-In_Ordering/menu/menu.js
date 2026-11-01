@@ -19,8 +19,8 @@ function configureMenuHeader() {
   menuCustomerName.textContent = state.customerName || "Customer";
   menuContextLabel.textContent = CUSTOMER_DATA.tableNumber;
   staffBtnHeader.style.display = "inline-flex";
-  paymentNote.textContent =
-    "Pay at the cashier after submitting. Preparation starts after payment is confirmed.";
+  if(window.QuvoDinePayment)QuvoDinePayment.render();
+  else paymentNote.textContent = "Pay at the cashier after submitting. Preparation starts after payment is confirmed.";
 }
 
 function renderCategories() {

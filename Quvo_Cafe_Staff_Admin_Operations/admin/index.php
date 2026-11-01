@@ -34,13 +34,13 @@ if (empty($_SESSION["admin_confirmed"])) {
   <link rel="stylesheet" href="../admin/operating-hours/operating-hours.css?v=logout-grace-1" />
   <link rel="stylesheet" href="../admin/wifi-settings/wifi-settings.css?v=guest-wifi-1" />
   <link rel="stylesheet" href="../admin/records/records.css?v=pos-payment-methods-1" />
-  <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=inventory-save-2" />
+  <link rel="stylesheet" href="../admin/sales-history/sales-history.css?v=cashier-password-only-1" />
   <link rel="stylesheet" href="../admin/accounts/accounts.css?v=staff-account-delete-2" />
   <link rel="stylesheet" href="../admin/inventory/inventory.css?v=tablet-stock-keyboard-1" />
   <link rel="stylesheet" href="../shared/css/workspace-tablet.css?v=tablet-payment-alerts-2" />
   <link rel="stylesheet" href="../shared/css/workspace-loading.css?v=centered-spinner-1" />
   <link rel="stylesheet" href="../shared/css/menu-options.css?v=sizes-checkbox-addons-1" />
-  <link rel="stylesheet" href="../shared/css/ordering-control.css?v=ordering-confirmation-1" />
+  <link rel="stylesheet" href="../shared/css/ordering-control.css?v=cashier-password-only-1" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <?php echo quvo_bootstrap($user); ?>
 <script src="../shared/js/auth.js"></script>
@@ -61,6 +61,7 @@ if (empty($_SESSION["admin_confirmed"])) {
     });
   </script>
   <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=reports-no-graph-4" />
+  <link rel="stylesheet" href="../shared/css/cashier-approval.css?v=cashier-password-only-1" />
 </head>
 <body class="logged-in workspace-loading quvo-cafe-ui">
   <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-label="Loading workspace">
@@ -78,6 +79,7 @@ if (empty($_SESSION["admin_confirmed"])) {
 <div class="nav-section-label nav-section-label-first">Administration</div>
 <div class="portal-badge"><strong>Staff workspace</strong></div>
 <button class="nav-item active" data-admin-screen="reports"><i data-lucide="bar-chart-3"></i><span>Reports</span></button>
+<a class="nav-item portal-link" href="sales-audit.php"><i data-lucide="clipboard-check"></i><span>Sales Audit</span></a>
 <button class="nav-item" data-admin-screen="menuAdmin"><i data-lucide="square-pen"></i><span>Menu edit</span></button>
 <button class="nav-item" data-admin-screen="websiteContent"><i data-lucide="notebook-pen"></i><span>Website content</span></button>
 <button class="nav-item" data-admin-screen="operatingHours"><i data-lucide="clock-3"></i><span>Operating hours</span></button>
@@ -113,6 +115,6 @@ if (empty($_SESSION["admin_confirmed"])) {
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=reports-no-graph-4"></script>
+  <script src="../shared/js/workspace-loader.js?v=menu-fill-space-1"></script>
 </body>
 </html>

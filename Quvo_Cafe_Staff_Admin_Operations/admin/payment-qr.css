@@ -56,4 +56,10 @@ body { margin: 0; background: #f6f1e8; color: #191714; font: 14px/1.6 Arial, san
 .qr-add-modal .qr-modal-close { position: absolute; top: 10px; right: 16px; border: 0; background: none; font-size: 24px; cursor: pointer; }
 .qr-add-modal #addPaymentMethodError { color: #b2503d; }
 .qr-method-empty { grid-column: 1 / -1; padding: 36px; text-align: center; color: #82786d; border: 1px dashed #ded1ba; border-radius: 16px; }
+.qr-channel-settings { padding:14px; border:1px solid #e1e5d7; border-radius:12px; background:#f5f7ef; }
+.qr-online-toggle { display:flex!important; align-items:center; gap:10px; margin:0!important; font-size:13px!important; font-weight:600; cursor:pointer; }
+.qr-online-toggle input[type="checkbox"] { width:18px!important; height:18px; flex:0 0 18px; margin:0; padding:0; accent-color:#526d4b; }
+.qr-channel-status { font-size:12px; line-height:1.5; color:#66705e; margin:8px 0 12px; }
+.payment-qr-card .qr-visibility-save { min-height:38px; margin:0; font-size:12px; }
+.qr-add-modal .qr-online-toggle { margin:18px 0!important; }
 @media(max-width: 640px) { .qr-method-toolbar { align-items: stretch; flex-direction: column; gap: 12px; } }

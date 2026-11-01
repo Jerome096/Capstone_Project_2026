@@ -46,6 +46,7 @@ function showScreen(screenId) {
   configureMenuHeader();
   updateNavState(screenId);
   updateFloatingCart();
+  if(screenId==='screenCart')window.QuvoDinePayment?.refresh();
 }
 
 function updateNavState(screenId) {

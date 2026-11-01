@@ -21,6 +21,7 @@ function initNavigation() {
 }
 
 function showScreen(screen) {
+  if (screen === "dashboard" && window.QUVO_CONFIG?.portal === "cashier") screen = "menu";
   const allowedScreens = window.QUVO_CONFIG?.allowedScreens || [];
   if (!allowedScreens.includes(screen)) return;
   document.querySelectorAll(".nav-item").forEach((item) => {

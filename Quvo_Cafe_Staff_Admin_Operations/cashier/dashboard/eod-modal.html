@@ -18,15 +18,18 @@
     <div class="eyebrow">End of day</div>
     <h2 id="eodTitle">Close current sales day</h2>
     <p class="modal-sub">
-      Review the closing figures before ending the day. Confirming EOD saves the record
-      and returns to the login screen.
+      Count all physical cash in the shared drawer, including the beginning change fund.
+      Your declaration will be locked before the closing report is revealed.
     </p>
     <p id="eodOperationDate" class="helper-text"></p>
-    <p class="helper-text">Sales and voids include only today’s transactions not yet saved in an EOD. Cash change is excluded. Active orders stay open. SQL recalculates the final totals when you confirm.</p>
+    <p class="helper-text">Do not remove the next operation's change fund or a bank deposit before this count. Use Cash expense / payout for cash taken during operation, with admin approval. Active orders remain saved.</p>
     <div
       class="eod-grid"
       id="eodSummary"
     ></div>
+    <label class="eod-note">Actual physical cash counted (PHP)
+      <input id="eodCountedCash" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Enter the amount you physically counted" required />
+    </label>
     <label class="eod-note">
       Closing note
       <textarea
@@ -52,3 +55,8 @@
     </div>
   </div>
 </div>
+<dialog id="eodSavedDialog" class="ordering-confirmation" aria-labelledby="eodSavedTitle">
+  <h2 id="eodSavedTitle">EOD saved and locked</h2><p id="eodSavedMessage"></p>
+  <p>The closing report includes the original opening and EOD timestamps. Printing does not create another closing record.</p>
+  <div class="ordering-confirmation-actions"><button type="button" class="btn light" id="eodNotNow">Not now</button><button type="button" class="btn dark" id="eodPrintSaved">Print</button></div>
+</dialog>

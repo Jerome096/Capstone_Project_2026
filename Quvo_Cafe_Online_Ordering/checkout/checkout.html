@@ -59,6 +59,7 @@
           <input id="onlinePaymentReceipt" type="file" accept="image/*,.heic,.heif" aria-describedby="paymentReceiptStatus" />
         </label>
         <p id="paymentReceiptStatus" class="small-copy payment-receipt-status" role="status">Upload your receipt to place the order.</p>
+        <label class="customer-payment-reference" for="onlinePaymentReference">Reference number <small>Optional</small><input id="onlinePaymentReference" type="text" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Enter the reference from your payment receipt" /></label>
         <img id="paymentReceiptPreview" alt="Your uploaded payment receipt" hidden />
         <button id="removePaymentReceipt" class="secondary-btn payment-receipt-remove" type="button" aria-describedby="paymentReceiptStatus" hidden>Remove photo</button>
       </section>

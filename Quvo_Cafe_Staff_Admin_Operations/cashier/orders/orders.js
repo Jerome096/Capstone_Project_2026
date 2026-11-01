@@ -523,46 +523,9 @@ function bindEditModal() {
   });
 
   document.getElementById("voidOrderBtn").addEventListener("click", () => {
-    const orderId = editOrderId;
-
-    openAdminGate(() => {
-      const order = state.orders.find((entry) => entry.id === orderId);
-      if (!order) return;
-
-      state.orders = state.orders.filter((entry) => entry.id !== orderId);
-      createReceiptRecord({
-        orderNumber: order.number,
-        location: order.table,
-        source: getOrderSourceLabel(order.source),
-        customerName: order.customerName || "Guest",
-        status: "voided",
-        paymentMethod: order.paymentMethod || "Cash",
-        total: order.total,
-        amountReceived: order.amountReceived || 0,
-        change: order.change || 0,
-        gcashReference: order.gcashReference || "",
-        time: "now",
-        items: order.items,
-      });
-      closeEditOrderModal();
-
-      state.activities.unshift({
-        tag: "Order",
-        type: "coral",
-        text: `Order ${order.number} voided`,
-        table: order.table,
-        time: "now",
-      });
-
-      addSystemRecord(
-        "Order voided",
-        `Order ${order.number} was voided and saved to receipt records`,
-        "Void",
-      );
-
-      renderAll();
-      showToast(`Order ${order.number} has been voided.`);
-    });
+    const order=state.orders.find(entry=>entry.id===editOrderId);
+    if(!order?.sqlId){showToast("Refresh orders to void a saved unpaid order with admin approval.");return;}
+    closeEditOrderModal();cancelSqlOrder(order.sqlId);
   });
 
   document.getElementById("saveOrderBtn").addEventListener("click", () => {

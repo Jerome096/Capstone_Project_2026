@@ -33,20 +33,9 @@ function sales_preview(PDO $db):array {
 function sales_record(PDO $db,int $id):array {
     $q=$db->prepare("SELECT c.closure_id id,CONVERT(char(10),COALESCE(c.business_date,CAST(DATEADD(hour,8,c.closed_at) AS date)),23) date,c.closed_at closedAt,c.note,u.full_name closedBy,".sales_fields()." FROM dbo.eod_closures c JOIN dbo.staff_users u ON u.staff_id=c.closed_by_staff_id LEFT JOIN dbo.eod_sales_orders s ON s.closure_id=c.closure_id WHERE c.closure_id=? GROUP BY c.closure_id,c.closed_at,c.business_date,c.note,u.full_name");$q->execute([$id]);$row=$q->fetch();$q->closeCursor();if(!$row)throw new OrderError('EOD record not found.',404);$row['id']=(string)$row['id'];return sales_public($row);
 }
-function sales_close(PDO $db,int $actor,string $note,mixed $key,mixed $requestedDate=null):array {
-    $note=orders_text($note,1000);
-    if(!is_string($key)||!preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i',$key))throw new OrderError('A valid EOD submission key is required.');
-    $hash=hash('sha256',$note);
-    $q=$db->query("DECLARE @r int;EXEC @r=sys.sp_getapplock @Resource='QuvoDashboardEod',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=5000;SELECT @r");$lock=(int)$q->fetchColumn();$q->closeCursor();if($lock<0)throw new OrderError('Another EOD is being saved. Retry this confirmation.',409);
-    $q=$db->prepare('SELECT closure_id,CONVERT(varchar(64),request_hash,2) request_hash FROM dbo.eod_closures WHERE closed_by_staff_id=? AND request_key=?');$q->execute([$actor,$key]);$old=$q->fetch();$q->closeCursor();
-    if($old){if(!hash_equals(strtolower($old['request_hash']),$hash))throw new OrderError('This EOD key was used for another closing note.',409);return ['record'=>sales_record($db,(int)$old['closure_id']),'closure_id'=>(string)$old['closure_id'],'completed_today'=>dashboard_completed_today($db),'replayed'=>true];}
-    $hours=operating_hours_context($db);$date=operating_business_date($hours);$window=operating_day_bounds($hours,$date);
-    if($requestedDate!==null&&$requestedDate!==$date)throw new OrderError('The operation date changed. Reopen EOD to review today’s figures.',422);
-    ordering_pause($db,$actor,'eod');
-    $closed=dashboard_close_completions($db,$actor,$note,$date);$id=(int)$closed['closure_id'];
-    $db->prepare('UPDATE dbo.eod_closures SET request_key=?,request_hash=CONVERT(binary(32),?,2),business_date=? WHERE closure_id=?')->execute([$key,$hash,$date,$id]);
-    $db->prepare('INSERT dbo.eod_sales_orders(order_id,closure_id,amount,payment_method,order_status,entry_type) SELECT s.order_id,?,s.amount,s.payment_method,s.order_status,s.entry_type FROM ('.sales_pending_sql($date,$window).') s')->execute([$id]);
-    return $closed+['record'=>sales_record($db,$id),'replayed'=>false];
+function sales_close(PDO $db,int $actor,string $note,mixed $key,mixed $requestedDate=null,mixed $countedCash=null,mixed $operationId=null):array {
+    require_once __DIR__.'/cash-operations.php';
+    return cash_ops_close($db,$actor,$note,$key,$operationId,$countedCash,$requestedDate);
 }
 function sales_history(PDO $db,mixed $view='daily',mixed $offset=0):array {
     if(!is_string($view)||!in_array($view,['daily','monthly','yearly'],true))throw new OrderError('Choose daily, monthly or yearly.');

@@ -8,7 +8,8 @@
       >Sales history and closing records are restricted to authorized admin access.</span
     >
   </div>
-  <div class="stats-grid report-stats">
+  <div class="receipt-filters cash-history-tabs"><button type="button" class="receipt-filter active" id="cashHistoryShowTotals">Sales totals</button><button type="button" class="receipt-filter" id="cashHistoryShowClosings">EOD / Cashier closing</button></div>
+  <div id="cashHistoryTotals"><div class="stats-grid report-stats">
     <article class="stat-card">
       <div class="stat-label">Current business day sales</div>
       <div
@@ -85,4 +86,16 @@
     <p id="salesHistoryStatus" class="helper-text" role="status"></p>
     <button type="button" class="btn light" id="salesHistoryMore" hidden>Load older records</button>
   </section>
+  </div>
+  <div id="cashHistoryClosings" hidden>
+    <section class="records-card"><div class="eyebrow">Cashier requests</div><h2>Admin-approved payouts and voids</h2><p class="helper-text">Recent approvals across all dates. Each entry preserves the requesting cashier, approving admin, reason and Philippine timestamp.</p><div id="cashApprovalHistory" class="sales-table-scroll"></div><button type="button" id="cashApprovalMore" class="btn light" hidden>Load older approvals</button></section>
+    <section class="records-card"><div class="admin-toolbar"><div><div class="eyebrow">One shared drawer</div><h2>Current cash operation</h2></div><button type="button" class="btn dark" id="cashMovementOpen" disabled>Record authorized cash movement</button></div><p id="cashCurrentStatus" class="helper-text"></p><div id="cashCurrentMovements"></div></section>
+    <section class="records-card"><div class="admin-toolbar"><div><div class="eyebrow">Locked cashier declarations</div><h2>EOD / Cashier closing history</h2></div></div>
+      <form id="cashHistoryFilters" class="cash-history-filters"><label>From business date<input type="date" name="from"></label><label>To business date<input type="date" name="to"></label><label>Cash status<select name="status"><option value="all">All closings</option><option value="SHORT">Short</option><option value="OVER">Over</option><option value="BALANCED">Balanced</option></select></label><button class="btn light" type="submit">Refresh closings</button></form>
+      <p id="cashHistoryStatus" class="helper-text" role="status"></p><div id="cashHistoryList" class="sales-table-scroll"></div><button type="button" class="btn light" id="cashHistoryMore" hidden>Load older closings</button>
+      <p class="helper-text">Opening and closing timestamps are shown in Philippine time. Older EOD records without physical cash declarations remain in Sales totals. <a href="../admin/sales-audit.php">Open Sales Audit and Excel export</a></p>
+    </section>
+  </div>
+  <dialog class="ordering-confirmation cash-closing-dialog" id="cashClosingDialog" aria-labelledby="cashClosingTitle"><h2 id="cashClosingTitle">Saved EOD report</h2><div id="cashClosingPreview" class="cash-closing-preview"></div><div class="ordering-confirmation-actions"><button type="button" id="cashClosingDismiss">Close</button><button type="button" id="cashClosingPrint">Print report</button></div></dialog>
+  <dialog class="ordering-confirmation" id="cashMovementDialog" aria-labelledby="cashMovementTitle"><h2 id="cashMovementTitle">Authorize cash movement</h2><p>This movement changes expected physical cash. Confirm the amount and explanation before saving. Closed operations cannot be changed.</p><form id="cashMovementForm" class="cash-movement-form"><label>Movement<select name="type"><option value="payout">Cash expense / payout</option><option value="cash_in">Other cash in</option><option value="drop">Cash drop / bank deposit</option></select></label><label>Amount PHP<input name="amount" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" required></label><label>Explanation<textarea name="note" maxlength="1000" required></textarea></label><p id="cashMovementError" role="alert"></p><div class="ordering-confirmation-actions"><button type="button" id="cashMovementCancel">Cancel</button><button type="submit" id="cashMovementSave">Save authorized movement</button></div></form></dialog>
 </section>

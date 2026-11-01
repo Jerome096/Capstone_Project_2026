@@ -1,0 +1,10 @@
+.cashier-approval-card{position:fixed;inset:0;width:min(560px,calc(100vw - 28px));max-height:calc(100dvh - 28px);margin:auto;overflow:auto;border:1px solid #e5dfd2;border-radius:20px;background:#fffefb;color:#1d241c;padding:28px;box-sizing:border-box}
+.cashier-approval-card::backdrop{background:rgba(29,36,28,.55);backdrop-filter:blur(4px)}
+.cashier-approval-card form{position:relative}.cashier-approval-card h2{margin:6px 35px 12px 0;font-family:Georgia,serif;font-size:28px;font-weight:400}
+.cashier-approval-card label{display:block;font-size:13px;font-weight:600;margin:14px 0;color:#59644f}
+.cashier-approval-card input,.cashier-approval-card textarea{display:block;box-sizing:border-box;width:100%;margin-top:6px;padding:12px;border:1px solid #ded3bf;border-radius:10px;background:white;color:#1d241c;font:inherit;font-size:16px}
+.cashier-approval-card fieldset{margin:20px 0 8px;padding:6px 14px 12px;border:1px solid #e5dfd2;border-radius:12px}.cashier-approval-card legend{font-size:13px;font-weight:600}
+.cashier-approval-card .modal-close{position:absolute;right:-12px;top:-12px}.cashier-approval-card .modal-actions{display:flex;gap:10px;margin-top:18px}.cashier-approval-card .modal-actions button{flex:1;min-height:44px}
+.cashier-approval-card #cashierApprovalError{color:#9b2924}.cashier-approval-card [hidden]{display:none!important}.cashier-approval-card input:disabled,.cashier-approval-card textarea:disabled{background:#f4f1e9}
+#openCashierPayoutBtn{width:100%;margin-bottom:10px}
+@media(max-width:480px){.cashier-approval-card{padding:22px 18px}.cashier-approval-card h2{font-size:25px}.cashier-approval-card .modal-actions{flex-wrap:wrap}.cashier-approval-card .modal-actions button{flex-basis:100%}}

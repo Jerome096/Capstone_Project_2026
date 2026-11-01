@@ -4,6 +4,7 @@ require_once __DIR__ . "/../../includes/auth.php";
 require_once __DIR__ . "/../../includes/orders.php";
 require_once __DIR__ . "/../../includes/payment-images.php";
 require_once __DIR__ . "/../../includes/delivery.php";
+require_once __DIR__ . "/../../includes/cashier-approval.php";
 $db = null;
 try {
     $actor = quvo_current_user();
@@ -39,11 +40,22 @@ try {
     quvo_require_post();
     $input = orders_input();
     $id = orders_id($input["id"] ?? null);
+    if (($input['action'] ?? '') === 'cancel') {
+        $reason=orders_text($input['reason']??null,500,true);
+        $approver=cashier_approval_verify($db,$actor,$input);
+        $db->beginTransaction();
+        $approval=cashier_approval_begin($db,$actor,$approver,'void',$input['requestKey']??null,['orderId'=>$id,'reason'=>$reason]);
+        if($approval['result']!==null){$result=$approval['result'];$result['replayed']=true;}
+        else{
+            $result=['order'=>orders_cancel($db,$actor,$id,$reason,$approver),'replayed'=>false];
+            cashier_approval_save($db,$actor,$approver,$approval,(string)$id,$result);
+        }
+        $db->commit();quvo_json(['ok'=>true]+$result);
+    }
     $db->beginTransaction();
     $result = match ($input["action"] ?? "") {
         "pay" => orders_pay($db, $actor["staff_id"], $id, $input),
         "status" => ["order" => orders_status($db, $actor["staff_id"], $id, $input["status"] ?? null)],
-        "cancel" => ["order" => orders_cancel($db, $actor, $id, $input["reason"] ?? null)],
         "remind_ready" => orders_remind_ready($db, $actor, $id, $input["request_key"] ?? null),
         default => throw new OrderError("Unknown order action."),
     };

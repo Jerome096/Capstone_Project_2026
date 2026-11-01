@@ -69,12 +69,14 @@ function ordering_status(PDO $db, bool $staff = false): array
 {
     $row = ordering_row($db);
     $open = (bool)$row['accepting_orders'];
+    $cashReady=cash_ops_ready($db);$cashOperation=$cashReady?cash_ops_active($db):null;
+    if(!$cashReady||!$cashOperation)$open=false;
     $offline = $row['change_reason'] === 'offline';
     $status = ['acceptingOrders'=>$open, 'state'=>$open?'open':($offline?'offline':'paused'),
         'message'=>$open?'We are accepting orders.':'We are not accepting orders right now. You can still browse the menu. Please try again when ordering reopens.',
         'autoPauseAt'=>$open&&$row['logout_pause_at']!==null?$row['logout_pause_at'].'Z':null,
         'serverTime'=>$row['server_time'].'Z'];
-    if ($staff) $status += ['revision'=>strtolower($row['service_version']), 'onlineWorkspaces'=>(int)$row['online_workspaces']];
+    if ($staff) $status += ['revision'=>strtolower($row['service_version']), 'onlineWorkspaces'=>(int)$row['online_workspaces'],'cashReady'=>$cashReady,'cashOperation'=>cash_ops_public($cashOperation)];
     return $status;
 }
 
@@ -121,6 +123,7 @@ function ordering_change(PDO $db, ?array $actor, array $input, string $sessionHa
     if (!in_array($action,['start','pause','heartbeat'],true)) throw new OrderError('Unknown ordering action.');
     $workspace=ordering_uuid($input['workspaceId']??null);
     $revision=ordering_uuid($input['revision']??null);
+    if($action==='start'){inventory_lock($db);cash_ops_schema($db);cash_ops_lock($db);}
     ordering_lock($db); $row=ordering_row($db);
     if (!hash_equals(strtolower($row['service_version']),$revision)) {
         if ($action==='heartbeat') return ordering_status($db,true);
@@ -129,6 +132,10 @@ function ordering_change(PDO $db, ?array $actor, array $input, string $sessionHa
     $actorId=(int)$actor['staff_id'];
     if ($action==='pause') ordering_pause($db,$actorId);
     elseif ($action==='start') {
+        if(!cash_ops_active($db)){
+            require_once __DIR__.'/cash-operations.php';
+            cash_ops_open($db,$actor,$input['openingCash']??null,$input['operationKey']??null);
+        }
         $db->prepare("UPDATE dbo.ordering_settings SET accepting_orders=1,service_version=NEWID(),change_reason='manual',changed_by_staff_id=?,changed_at=SYSUTCDATETIME() WHERE settings_id=1")->execute([$actorId]);
         ordering_lease($db,$actorId,$workspace,$sessionHash,$stamp);
     } elseif ((bool)$row['accepting_orders']) {

@@ -1,4 +1,21 @@
-<p class="small-copy" id="paymentNote">Pay at the cashier after submitting. Preparation starts after payment is confirmed.</p>
+<section class="dine-payment-card" id="dinePaymentPanel" aria-labelledby="dinePaymentHeading">
+  <p class="eyebrow">Payment</p><h3 id="dinePaymentHeading">How would you like to pay?</h3>
+  <div class="dine-payment-choices">
+    <label><input type="radio" name="dinePaymentChoice" value="counter" checked /><span>Pay at counter</span></label>
+    <label><input type="radio" name="dinePaymentChoice" value="qr" /><span>Pay by QR</span></label>
+  </div>
+  <p class="small-copy" id="paymentNote">Submit your order, then pay at the cashier. Preparation starts after payment is confirmed.</p>
+  <div id="dineQrCheckout" hidden>
+    <div class="dine-payment-method-heading"><strong>Choose a payment method</strong><button type="button" class="dine-payment-link" id="dinePaymentRefresh">Refresh methods</button></div>
+    <div id="dinePaymentMethods" class="dine-payment-choices"></div>
+    <p id="dinePaymentStatus" class="small-copy" role="status" aria-live="polite"></p>
+    <div class="dine-payment-amount"><span>Amount to pay</span><strong id="dineQrAmount">₱0.00</strong></div>
+    <div class="dine-payment-steps">
+      <section><h4>1. Scan &amp; pay</h4><div class="dine-qr-frame"><img id="dinePaymentQr" alt="Café payment QR" hidden /><p id="dinePaymentQrPlaceholder" class="small-copy">Choose an available payment method.</p></div><a id="dinePaymentQrDownload" class="dine-payment-button" hidden>Download QR code</a><p id="dineQrInstructions" class="small-copy" hidden>Scan the QR in your payment app, or download and upload it there. Check the recipient and send the exact total above.</p></section>
+      <section><h4>2. Upload receipt <small>Required</small></h4><p class="small-copy">Use a clear screenshot or photo showing the amount, recipient and reference number.</p><label class="dine-receipt-upload"><input id="dinePaymentReceipt" type="file" accept="image/*,.heic,.heif" /><strong id="dineReceiptButtonText">Choose receipt image</strong><span>Image · Up to 2 MB</span></label><p id="dineReceiptStatus" class="small-copy" role="status"></p><label class="customer-payment-reference" for="dinePaymentReference">Reference number <small>Optional</small><input id="dinePaymentReference" type="text" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Enter the reference from your payment receipt" /></label><img id="dineReceiptPreview" alt="Your payment receipt" hidden /><button id="dineReceiptRemove" type="button" class="dine-payment-link" hidden>Remove receipt</button></section>
+    </div>
+  </div>
+</section>
 <section class="summary-card">
   <p class="small-copy" id="dineCashierNote" hidden>Submit your order, then pay the full amount at the cashier. Preparation starts after payment is confirmed.</p>
   <p class="small-copy" id="dineRetryNote" role="status" hidden>Your order is awaiting confirmation. Use Retry order to check the same submission before changing your cart.</p>

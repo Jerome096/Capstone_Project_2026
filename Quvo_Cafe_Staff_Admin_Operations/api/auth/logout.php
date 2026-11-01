@@ -6,7 +6,7 @@ require_once __DIR__.'/../../includes/orders.php';
 try {
     $actor=quvo_current_user();
     if($actor&&in_array($actor['role'],['staff','admin'],true)) {
-        $db=quvo_db();$db->beginTransaction();
+        $db=quvo_db();dining_expire_sessions($db);$db->beginTransaction();
         ordering_release_session($db,hash('sha256',session_id()));
         $db->commit();
     }

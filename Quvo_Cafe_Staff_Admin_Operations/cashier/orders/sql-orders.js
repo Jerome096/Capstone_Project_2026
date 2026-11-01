@@ -5,8 +5,10 @@ const sqlOrders = {
   receiptDate:null, receiptRequest:0, receiptLoading:false,
   reminderAttempts:new Map(),reminderTimes:new Map(),
   stockNotice:null,stockError:false,stockLoading:false,stockPromise:null,stockRequest:0,stockReview:false,
+  paymentMethodsLoading:false,paymentMethodsRequest:0,
 };
 const sqlMoney = value => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value));
+function sqlSubmittedPayment(row){return row.order_source==='online'||(row.order_source==='dine_in'&&Number(row.has_payment_receipt)===1);}
 function sqlDate(value) {
   return value ? new Date(value.replace(" ", "T") + "Z").toLocaleString("en-PH") : "";
 }
@@ -202,7 +204,7 @@ function renderSqlOrderCard(order) {
   const row = order.raw;
   let actions = "";
   if (row.order_status === "received") {
-    actions = '<button class="btn dark" onclick="openSqlPayment(\'' + order.id + '\')">' + (row.order_source === "online" ? "Approve payment" : "Collect payment") + '</button>';
+    actions = '<button class="btn dark" onclick="openSqlPayment(\'' + order.id + '\')">' + (sqlSubmittedPayment(row) ? "Approve payment" : "Collect payment") + '</button>';
     if (row.payment_status === "unpaid" && ["admin", "staff"].includes(QUVO_AUTH.getSession()?.role)) {
       actions += '<button class="btn light" onclick="cancelSqlOrder(\'' + order.sqlId + '\')">Cancel order</button>';
     }
@@ -213,6 +215,7 @@ function renderSqlOrderCard(order) {
   if (row.order_source === "online") {
     actions = '<button class="btn light" onclick="openOnlineOrderDetails(\'' + order.sqlId + '\')">View customer details</button>' + actions;
   }
+  if(row.order_source==='dine_in'&&Number(row.has_payment_receipt)===1)actions='<button class="btn light" onclick="openOnlineOrderDetails(\''+order.sqlId+'\')">View payment receipt</button>'+actions;
   actions += sqlReadyReminderMarkup(order)+preparationReprintMarkup(order);
   return '<article class="order-card"><div class="order-top"><strong>' + e(order.number) +
     '</strong><span class="table-chip">' + e(order.table) + '</span></div><p class="order-context">Customer: ' +
@@ -222,8 +225,8 @@ function renderSqlOrderCard(order) {
       '<br>Payment method: ' + e(row.preferred_payment_label || row.preferred_payment_method || "Cash") + '</p>' : "") +
     '<div class="order-total">' + sqlMoney(row.total_amount) +
     '</div><div class="order-payment ' + (order.paid ? "confirmed" : "pending") + '">' +
-    (order.paid ? "Paid · " + e(order.paymentMethod) : row.order_source === "online" ?
-      e(row.preferred_payment_label || row.preferred_payment_method) + " · Awaiting cashier approval" : "Unpaid · Cashier payment required") +
+    (order.paid ? "Paid · " + e(order.paymentMethod) : sqlSubmittedPayment(row) ?
+      e(row.preferred_payment_label || row.preferred_payment_method) + " · QR payment awaiting review" : "Pay at counter · Awaiting payment") +
     '</div>' + preparationApprovalMarkup(order) + sqlFoodReadyMarkup(order) + '<div class="item-list">' + order.items.map(item => '<div class="item-row"><span>' +
       e(item.qty + " × " + item.name) + "</span><span>" + sqlMoney(item.qty * item.price) + "</span>" +
       (item.note ? '<div class="item-note">' + e(item.note) + "</div>" : "") + "</div>").join("") +
@@ -232,7 +235,7 @@ function renderSqlOrderCard(order) {
 // Show the saved order information without changing its payment or preparation status.
 async function openOnlineOrderDetails(id) {
   const row = sqlOrders.known.get(String(id));
-  if (!row || row.order_source !== "online") return;
+  if (!row || (row.order_source !== "online" && !(row.order_source==='dine_in'&&Number(row.has_payment_receipt)===1))) return;
   const modal=document.getElementById('onlineOrderDetailsModal'),request=(sqlOrders.detailsRequest||0)+1;
   sqlOrders.detailsRequest=request;
   const current=()=>modal.open&&sqlOrders.detailsRequest===request;
@@ -240,12 +243,14 @@ async function openOnlineOrderDetails(id) {
   const field = (label, value) => '<div><dt>' + escapeHtml(label) + '</dt><dd>' +
     escapeHtml(value || "Not provided") + '</dd></div>';
   document.getElementById("onlineOrderDetailsTitle").textContent = row.order_number;
-  document.getElementById("onlineOrderCustomerDetails").innerHTML =
+  document.getElementById('onlineOrderDetailsEyebrow').textContent=row.order_source==='dine_in'?'Dine-in payment receipt':'Online order details';
+  document.getElementById("onlineOrderCustomerDetails").innerHTML = row.order_source==='dine_in'?
+    field('Customer',row.customer_name)+field('Table',row.table_name)+field('Payment method',row.preferred_payment_label||row.preferred_payment_method)+field('Customer reference',row.customer_payment_reference)+field('Total',sqlMoney(row.total_amount)):
     field("Customer", row.customer_name) + field("Recipient", row.recipient_name || row.customer_name) +
     field("Contact number", row.contact_snapshot) +
     field("Fulfillment", row.fulfillment_type === "delivery" ? (row.delivery_provider === "lalamove" ? "Customer-booked Lalamove" : "Delivery request") : "Pickup") +
     (row.pickup_address_snapshot ? field("Café pickup address", row.pickup_address_snapshot) + field("Café phone", row.cafe_phone_snapshot) : row.fulfillment_type === "delivery" ? field("Delivery address", row.address_snapshot) : "") +
-    field("Payment method", row.preferred_payment_label || row.preferred_payment_method) + field("Total", sqlMoney(row.total_amount));
+    field("Payment method", row.preferred_payment_label || row.preferred_payment_method) + field("Customer reference",row.customer_payment_reference) + field("Total", sqlMoney(row.total_amount));
   };
   renderDetails(row);
   const bookingSection=document.getElementById('onlineOrderBookingSection');
@@ -307,31 +312,54 @@ function loadSqlPaymentStock(order) {
   })();
   sqlOrders.stockPromise=task;return task;
 }
+async function loadSqlPaymentMethods(order,preferred=null) {
+  if(sqlOrders.paymentOrder!==order||sqlSubmittedPayment(order.raw)||sqlOrders.paymentAttempt)return;
+  const request=++sqlOrders.paymentMethodsRequest,select=document.getElementById('sqlPaymentMethod');
+  const chosen=preferred??select.value;
+  sqlOrders.paymentMethodsLoading=true;document.getElementById('sqlPaymentMethodsStatus').textContent='Loading configured payment methods...';updateSqlPayment();
+  try{
+    const response=await fetch(quvoPath('api/pos/index.php')+'?view=payment-methods',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)}),data=await response.json();
+    if(!response.ok||!data.ok||!Array.isArray(data.methods))throw new Error('Payment methods unavailable.');
+    if(sqlOrders.paymentOrder!==order||request!==sqlOrders.paymentMethodsRequest)return;
+    const methods=new Map([['Cash','Cash']]);
+    for(const method of data.methods)if(typeof method.code==='string'&&method.code&&method.code.length<=10&&typeof method.label==='string'&&method.label.trim())methods.set(method.code,method.label);
+    select.innerHTML=Array.from(methods,([code,label])=>'<option value="'+escapeHtml(code)+'">'+escapeHtml(label)+'</option>').join('');
+    select.value=methods.has(chosen)?chosen:'Cash';
+    document.getElementById('sqlPaymentMethodsStatus').textContent=chosen&&chosen!=='Cash'&&!methods.has(chosen)?'The previous method is no longer available. Choose a current payment method.':'';
+  }catch{
+    if(sqlOrders.paymentOrder!==order||request!==sqlOrders.paymentMethodsRequest)return;
+    select.innerHTML='<option value="Cash">Cash</option>';
+    document.getElementById('sqlPaymentMethodsStatus').textContent='Could not load digital payment methods. Cash is available. Refresh payment methods to retry.';
+  }finally{if(sqlOrders.paymentOrder===order&&request===sqlOrders.paymentMethodsRequest){sqlOrders.paymentMethodsLoading=false;updateSqlPayment();}}
+}
 function openSqlPayment(id) {
   if (sqlOrders.changing || sqlOrders.stockReview) return;
   const order = state.orders.find(row => row.id === id);
   if (!order || order.paid || order.stage !== "received") return;
   sqlOrders.paymentOrder = order;
   sqlOrders.paymentAttempt = null;
+  sqlOrders.paymentMethodsRequest++;sqlOrders.paymentMethodsLoading=false;
   resetSqlPaymentStock();
-  const onlineOrder=order.raw.order_source === "online";
+  const onlineOrder=sqlSubmittedPayment(order.raw);
   document.getElementById("sqlPaymentTitle").textContent = (onlineOrder ? "Approve payment · " : "Collect payment · ") + order.number;
-  document.getElementById("sqlPaymentEyebrow").textContent=onlineOrder?"Online payment approval":"Cashier payment";
+  document.getElementById("sqlPaymentEyebrow").textContent=onlineOrder?"QR payment approval":"Cashier payment";
   document.getElementById("sqlPaymentAmountLabel").textContent=onlineOrder?"Order total":"Total due";
   document.getElementById("sqlPaymentMethod").hidden=onlineOrder;
+  document.getElementById('sqlPaymentMethodsControl').hidden=onlineOrder;
+  document.getElementById('sqlPaymentMethodsStatus').textContent='';
   document.getElementById("sqlOnlinePaymentMethod").hidden=!onlineOrder;
   document.getElementById("sqlOnlinePaymentMethod").textContent=order.raw.preferred_payment_label||order.raw.preferred_payment_method||"Not provided";
   document.getElementById("sqlOnlinePaymentHelp").hidden=!onlineOrder;
+  document.getElementById("sqlSubmittedReference").hidden=!onlineOrder;
+  document.getElementById("sqlSubmittedReference").textContent="Customer reference: "+(order.raw.customer_payment_reference||"Not provided");
   document.getElementById("sqlPaymentTotal").textContent = sqlMoney(order.total);
-  const methods=new Map([['Cash','Cash'],['GCash','GCash'],['PayMaya','PayMaya']]);
-  if(order.raw.preferred_payment_method)methods.set(order.raw.preferred_payment_method,order.raw.preferred_payment_label||order.raw.preferred_payment_method);
-  document.getElementById('sqlPaymentMethod').innerHTML=Array.from(methods,([code,label])=>'<option value="'+escapeHtml(code)+'">'+escapeHtml(label)+'</option>').join('');
-  document.getElementById("sqlPaymentMethod").value = order.raw.preferred_payment_method || "Cash";
+  document.getElementById('sqlPaymentMethod').innerHTML='<option value="Cash">Cash</option>';
   document.getElementById("sqlAmountReceived").value = "";
   document.getElementById("sqlPaymentReference").value = "";
   document.getElementById("sqlPaymentError").textContent = "";
   document.getElementById("sqlPaymentModal").classList.remove("hidden");
   updateSqlPayment();
+  if(!onlineOrder)loadSqlPaymentMethods(order,order.raw.preferred_payment_method||'Cash');
   loadSqlPaymentStock(order);
 }
 function closeSqlPayment() {
@@ -339,10 +367,11 @@ function closeSqlPayment() {
   document.getElementById("sqlPaymentModal").classList.add("hidden");
   sqlOrders.paymentOrder = null;
   sqlOrders.paymentAttempt = null;
+  sqlOrders.paymentMethodsRequest++;sqlOrders.paymentMethodsLoading=false;
   resetSqlPaymentStock();
 }
 function updateSqlPayment() {
-  const onlineOrder=sqlOrders.paymentOrder?.raw.order_source === "online";
+  const onlineOrder=sqlOrders.paymentOrder?sqlSubmittedPayment(sqlOrders.paymentOrder.raw):false;
   const cash = document.getElementById("sqlPaymentMethod").value === "Cash";
   document.getElementById("sqlCashFields").hidden = onlineOrder || !cash;
   document.getElementById("sqlReferenceFields").hidden = onlineOrder || cash;
@@ -351,15 +380,16 @@ function updateSqlPayment() {
   document.getElementById("sqlPaymentChange").textContent = sqlMoney(Math.max(0, Math.round((received - total) * 100) / 100));
   document.getElementById("sqlPaymentConfirm").textContent = onlineOrder ? (sqlOrders.paymentAttempt ? "Retry payment approval" : "Approve payment") : (sqlOrders.paymentAttempt ? "Retry payment confirmation" : "Confirm payment received");
   if(sqlOrders.stockReview)document.getElementById("sqlPaymentConfirm").textContent='Checking stock...';
-  document.querySelectorAll("#sqlPaymentForm input, #sqlPaymentForm select").forEach(el => el.disabled = onlineOrder || sqlOrders.changing || sqlOrders.stockReview || Boolean(sqlOrders.paymentAttempt));
-  document.getElementById("sqlPaymentConfirm").disabled = sqlOrders.changing || sqlOrders.stockReview;
+  document.querySelectorAll("#sqlPaymentForm input, #sqlPaymentForm select").forEach(el => el.disabled = onlineOrder || sqlOrders.changing || sqlOrders.stockReview || sqlOrders.paymentMethodsLoading || Boolean(sqlOrders.paymentAttempt));
+  document.getElementById('sqlPaymentMethodsRefresh').disabled=sqlOrders.changing||sqlOrders.stockReview||sqlOrders.paymentMethodsLoading||Boolean(sqlOrders.paymentAttempt);
+  document.getElementById("sqlPaymentConfirm").disabled = sqlOrders.changing || sqlOrders.stockReview || sqlOrders.paymentMethodsLoading;
 }
 async function confirmSqlPayment(event) {
   event.preventDefault();
-  if (sqlOrders.changing || sqlOrders.stockReview || !sqlOrders.paymentOrder) return;
+  if (sqlOrders.changing || sqlOrders.stockReview || sqlOrders.paymentMethodsLoading || !sqlOrders.paymentOrder) return;
   const order = sqlOrders.paymentOrder;
   if (!sqlOrders.paymentAttempt) {
-    const onlineOrder=order.raw.order_source === "online";
+    const onlineOrder=sqlSubmittedPayment(order.raw);
     const method = onlineOrder ? order.raw.preferred_payment_method : document.getElementById("sqlPaymentMethod").value;
     const amount = onlineOrder || method !== "Cash" ? order.raw.total_amount : document.getElementById("sqlAmountReceived").value.trim();
     if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(amount) || Number(amount) < order.total) {
@@ -380,7 +410,7 @@ async function confirmSqlPayment(event) {
     if(!confirmed||sqlOrders.paymentOrder!==order)return;
     sqlOrders.paymentAttempt = {
       action: "pay", id: order.sqlId, payment_method: method, amount_received: amount,
-      payment_reference: onlineOrder || method === "Cash" ? "" : document.getElementById("sqlPaymentReference").value.trim(),
+      payment_reference: onlineOrder ? (order.raw.customer_payment_reference||"") : method === "Cash" ? "" : document.getElementById("sqlPaymentReference").value.trim(),
     };
   }
   sqlOrders.changing = true; sqlOrders.revision++; updateSqlPayment();
@@ -391,7 +421,7 @@ async function confirmSqlPayment(event) {
     installSqlOrder(data.order);
     approvedOrder = sqlMapOrder(data.order);
     succeeded = true;
-    showToast(data.replayed ? "Previously confirmed payment restored." : order.raw.order_source === "online" ? "Payment approved. Order is preparing." : "Payment saved. Order is preparing.");
+    showToast(data.replayed ? "Previously confirmed payment restored." : sqlSubmittedPayment(order.raw) ? "Payment approved. Order is preparing." : "Payment saved. Order is preparing.");
   } catch (error) {
     document.getElementById("sqlPaymentError").textContent = error.message + " Retry to confirm the saved result, or close and refresh orders.";
   } finally {
@@ -407,10 +437,8 @@ async function changeSqlOrderStatus(id, status) {
 }
 async function cancelSqlOrder(id) {
   if (sqlOrders.changing) return;
-  const reason = window.prompt("Reason for cancelling this unpaid order:");
-  if (!reason?.trim()) return;
-  if (!window.confirm("Cancel this unpaid order? Its history will be kept.")) return;
-  await mutateSqlOrder({ action: "cancel", id, reason: reason.trim() });
+  const order=state.orders.find(entry=>String(entry.sqlId)===String(id));
+  window.QuvoCashierApproval.openVoid(id,order?.number);
 }
 async function mutateSqlOrder(payload) {
   sqlOrders.changing = true; sqlOrders.revision++;
@@ -438,6 +466,7 @@ function renderSqlReceipt(receipt) {
 function bindSqlOrders() {
   document.getElementById("sqlPaymentForm").addEventListener("submit", confirmSqlPayment);
   document.getElementById("sqlPaymentMethod").addEventListener("change", updateSqlPayment);
+  document.getElementById('sqlPaymentMethodsRefresh').addEventListener('click',()=>{if(sqlOrders.paymentOrder)loadSqlPaymentMethods(sqlOrders.paymentOrder);});
   document.getElementById("sqlAmountReceived").addEventListener("input", updateSqlPayment);
   document.getElementById("sqlPaymentClose").addEventListener("click", closeSqlPayment);
   document.getElementById("sqlOrdersRefresh").addEventListener("click", loadSqlOrders);
