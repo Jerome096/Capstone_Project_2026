@@ -15,7 +15,7 @@ $_SESSION["operations_portal"] = "cashier";
   <link rel="stylesheet" href="../shared/css/quvo-design-system.css" />
   <link rel="stylesheet" href="../shared/css/quvo-shell.css?v=hide-zero-badges-1" />
   <link rel="stylesheet" href="../shared/css/portal.css" />
-  <link rel="stylesheet" href="../cashier/dashboard/dashboard.css?v=report-colors-1" />
+  <link rel="stylesheet" href="../cashier/operations/operations.css?v=operations-cleanup-1" />
   <link rel="stylesheet" href="../cashier/menu/menu.css?v=menu-categories-1" />
   <link rel="stylesheet" href="../cashier/sessions/sessions.css?v=staff-session-timer-1" />
   <link rel="stylesheet" href="../cashier/orders/orders.css?v=native-ticket-popup-4" />
@@ -52,9 +52,9 @@ $_SESSION["operations_portal"] = "cashier";
       loginUrl: window.QUVO_CONFIG.loginUrl
     });
   </script>
-  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=reports-no-graph-4" />
+  <link rel="stylesheet" href="../shared/css/workspace-cafe.css?v=operations-cleanup-1" />
   <link rel="stylesheet" href="../shared/css/cashier-approval.css?v=cashier-password-only-1" />
-  <link rel="stylesheet" href="../cashier/menu/operations.css?v=menu-fill-space-1" />
+  <link rel="stylesheet" href="../cashier/menu/operations.css?v=operations-cleanup-1" />
 </head>
 <body class="logged-in workspace-loading quvo-cafe-ui quvo-operations-ui">
   <div class="workspace-loading-screen" id="workspaceLoading" role="status" aria-label="Loading workspace">
@@ -101,6 +101,6 @@ $_SESSION["operations_portal"] = "cashier";
   </main>
   <div id="modal-fragment-root"></div>
   <div class="toast hidden" id="toast"></div>
-  <script src="../shared/js/workspace-loader.js?v=menu-fill-space-1"></script>
+  <script src="../shared/js/workspace-loader.js?v=operations-cleanup-1"></script>
 </body>
 </html>

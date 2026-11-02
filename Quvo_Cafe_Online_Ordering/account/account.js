@@ -1,5 +1,3 @@
-const accountAvatar = document.getElementById("accountAvatar");
-
 const accountDisplayName = document.getElementById("accountDisplayName");
 
 const accountDisplayEmail = document.getElementById("accountDisplayEmail");
@@ -38,15 +36,6 @@ function renderAccount() {
   }
 
   const customer = state.onlineCustomer;
-  const initials =
-    String(customer.name || "Quvo Customer")
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() || "")
-      .join("") || "QC";
-
-  accountAvatar.textContent = initials;
   accountDisplayName.textContent = customer.name || "Customer";
   accountDisplayEmail.textContent = customer.email || "";
   profileName.value = customer.name || "";
@@ -62,7 +51,7 @@ function renderAccount() {
 async function handleProfileUpdate(event){
   event.preventDefault();if(!state.onlineCustomer)return;
   await onlineForm(profileForm,profileError,async()=>{
-    const result=await onlineApi({action:"profile",name:profileName.value.trim(),email:profileEmail.value.trim(),contact:profileContact.value.trim()});
+    const result=await onlineApi({action:"profile",name:profileName.value.trim(),contact:profileContact.value.trim()});
     state.onlineCustomer=result.account;state.customerName=result.account.name;
     configureMenuHeader();renderAccount();prefillDeliveryDetails(true);profileSuccess.textContent="Profile changes saved.";
   });

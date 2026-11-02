@@ -50,6 +50,23 @@
   .quvo-operations-ui #posCategoryFilters .pos-category-select.active { background: #1c211c; color: #fffefb; border-color: #1c211c; }
   .quvo-operations-ui #posCategoryFilters .pos-category-select option { color: #1c211c; background: #fffefb; }
   .quvo-operations-ui #menu .menu-card.available .menu-status { display: none; }
+  .quvo-operations-ui #menuGrid > .menu-card { padding: 15px; overflow-wrap: anywhere; }
+  .quvo-operations-ui #menu .menu-card-photo {
+    position: relative;
+    width: 170px;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 17 / 12;
+    margin-top: 0;
+  }
+  .quvo-operations-ui #menu .menu-card-photo .menu-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
   .quvo-operations-ui #menu > .menu-note { line-height: 1.5; }
   .quvo-operations-ui .pos-layout { grid-template-columns: minmax(0, 1fr) clamp(280px, 25vw, 340px); gap: 18px; align-items: start; }
   .quvo-operations-ui .pos-menu-area,
@@ -71,14 +88,14 @@
   }
   .quvo-operations-ui #proceedOrderBtn:not(:disabled):hover { background: #292929; }
   .quvo-operations-ui #proceedOrderBtn:disabled { background: #111; color: rgb(255 255 255 / 65%); opacity: 1; cursor: not-allowed; }
-  .quvo-operations-ui .pos-side-column .dashboard-stock-panel { padding: 18px; }
-  .quvo-operations-ui .dashboard-stock-header { flex-direction: column; align-items: stretch; }
-  .quvo-operations-ui .dashboard-stock-header h2 { font: 25px/1.2 var(--q-font-brand); letter-spacing: -.5px; }
-  .quvo-operations-ui .dashboard-stock-header .btn { width: 100%; }
-  .quvo-operations-ui .dashboard-stock-list { grid-template-columns: minmax(0, 1fr); }
-  .quvo-operations-ui .dashboard-stock-copy,
-  .quvo-operations-ui .dashboard-stock-status { font-size: 12px; }
-  .quvo-operations-ui .dashboard-stock-item-header { flex-wrap: wrap; gap: 6px; }
+  .quvo-operations-ui .pos-side-column .operation-stock-panel { padding: 18px; }
+  .quvo-operations-ui .operation-stock-header { flex-direction: column; align-items: stretch; }
+  .quvo-operations-ui .operation-stock-header h2 { font: 25px/1.2 var(--q-font-brand); letter-spacing: -.5px; }
+  .quvo-operations-ui .operation-stock-header .btn { width: 100%; }
+  .quvo-operations-ui .operation-stock-list { grid-template-columns: minmax(0, 1fr); }
+  .quvo-operations-ui .operation-stock-copy,
+  .quvo-operations-ui .operation-stock-status { font-size: 12px; }
+  .quvo-operations-ui .operation-stock-item-header { flex-wrap: wrap; gap: 6px; }
 }
 
 @media screen and (min-width: 1181px) {
@@ -151,8 +168,8 @@
    Normal document flow also handles changing carts, photos and stock reminders. */
 @media screen and (min-width: 720px) {
   .quvo-operations-ui .pos-layout {
-    --pos-columns: 3;
-    --pos-gap: 18px;
+    --pos-gap: 14px;
+    --pos-panel-width: clamp(240px, 25vw, 320px);
     display: flow-root;
     margin-right: calc(-1 * var(--pos-gap));
     font-size: 0;
@@ -162,7 +179,7 @@
   .quvo-operations-ui .menu-grid { display: contents; }
   .quvo-operations-ui .pos-side-column {
     float: right;
-    width: calc(100% / var(--pos-columns) - var(--pos-gap));
+    width: var(--pos-panel-width);
     margin-right: var(--pos-gap);
     margin-bottom: var(--pos-gap);
     font-size: 14px;
@@ -171,7 +188,7 @@
   .quvo-operations-ui #menuGrid > .menu-card {
     display: inline-block;
     vertical-align: top;
-    width: calc(100% / var(--pos-columns) - var(--pos-gap));
+    width: min(202px, calc((100% - var(--pos-panel-width) - var(--pos-gap)) / 2 - var(--pos-gap)));
     min-height: 130px;
     margin-right: var(--pos-gap);
     margin-bottom: var(--pos-gap);
@@ -180,27 +197,58 @@
   }
   .quvo-operations-ui #menuGrid > .helper-text {
     display: inline-block;
-    width: calc(100% - 100% / var(--pos-columns) - var(--pos-gap));
+    width: calc(100% - var(--pos-panel-width) - 2 * var(--pos-gap));
     padding: 16px 0;
     font-size: 12px;
     line-height: 1.6;
   }
   .quvo-operations-ui .pos-side-column .cart-customer input { width: 100%; min-width: 0; }
 }
-@media screen and (min-width: 1181px) {
-  .quvo-operations-ui .pos-layout { --pos-columns: 4; }
-}
-@media screen and (min-width: 1451px) {
-  .quvo-operations-ui .pos-layout { --pos-columns: 5; }
-}
-@media screen and (min-width: 1701px) {
-  .quvo-operations-ui .pos-layout { --pos-columns: 6; }
-}
-@media screen and (min-width: 1951px) {
-  .quvo-operations-ui .pos-layout { --pos-columns: 7; }
-}
 @media screen and (max-width: 719px) {
   .quvo-operations-ui .pos-layout { display: flex; flex-direction: column; }
   .quvo-operations-ui .pos-menu-area { order: 0; width: 100%; }
   .quvo-operations-ui .pos-side-column { order: 1; width: 100%; }
+  .quvo-operations-ui .menu-grid { grid-template-columns: repeat(2, minmax(0, 202px)); gap: 14px; }
+  .quvo-operations-ui #menuGrid > .menu-card { width: 100%; max-width: 202px; }
+}
+@media screen and (min-width: 600px) and (max-width: 719px) {
+  .quvo-operations-ui .menu-grid { grid-template-columns: repeat(3, minmax(0, 202px)); }
+}
+
+/* Compact overview cards leave more of the tablet viewport for the menu. */
+@media screen and (min-width: 600px) and (max-width: 1180px) {
+  .quvo-operations-ui #menu .stats-grid { gap: 10px; margin-bottom: 16px; }
+  .quvo-operations-ui #menu .stat-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18px;
+    grid-template-rows: minmax(28px, auto) auto;
+    gap: 6px 8px;
+    min-height: 88px;
+    padding: 12px;
+  }
+  .quvo-operations-ui #menu .stat-label { max-width: none; font-size: 10.5px; line-height: 1.35; }
+  .quvo-operations-ui #menu .stat-icon { position: static; width: 18px; height: 18px; place-self: start end; }
+  .quvo-operations-ui #menu .stat-icon svg { width: 16px; height: 16px; }
+  .quvo-operations-ui #menu .stat-value { grid-column: 1 / -1; grid-row: 2; margin: 0; font-size: 26px; line-height: 1.1; }
+}
+@media screen and (min-width: 720px) and (max-width: 1180px) {
+  .quvo-operations-ui #menu .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .quvo-operations-ui .pos-layout {
+    --pos-tablet-columns: 3;
+    --pos-tablet-side-span: 1;
+    --pos-tablet-card-width: calc(100% / var(--pos-tablet-columns) - var(--pos-gap));
+    --pos-panel-width: calc(100% / var(--pos-tablet-columns) * var(--pos-tablet-side-span) - var(--pos-gap));
+  }
+  .quvo-operations-ui #menuGrid > .menu-card {
+    width: var(--pos-tablet-card-width);
+    /* Keep the approved photo and text block 170px wide within every column. */
+    padding-inline: max(6px, calc((var(--pos-tablet-card-width) - 172px) / 2));
+  }
+  .quvo-operations-ui .operation-stock-header h2 { flex-wrap: wrap; }
+}
+@media screen and (min-width: 850px) and (max-width: 1049px) {
+  .quvo-operations-ui .pos-layout { --pos-tablet-columns: 4; --pos-tablet-side-span: 2; }
+}
+@media screen and (min-width: 1050px) and (max-width: 1180px) {
+  .quvo-operations-ui .pos-layout { --pos-tablet-columns: 5; --pos-tablet-side-span: 2; }
 }

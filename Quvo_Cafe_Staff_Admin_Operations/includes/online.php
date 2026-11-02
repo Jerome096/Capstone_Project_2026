@@ -114,9 +114,11 @@ function online_login(PDO $db,array $input): array
 
 function online_update_profile(PDO $db,int $id,array $input): array
 {
-    online_account($db,$id,true);
-    [$name,$email,$contact,$address]=online_profile_values($input);
-    $db->prepare('UPDATE dbo.customer_accounts SET full_name=?,email=?,contact_number=?,updated_at=SYSUTCDATETIME() WHERE customer_account_id=?')->execute([$name,$email,$contact,$id]);
+    $account=online_account($db,$id,true);
+    if(array_key_exists('email',$input)&&(!is_string($input['email'])||strcasecmp(trim($input['email']),$account['email'])!==0))
+        throw new OrderError('Your sign-in email cannot be changed.',422,'email_change_not_allowed');
+    [$name,,$contact,$address]=online_profile_values(array_replace($input,['email'=>$account['email']]));
+    $db->prepare('UPDATE dbo.customer_accounts SET full_name=?,contact_number=?,updated_at=SYSUTCDATETIME() WHERE customer_account_id=?')->execute([$name,$contact,$id]);
     // New profile forms omit this retired field. Preserve legacy saved data.
     if(array_key_exists('address',$input)) online_save_address($db,$id,$address,$contact);
     return online_account($db,$id);

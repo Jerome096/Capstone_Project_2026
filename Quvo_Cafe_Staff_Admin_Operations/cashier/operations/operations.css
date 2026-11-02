@@ -1,0 +1,167 @@
+
+.operation-stock-panel { padding: 18px; border: 1px solid var(--q-border); border-radius: var(--q-radius-lg); background: var(--q-surface); }
+.operation-stock-header, .operation-stock-item-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.operation-stock-header h2 { display: flex; align-items: center; gap: 8px; }
+.operation-stock-header .btn { min-height: 44px; }
+.operation-stock-count { display: inline-grid; place-items: center; min-width: 26px; min-height: 26px; padding: 3px 7px; border-radius: 999px; background: var(--q-surface-muted); font-size: var(--q-text-sm); }
+.operation-stock-copy, .operation-stock-status { margin-top: 10px; color: var(--q-ink-500); font-size: var(--q-text-sm); line-height: 1.5; }
+.operation-stock-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.operation-stock-list:empty { display: none; }
+.operation-stock-alert { min-width: 0; padding: 12px; border: 1px solid #e3c68e; border-radius: var(--q-radius-md); background: #fff9eb; overflow-wrap: anywhere; }
+.operation-stock-alert.out { background: #fff2ee; border-color: #e8b8a9; }
+.operation-stock-alert p { margin-top: 6px; font-size: var(--q-text-sm); line-height: 1.5; }
+.operation-stock-item-header { align-items: start; }
+.operation-stock-item-header span { flex-shrink: 0; border-radius: 999px; padding: 4px 8px; background: #f6e9cc; color: #80571f; font-size: var(--q-text-xs); font-weight: 700; }
+.operation-stock-alert.out .operation-stock-item-header span { background: #f9dbd2; color: #943f2a; }
+@media (max-width: 700px) {
+  .operation-stock-list { grid-template-columns: 1fr; }
+  .operation-stock-header { align-items: stretch; flex-direction: column; }
+  .operation-stock-header .btn { width: 100%; }
+}
+
+.eod-note {
+  display: grid;
+  gap: 6px;
+  color: #9a918a;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  font-size: 9px;
+}
+
+.eod-note textarea {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  min-height: 38px;
+  outline: 0;
+  padding: 0 11px;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+}
+
+.eod-note textarea {
+  min-height: 76px;
+  resize: vertical;
+  padding-top: 10px;
+}
+
+.eod-panel {
+  margin-top: auto;
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.eod-button {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--sidebar-soft);
+  color: #e5ded6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-weight: 800;
+}
+
+.eod-button svg {
+  width: 15px;
+  height: 15px;
+  color: var(--brown);
+}
+
+.eod-card {
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  background: var(--white);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+  position: relative;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.eod-grid {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.eod-metric {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+  padding: 12px;
+}
+
+.eod-metric span {
+  color: #8b8179;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.eod-metric b {
+  display: block;
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+@media (max-width: 760px) {
+  .eod-button span {
+    display: none;
+  }
+
+  .eod-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.eod-card {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--q-radius-xl);
+  box-shadow: var(--q-shadow-lg);
+}
+
+.eod-note {
+  color: var(--q-ink-600);
+  font-size: var(--q-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.eod-panel {
+  padding: 14px;
+}
+
+.eod-button {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 11px;
+  color: #e8e1db;
+  font-size: 0.8125rem;
+}
+
+.eod-button:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+@media (max-width: 960px) {
+  .eod-button span {
+    display: none;
+  }
+}
+
+.eod-button {
+  border-color: rgba(223, 196, 119, 0.14);
+}
+
+.eod-button svg {
+  color: var(--q-brand-400);
+}

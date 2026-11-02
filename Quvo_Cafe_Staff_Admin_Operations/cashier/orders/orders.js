@@ -392,13 +392,6 @@ function startPreparing(id) {
   if (!order.approvedAt) recordPreparationApproval(order);
   order.expanded = false;
 
-  state.activities.unshift({
-    tag: "Order",
-    type: "neutral",
-    text: `Order ${order.number} is now preparing`,
-    table: order.table,
-    time: "now",
-  });
 
   renderAll();
   openPreparationTickets(order);
@@ -416,13 +409,6 @@ function markReady(id) {
 
   order.stage = "ready";
 
-  state.activities.unshift({
-    tag: "Ready",
-    type: "green",
-    text: `Order ${order.number} marked as Ready`,
-    table: order.table,
-    time: "now",
-  });
 
   renderAll();
 }
@@ -431,7 +417,6 @@ function markServed(id) {
   const order = state.orders.find((entry) => entry.id === id);
   if (!order) return;
 
-  const stockMovements = deductInventoryForOrder(order, "Order completion");
 
   const receipt = createReceiptRecord({
     orderNumber: order.number,
@@ -454,13 +439,6 @@ function markServed(id) {
   completed.textContent = Number(completed.textContent) + 1;
   lastReceiptId = receipt.id;
 
-  state.activities.unshift({
-    tag: "Served",
-    type: "green",
-    text: `Order ${order.number} marked as Served`,
-    table: order.table,
-    time: "now",
-  });
 
   addSystemRecord(
     "Order served",
@@ -469,11 +447,7 @@ function markServed(id) {
   );
 
   renderAll();
-  showToast(
-    stockMovements.length
-      ? `Receipt saved for ${order.number}. Inventory auto-deducted.`
-      : `Receipt saved for ${order.number}.`,
-  );
+  showToast(`Receipt saved for ${order.number}.`);
 }
 
 function openEditOrderModal(orderId) {
@@ -550,13 +524,6 @@ function bindEditModal() {
 
       closeEditOrderModal();
 
-      state.activities.unshift({
-        tag: "Order",
-        type: "blue",
-        text: `Changes saved for ${order.number}`,
-        table: order.table,
-        time: "now",
-      });
 
       renderAll();
       showToast(`Changes saved for ${order.number}.`);

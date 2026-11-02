@@ -21,21 +21,6 @@
     rgba(255, 253, 249, 0.98);
 }
 
-.account-avatar {
-  flex: 0 0 auto;
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: var(--quvo-black);
-  color: #f1d98e;
-  border: 1px solid rgba(192, 156, 80, 0.42);
-  font-size: 1rem;
-  font-weight: 950;
-  letter-spacing: 0.04em;
-}
-
 .account-identity-copy {
   min-width: 0;
 }
@@ -108,6 +93,12 @@
   transition:
     border-color 0.16s ease,
     box-shadow 0.16s ease;
+}
+
+.account-form input[readonly] {
+  background: #f5f1e8;
+  color: var(--quvo-muted);
+  cursor: default;
 }
 
 .account-form textarea {

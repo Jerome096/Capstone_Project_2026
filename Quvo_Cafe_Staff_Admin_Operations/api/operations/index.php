@@ -14,10 +14,10 @@ try {
     $db = quvo_db();
     if ($method === 'GET') {
         if (($_GET['action'] ?? '') === 'eod-preview') {cash_ops_schema($db);quvo_json(['ok'=>true,'operation'=>cash_ops_public(cash_ops_active($db))]);}
-        quvo_json(['ok'=>true,'completed_today'=>dashboard_completed_today($db),'stock_alerts'=>inventory_stock_alerts($db)]);
+        quvo_json(['ok'=>true,'completed_today'=>operations_completed_today($db),'stock_alerts'=>inventory_stock_alerts($db)]);
     }
     $input = orders_input();
-    if (($input['action'] ?? '') !== 'eod') throw new OrderError('Unknown dashboard action.');
+    if (($input['action'] ?? '') !== 'eod') throw new OrderError('Unknown operation action.');
     $note = orders_text($input['note'] ?? '', 1000);
     dining_expire_sessions($db);
     $db->beginTransaction();

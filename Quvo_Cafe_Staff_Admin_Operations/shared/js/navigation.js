@@ -40,11 +40,9 @@ function showScreen(screen) {
   document.getElementById("screenTitle").textContent = meta.title;
 
   const runtimeSub =
-    screen === "dashboard"
-      ? getShiftSummary()
-      : screen === "reports"
-        ? `${new Date().toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" })} · Current shift performance`
-        : meta.sub;
+    screen === "reports"
+      ? `${new Date().toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" })} · Current shift performance`
+      : meta.sub;
 
   document.getElementById("screenSub").textContent = runtimeSub;
   // Returning to Sessions refreshes decisions made on other staff devices.

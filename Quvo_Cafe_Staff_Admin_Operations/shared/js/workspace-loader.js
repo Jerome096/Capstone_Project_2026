@@ -16,7 +16,7 @@ const QUVO_SCREEN_FRAGMENTS = [
 ];
 
 const QUVO_MODAL_FRAGMENTS = [
-  "cashier/dashboard/eod-modal.html",
+  "cashier/operations/eod-modal.html",
   "shared/components/admin-access-modal.html",
   "shared/components/cashier-approval-modal.html",
   "cashier/menu/item-modal.html",
@@ -43,7 +43,9 @@ const QUVO_WORKSPACE_SCRIPTS = [
   "shared/js/state.js",
   "shared/js/business-day.js",
   "shared/js/navigation.js",
-  "cashier/dashboard/dashboard.js",
+  "cashier/operations/operations.js",
+  "cashier/menu/summary.js",
+  "shared/js/render.js",
   "cashier/menu/menu.js",
   "cashier/menu/pos-sql.js",
   "cashier/sessions/sessions.js",
@@ -90,7 +92,7 @@ async function appendQuvoFragments(paths, targetId) {
 function loadQuvoScript(path) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = quvoPath(path) + "?v=menu-fill-space-1";
+    script.src = quvoPath(path) + "?v=operations-cleanup-1";
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${path}`));
     document.body.appendChild(script);

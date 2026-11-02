@@ -53,7 +53,7 @@ function sqlReceipt(row) {
 }
 function sqlRender() {
   renderOrders(); renderReceipts(); renderStats(); lucide.createIcons();
-  if (typeof refreshDashboardCompletion === "function") refreshDashboardCompletion();
+  if (typeof refreshOperationSummary === "function") refreshOperationSummary();
 }
 function sqlUpdateReceipts() {
   state.receipts = [

@@ -69,8 +69,8 @@
   .quvo-cafe-ui .search-box input { border:0;min-width:0; }
   .quvo-cafe-ui :is(.filter,.report-period-controls .btn) { border-radius:22px;min-height:42px;padding-inline:16px; }
   .quvo-cafe-ui .filter.active,.quvo-cafe-ui .report-period-controls [aria-pressed="true"] { background:#1c211c;border-color:#1c211c;color:#fffefb; }
-  .quvo-cafe-ui :is(.stat-card,.activity-panel,.dashboard-stock-panel,.report-table-card,.menu-admin-panel,.admin-menu-panel,.account-card,.inventory-main-card,.inventory-side-card,.record-panel,.sales-table-card,.sales-history-card,.receipt-list-panel,.receipt-preview-panel,.pos-cart,.pos-menu,.wifi-card,.hours-card,.website-card) { background:var(--q-surface);border:1px solid var(--q-border);border-radius:15px;box-shadow:none; }
-  .quvo-cafe-ui :is(.admin-toolbar,.section-head,.inventory-toolbar,.accounts-toolbar) h2,.quvo-cafe-ui :is(.activity-panel,.dashboard-stock-panel,.report-table-card,.account-card,.inventory-main-card,.inventory-side-card) > h2 { font:27px/1.2 var(--q-font-brand);font-weight:400;letter-spacing:-.7px; }
+.quvo-cafe-ui :is(.stat-card,.operation-stock-panel,.report-table-card,.menu-admin-panel,.admin-menu-panel,.account-card,.inventory-main-card,.inventory-side-card,.record-panel,.sales-table-card,.sales-history-card,.receipt-list-panel,.receipt-preview-panel,.pos-cart,.pos-menu,.wifi-card,.hours-card,.website-card) { background:var(--q-surface);border:1px solid var(--q-border);border-radius:15px;box-shadow:none; }
+.quvo-cafe-ui :is(.admin-toolbar,.section-head,.inventory-toolbar,.accounts-toolbar) h2,.quvo-cafe-ui :is(.operation-stock-panel,.report-table-card,.account-card,.inventory-main-card,.inventory-side-card) > h2 { font:27px/1.2 var(--q-font-brand);font-weight:400;letter-spacing:-.7px; }
   .quvo-cafe-ui :is(.helper-text,.modal-sub,.inventory-field-hint,.accounts-help) { color:var(--muted);font-size:12px;line-height:1.65; }
   .quvo-cafe-ui .admin-page-note { background:#f1f0e8;color:#757b6a;border:1px solid var(--q-border);border-radius:9px;font-size:12px;padding:11px 14px;margin-bottom:20px; }
   .quvo-cafe-ui .stats-grid,.quvo-cafe-ui .cafe-report-metrics { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:23px; }
@@ -114,9 +114,7 @@
   .quvo-cafe-ui .modal-backdrop, .quvo-cafe-ui dialog::backdrop { background:#1823188a;backdrop-filter:blur(3px); }
   .quvo-cafe-ui .modal-close,.quvo-cafe-ui .workspace-nav-close { border-radius:50%;color:var(--text);background:var(--q-surface);border:1px solid var(--q-border); }
   .quvo-cafe-ui .workspace-modal-card .modal-actions { background:var(--q-surface); }
-  .quvo-cafe-ui .dashboard-layout { grid-template-columns:1fr; }
-  .quvo-cafe-ui .dashboard-side-column { display:grid;grid-template-columns:1fr 1fr;gap:21px;align-items:start; }
-  .quvo-cafe-ui .activity-panel,.quvo-cafe-ui .dashboard-stock-panel { padding:24px;margin:0; }
+.quvo-cafe-ui .operation-stock-panel { padding:24px;margin:0; }
   .quvo-cafe-ui .payment-qr-admin { max-width:1120px; }
   .quvo-cafe-ui .qr-page-heading h1 { font:46px/1.15 var(--q-font-brand);font-weight:400;letter-spacing:-1.5px; }
   .quvo-cafe-ui .qr-card-heading h2 { font:27px var(--q-font-brand);font-weight:400; }
@@ -143,8 +141,6 @@
 @media screen and (min-width:1181px) {
   .quvo-cafe-ui .sidebar { width:248px; }
   .quvo-cafe-ui .main { margin-left:248px; }
-}
-@media screen and (max-width:1450px) {
 }
 @media screen and (max-width:1180px) {
   body.quvo-cafe-ui { --q-page-gutter:25px; }
@@ -181,7 +177,7 @@
   .quvo-cafe-ui .cafe-report-metric strong { font-size:clamp(21px,6.3vw,29px);letter-spacing:-.6px;white-space:nowrap; }
   .quvo-cafe-ui .cafe-report-metric small { font-size:10px; }
   .quvo-cafe-ui .cafe-report-metric strong[data-wide-value] { font-size:20px;letter-spacing:-.8px; }
-  .quvo-cafe-ui .cafe-report-overview,.quvo-cafe-ui .dashboard-side-column { grid-template-columns:minmax(0,1fr);gap:17px; }
+.quvo-cafe-ui .cafe-report-overview { grid-template-columns:minmax(0,1fr);gap:17px; }
   .quvo-cafe-ui .cafe-report-overview>section { padding:18px; }
   .quvo-cafe-ui .cafe-order-search { width:100%; }
   .quvo-cafe-ui .cafe-order-search input { width:100%; }

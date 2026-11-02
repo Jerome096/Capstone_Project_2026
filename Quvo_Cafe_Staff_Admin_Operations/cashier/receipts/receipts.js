@@ -119,28 +119,16 @@ function confirmPaymentReview() {
     recordPreparationApproval(order);
     order.expanded = false;
 
-    state.activities.unshift({
-      tag: "Paid",
-      type: "green",
-      text: `${pendingPaymentReview.paymentMethod} payment confirmed for ${order.number}; order is now preparing`,
-      table: order.table,
-      time: "now",
-    });
 
     addSystemRecord(
       "Payment confirmed",
       `${pendingPaymentReview.paymentMethod} payment confirmed for ${order.number}`,
       "Payment",
     );
-    const stockMovements = deductInventoryForOrder(order, "Payment confirmation");
 
     closePaymentReviewModal();
     renderAll();
-    showToast(
-      stockMovements.length
-        ? `Payment confirmed for ${order.number}. Inventory auto-deducted.`
-        : `Payment confirmed for ${order.number}. Order sent to preparation.`,
-    );
+    showToast(`Payment confirmed for ${order.number}. Order sent to preparation.`);
     openPreparationTickets(order);
     return;
   }

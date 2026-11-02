@@ -25,6 +25,44 @@ function bindMenu() {
   document.getElementById("menuSearch").addEventListener("input", renderMenu);
   document.getElementById("clearCartBtn").addEventListener("click", clearCart);
   document.getElementById("proceedOrderBtn").addEventListener("click", openCheckoutModal);
+  bindPosMenuLayout();
+}
+
+let posMenuLayoutFrame = 0;
+let posMenuLayoutObserver = null;
+function queuePosMenuLayout() {
+  if (posMenuLayoutFrame || !document.body.classList.contains("quvo-operations-ui")) return;
+  posMenuLayoutFrame = requestAnimationFrame(() => {
+    posMenuLayoutFrame = 0;
+    const grid = document.getElementById("menuGrid");
+    if (!grid || !document.getElementById("menu").getClientRects().length) return;
+    const cards = [...grid.querySelectorAll(":scope > .menu-card")];
+    cards.forEach(card => card.style.removeProperty("height"));
+    // Phone grids already stretch each row. The wider wrapping layout needs
+    // equal card heights per line while it flows around the POS and stock panel.
+    if (!matchMedia("(min-width: 720px)").matches) return;
+    const rows = [];
+    for (const card of cards) {
+      const bounds = card.getBoundingClientRect();
+      let row = rows.find(entry => Math.abs(entry.top - bounds.top) < 1);
+      if (!row) rows.push(row = { top: bounds.top, height: 0, cards: [] });
+      row.height = Math.max(row.height, bounds.height);
+      row.cards.push(card);
+    }
+    for (const row of rows) {
+      for (const card of row.cards) card.style.height = row.height + "px";
+    }
+  });
+}
+function bindPosMenuLayout() {
+  if (posMenuLayoutObserver || !document.body.classList.contains("quvo-operations-ui")) return;
+  posMenuLayoutObserver = new ResizeObserver(queuePosMenuLayout);
+  for (const selector of ["#menu .pos-layout", "#menu .pos-side-column"]) {
+    const panel = document.querySelector(selector);
+    if (panel) posMenuLayoutObserver.observe(panel);
+  }
+  window.addEventListener("resize", queuePosMenuLayout);
+  queuePosMenuLayout();
 }
 
 function posCategoryGroups(categories) {
@@ -99,6 +137,7 @@ function renderMenu() {
         )
         .join("")
     : `<div class="helper-text">No menu items loaded. Menu data will be populated from the database.</div>`;
+  queuePosMenuLayout();
 }
 
 function openItemModal(itemId) {

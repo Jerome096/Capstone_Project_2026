@@ -79,22 +79,11 @@ function renderAlerts() {
 
 async function resolveAlert(id) {
   if(assistanceAlerts.changing) return;
-  const alert = state.alerts.find((entry) => entry.id === id);
   assistanceAlerts.changing=true; assistanceAlerts.revision++;
   renderAlerts();
   try {
     const data=await assistanceAlertApi({action:"resolve",id});
     installAssistanceAlerts(data.requests);
-    if (alert && data.resolved) {
-    state.activities.unshift({
-      tag: "Alert",
-      type: "green",
-      text: `Assistance request resolved for ${escapeHtml(alert.customer)}`,
-      table: alert.table,
-      time: "now",
-    });
-    }
-    renderActivities();
     if(!data.resolved) showToast("This assistance request is no longer pending.");
   } catch(error) {showToast(error.message);}
   finally {assistanceAlerts.changing=false;renderAlerts();lucide.createIcons();}

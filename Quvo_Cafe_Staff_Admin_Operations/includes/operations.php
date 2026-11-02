@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/orders.php';
 require_once __DIR__ . '/operating-hours.php';
 
-function dashboard_completed_today(PDO $db): int
+function operations_completed_today(PDO $db): int
 {
     $hours=operating_hours_context($db);$window=operating_day_bounds($hours,operating_business_date($hours));
     // Count the full opening-day window, including service after midnight.
@@ -16,8 +16,8 @@ function dashboard_completed_today(PDO $db): int
 }
 
 // Caller owns the transaction. Snapshot order IDs so timestamp rounding and repeat serving
-// cannot make a closed order reappear in the next day's dashboard.
-function dashboard_close_completions(PDO $db, int $actor, string $note, ?string $businessDate=null): array
+// cannot make a closed order reappear in the next operation overview.
+function operations_close_completions(PDO $db, int $actor, string $note, ?string $businessDate=null): array
 {
     $note = orders_text($note, 1000);
     $lock = $db->query("DECLARE @result int; EXEC @result=sys.sp_getapplock
@@ -36,5 +36,5 @@ function dashboard_close_completions(PDO $db, int $actor, string $note, ?string 
         AND NOT EXISTS (SELECT 1 FROM dbo.eod_completed_orders c WHERE c.order_id=o.order_id)".
         ($window!==null?" AND o.updated_at>=? AND o.updated_at<?":""));
     $q->execute($window!==null?[$id,$window['startUtc'],$window['endUtc']]:[$id]);
-    return ['closure_id'=>(string)$id, 'completed_today'=>dashboard_completed_today($db)];
+    return ['closure_id'=>(string)$id, 'completed_today'=>operations_completed_today($db)];
 }

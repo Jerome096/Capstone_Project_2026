@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/dashboard.php';
+require_once __DIR__.'/operations.php';
 function sales_fields(string $alias='s'):string {
     return "COALESCE(SUM($alias.amount),0) totalSales,
         COALESCE(SUM(CASE WHEN $alias.payment_method='Cash' THEN $alias.amount ELSE 0 END),0) cashSales,

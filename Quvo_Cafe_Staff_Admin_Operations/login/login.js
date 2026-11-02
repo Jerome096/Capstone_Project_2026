@@ -55,22 +55,12 @@ function restoreStaffSession() {
   const initialScreen =
     requested && allowedScreens.includes(requested)
       ? requested
-      : config.initialScreen || "dashboard";
+      : config.initialScreen || (config.portal === "admin" ? "reports" : "menu");
 
   showScreen(initialScreen);
   return true;
 }
 
-function getShiftSummary() {
-  const now = new Date();
-  const dateText = now.toLocaleDateString("en-PH", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `${dateText} · Current shift`;
-}
 
 async function logoutToLogin() {
   const button = document.getElementById("logoutBtn");

@@ -6,7 +6,6 @@ const state = {
   currentUser: null,
   insideTables: [],
   outsideTables: [],
-  longTableSeats: [],
   sessions: [],
   orders: [],
   menu: [],
@@ -24,7 +23,6 @@ const state = {
   editingInventoryItemId: null,
   editingInventoryRecipeMenu: null,
   alerts: [],
-  activities: [],
 };
 
 let editOrderId = null;
@@ -115,15 +113,7 @@ function updateInventoryLinkedMenus() {
   });
 }
 
-// Menu availability is set by the cafe. SQL records stock deductions, including payment retries.
-function updateMenuAvailabilityFromInventory() {}
-function deductInventoryForOrder() { return []; }
 const screenText = {
-  dashboard: {
-    eyebrow: "Live overview",
-    title: "Dashboard",
-    sub: "Current shift overview",
-  },
   menu: {
     eyebrow: "Counter POS",
     title: "Menu",
